@@ -9,6 +9,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	WNDCLASSA wc;
     clear(wc);
+    //memset(&wc, 0, sizeof(wc));
 
 	wc.lpfnWndProc = DefWindowProcA;
 	wc.hInstance = instance;
