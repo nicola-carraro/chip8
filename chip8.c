@@ -1,14 +1,14 @@
 #include <Windows.h>
 #include<stdbool.h>
 
-#define clear(obj)(memset(&obj, 0, sizeof(obj)))
+#define clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
 
 	const char* class_name = "chip8";
 
 	WNDCLASSA wc;
-    clear(wc);
+    clear_struct(wc);
 
 	wc.lpfnWndProc = DefWindowProcA;
 	wc.hInstance = instance;
@@ -30,6 +30,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
         if (window != 0) {
             ShowWindow(window, cmd_show);
             MSG msg;
+            clear_struct(msg);
 
             while(true) {
             }
