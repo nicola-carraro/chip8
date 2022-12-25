@@ -6,8 +6,8 @@
 
 typedef struct  {
 	boolean running;
-	LPDIRECT3D9 direct3d;   
-	LPDIRECT3DDEVICE9 direct3d_dev;
+	LPDIRECT3D9 d3d;   
+	LPDIRECT3DDEVICE9 d3d_dev;
 } State;
 
 State global_state;
