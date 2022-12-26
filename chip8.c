@@ -15,7 +15,22 @@ State global_state;
 
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
-	case WM_QUIT: {global_state.running = false; } break;
+	case WM_CLOSE:
+	{
+		if (!DestroyWindow(window))
+		{
+			OutputDebugStringA("Could not destroy window\n");
+		}
+	}break;
+
+	case WM_DESTROY:
+	{
+		PostQuitMessage(0);
+	}
+	case WM_QUIT:
+	{
+		global_state.running = false;
+	} break;
 
 	}
 
@@ -30,7 +45,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	WNDCLASSA wc;
 	clear_struct(wc);
 
-	wc.lpfnWndProc = DefWindowProcA;
+	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = instance;
 	wc.lpszClassName = class_name;
 	if (RegisterClassA(&wc) != 0) {
@@ -54,7 +69,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			LARGE_INTEGER perf_count;
 			if (!QueryPerformanceCounter(&perf_count))
 			{
-				"Failed to get perfCount";
+				"Failed to get perfCount\n";
 			}
 			global_state.d3d = Direct3DCreate9(DIRECT3D_VERSION);
 			if (window != 0) {
@@ -97,25 +112,25 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 							);
 
 							if (cleared != D3D_OK) {
-								OutputDebugStringA("Could not clear screen");
+								OutputDebugStringA("Could not clear screen\n");
 							}
 
 							if (IDirect3DDevice9_BeginScene(global_state.d3d_dev) != D3D_OK) {
-								OutputDebugStringA("BeginScene failed");
+								OutputDebugStringA("BeginScene failed\n");
 							}
 
 							if (IDirect3DDevice9_EndScene(global_state.d3d_dev) != D3D_OK) {
-								OutputDebugStringA("EndScene failed");
+								OutputDebugStringA("EndScene failed\n");
 							}
 
 							if (IDirect3DDevice9_Present(global_state.d3d_dev, 0, 0, 0, 0) != D3D_OK) {
-								OutputDebugStringA("Present failed");
+								OutputDebugStringA("Present failed\n");
 							}
 
 							LARGE_INTEGER old_perf_count = perf_count;
 							if (!QueryPerformanceCounter(&perf_count))
 							{
-								"Failed to get perfCount";
+								"Failed to get perfCount\n";
 							}
 
 							float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
@@ -128,25 +143,25 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						}
 					}
 					else {
-						OutputDebugStringA("Could not create d3d device");
+						OutputDebugStringA("Could not create d3d device\n");
 					}
 
 				}
 				else {
-					OutputDebugStringA("Could not initialize d3d");
+					OutputDebugStringA("Could not initialize d3d\n");
 				}
 
 			}
 			else {
-				OutputDebugStringA("Could not open window");
+				OutputDebugStringA("Could not open window\n");
 			}
 		}
 		else {
-			OutputDebugStringA("Could not get performance frequency");
+			OutputDebugStringA("Could not get performance frequency\n");
 		}
 
 	}
 	else {
-		OutputDebugStringA("Could not register window class");
+		OutputDebugStringA("Could not register window class\n");
 	}
 }
