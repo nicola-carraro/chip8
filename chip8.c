@@ -3,6 +3,17 @@
 #include <stdio.h>
 #include <d3d9.h>
 
+#define C8_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+
+typedef struct {
+	FLOAT x;
+	FLOAT y;
+	FLOAT z;
+	FLOAT rhw;
+	D3DCOLOR color;
+}
+D3d_Vertex;
+
 #define clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
 typedef struct {
@@ -89,16 +100,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						&global_state.d3d_dev);
 
 					if (device_created == D3D_OK) {
+						D3d_Vertex vertices[3];
+						memset(vertices, 0, sizeof(vertices));
 
-						float vb[3 * ((3 * sizeof(float)) + sizeof(D3DCOLOR))];
-
+						LPDIRECT3DVERTEXBUFFER9 vb;
 						HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
 							global_state.d3d_dev,
-							sizeof(vb),
+							sizeof(vertices),
 							0,
-							(D3DFVF_XYZRHW | D3DFVF_DIFFUSE),
+							C8_D3D_FVF,
 							D3DPOOL_MANAGED,
-							&vb_created,
+							&vb,
 							0
 						);
 
@@ -115,6 +127,18 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 									DispatchMessageA(&msg);
 								}
 
+								vertices[0].x = 0.0f;
+								vertices[0].y = 0.0f;
+								vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
+
+								vertices[1].x = 200.0f;
+								vertices[1].y = 0.0f;
+								vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
+
+								vertices[2].x = 200.0f;
+								vertices[2].y = 200.0f;
+								vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
+
 								HRESULT cleared = IDirect3DDevice9_Clear(global_state.d3d_dev,
 									0,
 									0,
@@ -130,6 +154,58 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 								if (IDirect3DDevice9_BeginScene(global_state.d3d_dev) != D3D_OK) {
 									OutputDebugStringA("BeginScene failed\n");
+								}
+
+								VOID* vp;
+								HRESULT locked = IDirect3DVertexBuffer9_Lock(
+									vb,
+									0,
+									0,
+									&vp,
+									0);
+								if (locked!= D3D_OK)
+								{
+									OutputDebugStringA("Failed to lock vertex buffer\n");
+								}
+
+								memcpy(vp, vertices, sizeof(vertices));
+
+								HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(vb);
+								if (unlocked != D3D_OK)
+								{
+									OutputDebugStringA("Failed to unlock vertex buffer\n");
+								}
+
+								HRESULT fvf_set = IDirect3DDevice9_SetFVF(
+									global_state.d3d_dev,
+									C8_D3D_FVF
+								);
+
+								if (fvf_set != D3D_OK)
+								{
+									OutputDebugStringA("SetFVF failed\n");
+								}
+
+								HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
+									global_state.d3d_dev, 
+									0, 
+									vb, 
+									0, 
+									sizeof(D3d_Vertex)
+								);
+
+								if (stream_src_set != D3D_OK)
+								{
+									OutputDebugStringA("SetStreamSource failed\n");
+								}
+
+								HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
+									global_state.d3d_dev,
+									D3DPT_TRIANGLELIST,
+									0,
+									1);
+								if (drawn != D3D_OK) {
+									OutputDebugStringA("DrawPrimitive failed\n");
 								}
 
 								if (IDirect3DDevice9_EndScene(global_state.d3d_dev) != D3D_OK) {
