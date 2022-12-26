@@ -1,33 +1,6 @@
-#include <Windows.h>
-#include<stdbool.h>
-#include <stdio.h>
-#include <assert.h>
+#include "c8_win.h"
 
-#include <d3d9.h>
-
-#define C8_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
-
-typedef struct {
-	FLOAT x;
-	FLOAT y;
-	FLOAT z;
-	FLOAT rhw;
-	D3DCOLOR color;
-} D3d_Vertex;
-
-#define clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
-
-typedef struct {
-	boolean running;
-	LPDIRECT3D9 d3d;
-	LPDIRECT3DDEVICE9 d3d_dev;
-	float cli_width;
-	float cli_height;
-} State;
-
-State global_state;
-
-D3DPRESENT_PARAMETERS c8_d3d_init_pp(HWND window)
+D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
 {
 	D3DPRESENT_PARAMETERS result;
 
@@ -62,19 +35,19 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
-		global_state.running = false;
+		global_state.app_state.running = false;
 
 	}break;
 	case WM_QUIT:
 	{
-		global_state.running = false;
+		global_state.app_state.running = false;
 	} break;
 	case WM_SIZE:
 	{
 
 		if (global_state.d3d_dev != 0)
 		{
-			D3DPRESENT_PARAMETERS d3dpp = c8_d3d_init_pp(window);
+			D3DPRESENT_PARAMETERS d3dpp = c8_win_initd3dpp(window);
 			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
 		}
 
@@ -117,11 +90,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			{
 				"Failed to get perfCount\n";
 			}
-			global_state.d3d = Direct3DCreate9(DIRECT3D_VERSION);
 			if (window != 0) {
+				global_state.d3d = Direct3DCreate9(DIRECT3D_VERSION);
 				if (global_state.d3d != 0)
 				{
-					D3DPRESENT_PARAMETERS d3dpp = c8_d3d_init_pp(window);
+					D3DPRESENT_PARAMETERS d3dpp = c8_win_initd3dpp(window);
 					HRESULT device_created = IDirect3D9_CreateDevice(
 						global_state.d3d,
 						D3DADAPTER_DEFAULT,
@@ -133,7 +106,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					);
 
 					if (device_created == D3D_OK) {
-						D3d_Vertex vertices[3];
+						C8_Win_D3d_Vertex vertices[3];
 						memset(vertices, 0, sizeof(vertices));
 
 						LPDIRECT3DVERTEXBUFFER9 vb;
@@ -141,7 +114,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 							global_state.d3d_dev,
 							sizeof(vertices),
 							0,
-							C8_D3D_FVF,
+							C8_WIN_D3D_FVF,
 							D3DPOOL_MANAGED,
 							&vb,
 							0
@@ -152,15 +125,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 							MSG msg;
 							clear_struct(msg);
 
-							global_state.running = true;
-							while (global_state.running)
+							global_state.app_state.running = true;
+							while (global_state.app_state.running)
 							{
 								while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
 									TranslateMessage(&msg);
 									DispatchMessageA(&msg);
 								}
 
-								if (!global_state.running)
+								if (!global_state.app_state.running)
 								{
 									break;
 								}
@@ -216,7 +189,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 								HRESULT fvf_set = IDirect3DDevice9_SetFVF(
 									global_state.d3d_dev,
-									C8_D3D_FVF
+									C8_WIN_D3D_FVF
 								);
 
 								if (fvf_set != D3D_OK)
@@ -229,7 +202,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 									0,
 									vb,
 									0,
-									sizeof(D3d_Vertex)
+									sizeof(C8_Win_D3d_Vertex)
 								);
 
 								if (stream_src_set != D3D_OK)
