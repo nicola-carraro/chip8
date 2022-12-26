@@ -38,7 +38,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
-
 	clear_struct(global_state);
 	const char* class_name = "chip8";
 
@@ -65,7 +64,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		LARGE_INTEGER perf_freq;
 
 		if (QueryPerformanceFrequency(&perf_freq)) {
-
 			LARGE_INTEGER perf_count;
 			if (!QueryPerformanceCounter(&perf_count))
 			{
@@ -80,6 +78,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					d3dpp.Windowed = true;
 					d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 					d3dpp.hDeviceWindow = window;
+					d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 					HRESULT device_created = IDirect3D9_CreateDevice(
 						global_state.d3d,
 						D3DADAPTER_DEFAULT,
@@ -159,7 +158,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		else {
 			OutputDebugStringA("Could not get performance frequency\n");
 		}
-
 	}
 	else {
 		OutputDebugStringA("Could not register window class\n");
