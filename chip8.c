@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include<stdbool.h>
 #include <stdio.h>
+#include <assert.h>
+
 #include <d3d9.h>
 
 #define C8_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
@@ -11,8 +13,7 @@ typedef struct {
 	FLOAT z;
 	FLOAT rhw;
 	D3DCOLOR color;
-}
-D3d_Vertex;
+} D3d_Vertex;
 
 #define clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
@@ -20,9 +21,33 @@ typedef struct {
 	boolean running;
 	LPDIRECT3D9 d3d;
 	LPDIRECT3DDEVICE9 d3d_dev;
+	float cli_width;
+	float cli_height;
 } State;
 
 State global_state;
+
+D3DPRESENT_PARAMETERS c8_d3d_init_pp(HWND window)
+{
+	D3DPRESENT_PARAMETERS result;
+
+	result.BackBufferWidth = 0;
+	result.BackBufferHeight = 0;
+	result.BackBufferFormat = D3DFMT_UNKNOWN;
+	result.BackBufferCount = 0;
+	result.MultiSampleType = D3DMULTISAMPLE_NONE;
+	result.MultiSampleQuality = 0;
+	result.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	result.hDeviceWindow = window;
+	result.Windowed = true;
+	result.EnableAutoDepthStencil =0;
+	result.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+	result.Flags = 0;
+	result.FullScreen_RefreshRateInHz = 0;
+	result.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+	return result;
+}
 
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
@@ -37,15 +62,27 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
-	}
+		global_state.running = false;
+
+	}break;
 	case WM_QUIT:
 	{
 		global_state.running = false;
 	} break;
+	case WM_SIZE:
+	{
+
+		if (global_state.d3d_dev != 0)
+		{
+			D3DPRESENT_PARAMETERS d3dpp = c8_d3d_init_pp(window);
+			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
+		}
+
+	}break;
 
 	}
 
-	DefWindowProcA(window, msg, wparam, lparam);
+	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
@@ -84,12 +121,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			if (window != 0) {
 				if (global_state.d3d != 0)
 				{
-					D3DPRESENT_PARAMETERS d3dpp;
-					clear_struct(d3dpp);
-					d3dpp.Windowed = true;
-					d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-					d3dpp.hDeviceWindow = window;
-					d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+					D3DPRESENT_PARAMETERS d3dpp = c8_d3d_init_pp(window);
 					HRESULT device_created = IDirect3D9_CreateDevice(
 						global_state.d3d,
 						D3DADAPTER_DEFAULT,
@@ -97,7 +129,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						window,
 						D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 						&d3dpp,
-						&global_state.d3d_dev);
+						&global_state.d3d_dev
+					);
 
 					if (device_created == D3D_OK) {
 						D3d_Vertex vertices[3];
@@ -125,6 +158,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 								while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
 									TranslateMessage(&msg);
 									DispatchMessageA(&msg);
+								}
+
+								if (!global_state.running)
+								{
+									break;
 								}
 
 								vertices[0].x = 0.0f;
@@ -163,7 +201,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 									0,
 									&vp,
 									0);
-								if (locked!= D3D_OK)
+								if (locked != D3D_OK)
 								{
 									OutputDebugStringA("Failed to lock vertex buffer\n");
 								}
@@ -187,10 +225,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 								}
 
 								HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
-									global_state.d3d_dev, 
-									0, 
-									vb, 
-									0, 
+									global_state.d3d_dev,
+									0,
+									vb,
+									0,
 									sizeof(D3d_Vertex)
 								);
 
@@ -204,6 +242,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 									D3DPT_TRIANGLELIST,
 									0,
 									1);
+
 								if (drawn != D3D_OK) {
 									OutputDebugStringA("DrawPrimitive failed\n");
 								}
