@@ -18,7 +18,9 @@ typedef struct {
 typedef struct {
 	LPDIRECT3D9 d3d;
 	LPDIRECT3DDEVICE9 d3d_dev;
+	LPDIRECT3DVERTEXBUFFER9 vb;
 	C8_App_State app_state;
+	C8_Win_D3d_Vertex vertices[3];
 } C8_Win_State;
 
 C8_Win_State global_state;
