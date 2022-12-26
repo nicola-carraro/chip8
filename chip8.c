@@ -89,56 +89,74 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						&global_state.d3d_dev);
 
 					if (device_created == D3D_OK) {
-						ShowWindow(window, cmd_show);
-						MSG msg;
-						clear_struct(msg);
 
-						global_state.running = true;
-						while (global_state.running)
-						{
-							while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
-								TranslateMessage(&msg);
-								DispatchMessageA(&msg);
-							}
+						float vb[3 * ((3 * sizeof(float)) + sizeof(D3DCOLOR))];
 
-							HRESULT cleared = IDirect3DDevice9_Clear(global_state.d3d_dev,
-								0,
-								0,
-								D3DCLEAR_TARGET,
-								D3DCOLOR_XRGB(0, 40, 100),
-								1.0f,
-								0
-							);
+						HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
+							global_state.d3d_dev,
+							sizeof(vb),
+							0,
+							(D3DFVF_XYZRHW | D3DFVF_DIFFUSE),
+							D3DPOOL_MANAGED,
+							&vb_created,
+							0
+						);
 
-							if (cleared != D3D_OK) {
-								OutputDebugStringA("Could not clear screen\n");
-							}
+						if (vb_created == D3D_OK) {
+							ShowWindow(window, cmd_show);
+							MSG msg;
+							clear_struct(msg);
 
-							if (IDirect3DDevice9_BeginScene(global_state.d3d_dev) != D3D_OK) {
-								OutputDebugStringA("BeginScene failed\n");
-							}
-
-							if (IDirect3DDevice9_EndScene(global_state.d3d_dev) != D3D_OK) {
-								OutputDebugStringA("EndScene failed\n");
-							}
-
-							if (IDirect3DDevice9_Present(global_state.d3d_dev, 0, 0, 0, 0) != D3D_OK) {
-								OutputDebugStringA("Present failed\n");
-							}
-
-							LARGE_INTEGER old_perf_count = perf_count;
-							if (!QueryPerformanceCounter(&perf_count))
+							global_state.running = true;
+							while (global_state.running)
 							{
-								"Failed to get perfCount\n";
+								while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
+									TranslateMessage(&msg);
+									DispatchMessageA(&msg);
+								}
+
+								HRESULT cleared = IDirect3DDevice9_Clear(global_state.d3d_dev,
+									0,
+									0,
+									D3DCLEAR_TARGET,
+									D3DCOLOR_XRGB(0, 40, 100),
+									1.0f,
+									0
+								);
+
+								if (cleared != D3D_OK) {
+									OutputDebugStringA("Could not clear screen\n");
+								}
+
+								if (IDirect3DDevice9_BeginScene(global_state.d3d_dev) != D3D_OK) {
+									OutputDebugStringA("BeginScene failed\n");
+								}
+
+								if (IDirect3DDevice9_EndScene(global_state.d3d_dev) != D3D_OK) {
+									OutputDebugStringA("EndScene failed\n");
+								}
+
+								if (IDirect3DDevice9_Present(global_state.d3d_dev, 0, 0, 0, 0) != D3D_OK) {
+									OutputDebugStringA("Present failed\n");
+								}
+
+								LARGE_INTEGER old_perf_count = perf_count;
+								if (!QueryPerformanceCounter(&perf_count))
+								{
+									"Failed to get perfCount\n";
+								}
+
+								float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
+
+								float milli_elapsed = secs_elapsed * 1000.0f;
+
+								char str[255];
+								sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+								OutputDebugStringA(str);
 							}
-
-							float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
-
-							float milli_elapsed = secs_elapsed * 1000.0f;
-
-							char str[255];
-							sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-							OutputDebugStringA(str);
+						}
+						else {
+							OutputDebugStringA("Failed to create vertex buffer");
 						}
 					}
 					else {
