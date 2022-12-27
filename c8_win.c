@@ -259,8 +259,8 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
-	c8_clear_struct(global_state);
+HWND c8_win_create_window(HINSTANCE instance)
+{
 	const char* class_name = "chip8";
 
 	WNDCLASSA wc;
@@ -269,9 +269,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = instance;
 	wc.lpszClassName = class_name;
+	HWND window = 0;
 	if (RegisterClassA(&wc) != 0) {
 
-		HWND window = CreateWindowExA(
+		window = CreateWindowExA(
 			0,
 			class_name,
 			"Chip 8",
@@ -283,55 +284,64 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			0
 		);
 
-		C8_Win_Timer timer = c8_win_init_timer();
-
-		if (window != 0) {
-			if (c8_win_initd3d(&global_state, window)) {
-				ShowWindow(window, cmd_show);
-				global_state.app_state.running = true;
-				while (global_state.app_state.running)
-				{
-					MSG msg;
-					while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
-						TranslateMessage(&msg);
-						DispatchMessageA(&msg);
-					}
-
-					if (!global_state.app_state.running)
-					{
-						break;
-					}
-
-					global_state.vertices[0].x = 0.0f;
-					global_state.vertices[0].y = 0.0f;
-					global_state.vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
-
-					global_state.vertices[1].x = 200.0f;
-					global_state.vertices[1].y = 0.0f;
-					global_state.vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
-
-					global_state.vertices[2].x = 200.0f;
-					global_state.vertices[2].y = 200.0f;
-					global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
-
-					c8_win_render(&global_state);
-
-					float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
-					char str[255];
-					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-					OutputDebugStringA(str);
-				}
-			}
-			else {
-				OutputDebugStringA("Could not initialize Direct3D\n");
-			}
-		}
-		else {
-			OutputDebugStringA("Could not open window\n");
-		}
 	}
 	else {
 		OutputDebugStringA("Could not register window class\n");
+	}
+
+	return window;
+}
+
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
+	c8_clear_struct(global_state);
+
+	HWND window = c8_win_create_window(instance);
+
+	C8_Win_Timer timer = c8_win_init_timer();
+
+	if (window != 0) {
+		if (c8_win_initd3d(&global_state, window)) {
+			ShowWindow(window, cmd_show);
+			global_state.app_state.running = true;
+			while (global_state.app_state.running)
+			{
+				MSG msg;
+				while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
+					TranslateMessage(&msg);
+					DispatchMessageA(&msg);
+				}
+
+				if (!global_state.app_state.running)
+				{
+					break;
+				}
+
+				global_state.vertices[0].x = 0.0f;
+				global_state.vertices[0].y = 0.0f;
+				global_state.vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
+
+				global_state.vertices[1].x = 200.0f;
+				global_state.vertices[1].y = 0.0f;
+				global_state.vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
+
+				global_state.vertices[2].x = 200.0f;
+				global_state.vertices[2].y = 200.0f;
+				global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
+
+				c8_win_render(&global_state);
+
+				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+
+				char str[255];
+				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+				OutputDebugStringA(str);
+			}
+		}
+		else {
+			OutputDebugStringA("Could not initialize Direct3D\n");
+		}
+	}
+	else {
+		OutputDebugStringA("Could not open window\n");
 	}
 }
