@@ -309,7 +309,9 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	return true;
 }
 
-void c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
+bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
+	bool result = false;
+	
 	assert(state->vertex_count < c8_arr_count(state->vertices));
 
 	if (state->vertex_count < c8_arr_count(state->vertices))
@@ -318,17 +320,31 @@ void c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b)
 		state->vertices[state->vertex_count].y = y;
 		state->vertices[state->vertex_count].color = D3DCOLOR_XRGB(r, g, b);
 		state->vertex_count++;
+		result = true;
 	}
 	else {
 		OutputDebugStringA("Vertex buffer size exceeded");
 	}
-	
+
+	return result;
 }
 
-void c8_win_push_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
-	c8_win_push_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
-	c8_win_push_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
-	c8_win_push_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
+bool c8_win_push_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
+	bool push1 = c8_win_push_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
+	bool push2 = c8_win_push_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
+	bool push3 = c8_win_push_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
+
+	return push1 && push2 && push3;
+}
+
+bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb) {
+	C8_V2 p1 = { x, y };
+	C8_V2 p2 = { x + width, y };
+	C8_V2 p3 = { x + width, y + height };
+	C8_V2 p4 = { x, y + height };
+
+	c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
+	c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
@@ -350,15 +366,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					break;
 				}
 
-				C8_V2 p1 = { 0.0f, 0.0f };
-				C8_V2 p2 = { 200.0f, 0.0f };
-				C8_V2 p3 = { 200.0f, 200.0f };
-				C8_V2 p4 = { 0.0f, 200.0f };
+				C8_Rgb rgb = { 255, 0, 0 };
 
-				C8_Rgb rgb = { 100, 0, 0 };
-
-				c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
-				c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
+				c8_plat_push_rect(0.0, 10.0, 200.0, 300.0, rgb);
 
 				c8_win_render(&global_state);
 

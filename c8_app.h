@@ -36,4 +36,6 @@ typedef struct {
 	u8 b;
 }C8_Rgb;
 
+bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb);
+
 #endif 
