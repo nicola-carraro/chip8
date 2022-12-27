@@ -292,6 +292,21 @@ HWND c8_win_create_window(HINSTANCE instance)
 	return window;
 }
 
+bool c8_win_process_msgs(C8_Win_State *state, HWND window) {
+	MSG msg;
+	while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessageA(&msg);
+	}
+
+	if (!state->app_state.running)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
 	c8_clear_struct(global_state);
 
@@ -305,13 +320,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			global_state.app_state.running = true;
 			while (global_state.app_state.running)
 			{
-				MSG msg;
-				while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
-					TranslateMessage(&msg);
-					DispatchMessageA(&msg);
-				}
 
-				if (!global_state.app_state.running)
+				if (!c8_win_process_msgs(&global_state, window))
 				{
 					break;
 				}
