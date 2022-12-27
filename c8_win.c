@@ -1,6 +1,6 @@
 #include "c8_win.h"
 
-D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
+D3DPRESENT_PARAMETERS c8_win_initd3dpp( HWND window)
 {
 	D3DPRESENT_PARAMETERS result;
 
@@ -22,6 +22,90 @@ D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
 	return result;
 }
 
+void c8_win32_render(C8_Win_State* state){
+
+	bool result = false;
+
+	HRESULT cleared = IDirect3DDevice9_Clear(state->d3d_dev,
+		0,
+		0,
+		D3DCLEAR_TARGET,
+		D3DCOLOR_XRGB(0, 40, 100),
+		1.0f,
+		0
+	);
+
+	if (cleared != D3D_OK) {
+		OutputDebugStringA("Could not clear screen\n");
+	}
+
+	if (IDirect3DDevice9_BeginScene(state->d3d_dev) != D3D_OK) {
+		OutputDebugStringA("BeginScene failed\n");
+	}
+
+	VOID* vp;
+	HRESULT locked = IDirect3DVertexBuffer9_Lock(
+		state->vb,
+		0,
+		0,
+		&vp,
+		0);
+	if (locked != D3D_OK)
+	{
+		OutputDebugStringA("Failed to lock vertex buffer\n");
+	}
+
+	memcpy(vp, state->vertices, sizeof(state->vertices));
+
+	HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->vb);
+	if (unlocked != D3D_OK)
+	{
+		OutputDebugStringA("Failed to unlock vertex buffer\n");
+	}
+
+	HRESULT fvf_set = IDirect3DDevice9_SetFVF(
+		state->d3d_dev,
+		C8_WIN_D3D_FVF
+	);
+
+	if (fvf_set != D3D_OK)
+	{
+		OutputDebugStringA("SetFVF failed\n");
+	}
+
+	HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
+		state->d3d_dev,
+		0,
+		state->vb,
+		0,
+		sizeof(C8_Win_D3d_Vertex)
+	);
+
+	if (stream_src_set != D3D_OK)
+	{
+		OutputDebugStringA("SetStreamSource failed\n");
+	}
+
+	HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
+		state->d3d_dev,
+		D3DPT_TRIANGLELIST,
+		0,
+		1);
+
+	if (drawn != D3D_OK) {
+		OutputDebugStringA("DrawPrimitive failed\n");
+	}
+
+	if (IDirect3DDevice9_EndScene(state->d3d_dev) != D3D_OK) {
+		OutputDebugStringA("EndScene failed\n");
+	}
+
+	if (IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0) != D3D_OK) {
+		OutputDebugStringA("Present failed\n");
+	}
+
+}
+
 bool c8_win_initd3d(C8_Win_State* state, HWND window)
 {
 	bool result = false;
@@ -40,7 +124,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 		);
 
 		if (device_created == D3D_OK) {
-			clear_struct(state->vertices);
+			c8_clear_struct(state->vertices);
 
 			HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
 				state->d3d_dev,
@@ -105,11 +189,11 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
-	clear_struct(global_state);
+	c8_clear_struct(global_state);
 	const char* class_name = "chip8";
 
 	WNDCLASSA wc;
-	clear_struct(wc);
+	c8_clear_struct(wc);
 
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = instance;
@@ -143,7 +227,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					while (global_state.app_state.running)
 					{
 						MSG msg;
-						clear_struct(msg);
+						c8_clear_struct(msg);
 						while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
 							TranslateMessage(&msg);
 							DispatchMessageA(&msg);
@@ -166,84 +250,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						global_state.vertices[2].y = 200.0f;
 						global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
 
-						HRESULT cleared = IDirect3DDevice9_Clear(global_state.d3d_dev,
-							0,
-							0,
-							D3DCLEAR_TARGET,
-							D3DCOLOR_XRGB(0, 40, 100),
-							1.0f,
-							0
-						);
-
-						if (cleared != D3D_OK) {
-							OutputDebugStringA("Could not clear screen\n");
-						}
-
-						if (IDirect3DDevice9_BeginScene(global_state.d3d_dev) != D3D_OK) {
-							OutputDebugStringA("BeginScene failed\n");
-						}
-
-						VOID* vp;
-						HRESULT locked = IDirect3DVertexBuffer9_Lock(
-							global_state.vb,
-							0,
-							0,
-							&vp,
-							0);
-						if (locked != D3D_OK)
-						{
-							OutputDebugStringA("Failed to lock vertex buffer\n");
-						}
-
-						memcpy(vp, global_state.vertices, sizeof(global_state.vertices));
-
-						HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(global_state.vb);
-						if (unlocked != D3D_OK)
-						{
-							OutputDebugStringA("Failed to unlock vertex buffer\n");
-						}
-
-						HRESULT fvf_set = IDirect3DDevice9_SetFVF(
-							global_state.d3d_dev,
-							C8_WIN_D3D_FVF
-						);
-
-						if (fvf_set != D3D_OK)
-						{
-							OutputDebugStringA("SetFVF failed\n");
-						}
-
-						HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
-							global_state.d3d_dev,
-							0,
-							global_state.vb,
-							0,
-							sizeof(C8_Win_D3d_Vertex)
-						);
-
-						if (stream_src_set != D3D_OK)
-						{
-							OutputDebugStringA("SetStreamSource failed\n");
-						}
-
-						HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
-							global_state.d3d_dev,
-							D3DPT_TRIANGLELIST,
-							0,
-							1);
-
-						if (drawn != D3D_OK) {
-							OutputDebugStringA("DrawPrimitive failed\n");
-						}
-
-						if (IDirect3DDevice9_EndScene(global_state.d3d_dev) != D3D_OK) {
-							OutputDebugStringA("EndScene failed\n");
-						}
-
-						if (IDirect3DDevice9_Present(global_state.d3d_dev, 0, 0, 0, 0) != D3D_OK) {
-							OutputDebugStringA("Present failed\n");
-						}
-
+						c8_win32_render(&global_state);
+					
 						LARGE_INTEGER old_perf_count = perf_count;
 						if (!QueryPerformanceCounter(&perf_count))
 						{

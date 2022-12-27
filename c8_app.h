@@ -7,7 +7,7 @@
 
 typedef int32_t i32;
 
-#define clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
+#define c8_clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
 typedef struct {
 	bool running;
