@@ -343,8 +343,10 @@ bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb) 
 	C8_V2 p3 = { x + width, y + height };
 	C8_V2 p4 = { x, y + height };
 
-	c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
-	c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
+	bool push1 = c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
+	bool push2 = c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
+
+	return push1 && push2;
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
@@ -366,9 +368,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					break;
 				}
 
-				C8_Rgb rgb = { 255, 0, 0 };
-
-				c8_plat_push_rect(0.0, 10.0, 200.0, 300.0, rgb);
+				c8_app_update();
 
 				c8_win_render(&global_state);
 
