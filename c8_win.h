@@ -23,6 +23,12 @@ typedef struct {
 	C8_Win_D3d_Vertex vertices[3];
 } C8_Win_State;
 
+typedef struct {
+	LARGE_INTEGER perf_freq;
+	LARGE_INTEGER perf_count;
+	bool has_timer;
+}C8_Win_Timer;
+
 C8_Win_State global_state;
 
 #endif 

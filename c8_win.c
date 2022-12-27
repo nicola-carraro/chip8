@@ -1,6 +1,6 @@
 #include "c8_win.h"
 
-D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
+D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 {
 	D3DPRESENT_PARAMETERS result;
 
@@ -22,12 +22,83 @@ D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
 	return result;
 }
 
-LARGE_INTEGER c8_win_perf_count(){
-	LARGE_INTEGER result;
+bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
+{
+	bool result = false;
+	if (QueryPerformanceCounter(perf_count)) {
+		result = true;
+	}
+	else {
+		timer->has_timer = false;
+		OutputDebugStringA("Failed to get perfCount\n");
+	}
+	return result;
+}
+
+C8_Win_Timer c8_win_init_timer()
+{
+	C8_Win_Timer result;
 	c8_clear_struct(result);
-	if (!QueryPerformanceCounter(&result))
+	result.has_timer = false;
+
+	LARGE_INTEGER perf_freq;
+
+	if (QueryPerformanceFrequency(&perf_freq)){
+		LARGE_INTEGER perf_count;
+
+		if (c8_win_query_perf_count(&result, &perf_count)){
+			result.has_timer = true;
+			result.perf_freq = perf_freq;
+			result.perf_count = perf_count;
+		}
+
+	}
+	else {
+		OutputDebugStringA("Could not get performance frequency\n");
+	}
+
+	return result;
+}
+
+float c8_win_compute_millis(C8_Win_Timer timer, LARGE_INTEGER new_perf_count)
+{
+	float secs_elapsed = ((float)(new_perf_count.QuadPart - timer.perf_count.QuadPart)) /
+		((float)(timer.perf_freq.QuadPart));
+
+	float result = secs_elapsed * 1000.0f;
+
+	return result;
+}
+
+float c8_win_reset_timer(C8_Win_Timer* timer)
+{
+	float millis_elapsed = -1.0f;
+
+	if (timer->has_timer)
 	{
-		"Failed to get perfCount\n";
+		LARGE_INTEGER perf_count;
+
+		if (c8_win_query_perf_count(timer, &perf_count)) {
+		
+			millis_elapsed = c8_win_compute_millis(*timer, perf_count);
+
+			timer->perf_count = perf_count;
+		}
+	}
+
+	return millis_elapsed;
+}
+
+float c8_win_millis_elapsed(C8_Win_Timer* timer) {
+	float result = -1.0f;
+
+	if (timer->has_timer)
+	{
+		LARGE_INTEGER perf_count;
+
+		if (c8_win_query_perf_count(timer, &perf_count)) {
+			result = c8_win_compute_millis(*timer, perf_count);
+		}
 	}
 
 	return result;
@@ -123,7 +194,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
 	if (state->d3d != 0)
 	{
-		D3DPRESENT_PARAMETERS d3dpp = c8_win_initd3dpp(window);
+		D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
 		HRESULT device_created = IDirect3D9_CreateDevice(
 			state->d3d,
 			D3DADAPTER_DEFAULT,
@@ -188,7 +259,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		if (global_state.d3d_dev != 0)
 		{
-			D3DPRESENT_PARAMETERS d3dpp = c8_win_initd3dpp(window);
+			D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
 			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
 		}
 
@@ -223,14 +294,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			0
 		);
 
-		LARGE_INTEGER perf_freq;
-
-		if (!QueryPerformanceFrequency(&perf_freq))
-		{
-			OutputDebugStringA("Could not get performance frequency\n");
-		}
-
-		LARGE_INTEGER perf_count = c8_win_perf_count();
+		C8_Win_Timer timer = c8_win_init_timer();
 
 		if (window != 0) {
 			if (c8_win_initd3d(&global_state, window)) {
@@ -239,7 +303,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				while (global_state.app_state.running)
 				{
 					MSG msg;
-					c8_clear_struct(msg);
 					while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
 						TranslateMessage(&msg);
 						DispatchMessageA(&msg);
@@ -264,12 +327,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 					c8_win_render(&global_state);
 
-					LARGE_INTEGER old_perf_count = perf_count;
-					perf_count = c8_win_perf_count();
-
-					float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
-
-					float milli_elapsed = secs_elapsed * 1000.0f;
+					float milli_elapsed = c8_win_reset_timer(&timer);
 
 					char str[255];
 					sprintf(str, "Milliseconds: %f\n", milli_elapsed);

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 typedef int32_t i32;
+typedef int64_t i64;
 
 #define c8_clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
