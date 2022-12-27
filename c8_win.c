@@ -22,7 +22,7 @@ D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 	return result;
 }
 
-bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
+bool c8_win_query_perf_count(C8_Win_Timer* timer, LARGE_INTEGER* perf_count)
 {
 	bool result = false;
 	if (QueryPerformanceCounter(perf_count)) {
@@ -43,10 +43,10 @@ C8_Win_Timer c8_win_init_timer()
 
 	LARGE_INTEGER perf_freq;
 
-	if (QueryPerformanceFrequency(&perf_freq)){
+	if (QueryPerformanceFrequency(&perf_freq)) {
 		LARGE_INTEGER perf_count;
 
-		if (c8_win_query_perf_count(&result, &perf_count)){
+		if (c8_win_query_perf_count(&result, &perf_count)) {
 			result.has_timer = true;
 			result.perf_freq = perf_freq;
 			result.perf_count = perf_count;
@@ -70,7 +70,7 @@ float c8_win_compute_millis(C8_Win_Timer timer, LARGE_INTEGER new_perf_count)
 	return result;
 }
 
-float c8_win_reset_timer(C8_Win_Timer* timer)
+float c8_win_millis_elapsed(C8_Win_Timer* timer, bool reset_timer)
 {
 	float millis_elapsed = -1.0f;
 
@@ -79,29 +79,17 @@ float c8_win_reset_timer(C8_Win_Timer* timer)
 		LARGE_INTEGER perf_count;
 
 		if (c8_win_query_perf_count(timer, &perf_count)) {
-		
+
 			millis_elapsed = c8_win_compute_millis(*timer, perf_count);
 
-			timer->perf_count = perf_count;
+			if (reset_timer)
+			{
+				timer->perf_count = perf_count;
+			}
 		}
 	}
 
 	return millis_elapsed;
-}
-
-float c8_win_millis_elapsed(C8_Win_Timer* timer) {
-	float result = -1.0f;
-
-	if (timer->has_timer)
-	{
-		LARGE_INTEGER perf_count;
-
-		if (c8_win_query_perf_count(timer, &perf_count)) {
-			result = c8_win_compute_millis(*timer, perf_count);
-		}
-	}
-
-	return result;
 }
 
 void c8_win_render(C8_Win_State* state) {
@@ -221,13 +209,14 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 			if (vb_created == D3D_OK) {
 				result = true;
 			}
+			else {
+				OutputDebugStringA("Failed to create vertex buffer");
+			}
 		}
 		else {
-			OutputDebugStringA("Failed to create vertex buffer");
+			OutputDebugStringA("Could not create d3d device\n");
 		}
-	}
-	else {
-		OutputDebugStringA("Could not create d3d device\n");
+
 	}
 
 	return result;
@@ -327,7 +316,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 					c8_win_render(&global_state);
 
-					float milli_elapsed = c8_win_reset_timer(&timer);
+					float milli_elapsed = c8_win_millis_elapsed(&timer, true);
 
 					char str[255];
 					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
