@@ -1,6 +1,6 @@
 #include "c8_win.h"
 
-D3DPRESENT_PARAMETERS c8_win_initd3dpp( HWND window)
+D3DPRESENT_PARAMETERS c8_win_initd3dpp(HWND window)
 {
 	D3DPRESENT_PARAMETERS result;
 
@@ -22,7 +22,18 @@ D3DPRESENT_PARAMETERS c8_win_initd3dpp( HWND window)
 	return result;
 }
 
-void c8_win32_render(C8_Win_State* state){
+LARGE_INTEGER c8_win_perf_count(){
+	LARGE_INTEGER result;
+	c8_clear_struct(result);
+	if (!QueryPerformanceCounter(&result))
+	{
+		"Failed to get perfCount\n";
+	}
+
+	return result;
+}
+
+void c8_win_render(C8_Win_State* state) {
 
 	bool result = false;
 
@@ -214,69 +225,63 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		LARGE_INTEGER perf_freq;
 
-		if (QueryPerformanceFrequency(&perf_freq)) {
-			LARGE_INTEGER perf_count;
-			if (!QueryPerformanceCounter(&perf_count))
-			{
-				"Failed to get perfCount\n";
-			}
-			if (window != 0) {
-				if (c8_win_initd3d(&global_state, window)) {
-					ShowWindow(window, cmd_show);
-					global_state.app_state.running = true;
-					while (global_state.app_state.running)
-					{
-						MSG msg;
-						c8_clear_struct(msg);
-						while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
-							TranslateMessage(&msg);
-							DispatchMessageA(&msg);
-						}
+		if (!QueryPerformanceFrequency(&perf_freq))
+		{
+			OutputDebugStringA("Could not get performance frequency\n");
+		}
 
-						if (!global_state.app_state.running)
-						{
-							break;
-						}
+		LARGE_INTEGER perf_count = c8_win_perf_count();
 
-						global_state.vertices[0].x = 0.0f;
-						global_state.vertices[0].y = 0.0f;
-						global_state.vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
-
-						global_state.vertices[1].x = 200.0f;
-						global_state.vertices[1].y = 0.0f;
-						global_state.vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
-
-						global_state.vertices[2].x = 200.0f;
-						global_state.vertices[2].y = 200.0f;
-						global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
-
-						c8_win32_render(&global_state);
-					
-						LARGE_INTEGER old_perf_count = perf_count;
-						if (!QueryPerformanceCounter(&perf_count))
-						{
-							"Failed to get perfCount\n";
-						}
-
-						float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
-
-						float milli_elapsed = secs_elapsed * 1000.0f;
-
-						char str[255];
-						sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-						OutputDebugStringA(str);
+		if (window != 0) {
+			if (c8_win_initd3d(&global_state, window)) {
+				ShowWindow(window, cmd_show);
+				global_state.app_state.running = true;
+				while (global_state.app_state.running)
+				{
+					MSG msg;
+					c8_clear_struct(msg);
+					while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
+						TranslateMessage(&msg);
+						DispatchMessageA(&msg);
 					}
-				}
-				else {
-					OutputDebugStringA("Could not initialize Direct3D\n");
+
+					if (!global_state.app_state.running)
+					{
+						break;
+					}
+
+					global_state.vertices[0].x = 0.0f;
+					global_state.vertices[0].y = 0.0f;
+					global_state.vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
+
+					global_state.vertices[1].x = 200.0f;
+					global_state.vertices[1].y = 0.0f;
+					global_state.vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
+
+					global_state.vertices[2].x = 200.0f;
+					global_state.vertices[2].y = 200.0f;
+					global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
+
+					c8_win_render(&global_state);
+
+					LARGE_INTEGER old_perf_count = perf_count;
+					perf_count = c8_win_perf_count();
+
+					float secs_elapsed = ((float)(perf_count.QuadPart - old_perf_count.QuadPart)) / ((float)(perf_freq.QuadPart));
+
+					float milli_elapsed = secs_elapsed * 1000.0f;
+
+					char str[255];
+					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+					OutputDebugStringA(str);
 				}
 			}
 			else {
-				OutputDebugStringA("Could not open window\n");
+				OutputDebugStringA("Could not initialize Direct3D\n");
 			}
 		}
 		else {
-			OutputDebugStringA("Could not get performance frequency\n");
+			OutputDebugStringA("Could not open window\n");
 		}
 	}
 	else {
