@@ -125,7 +125,7 @@ void c8_win_render(C8_Win_State* state) {
 		OutputDebugStringA("Failed to lock vertex buffer\n");
 	}
 
-	memcpy(vp, state->vertices, sizeof(state->vertices));
+	memcpy(vp, state->vertices, state->vertex_count * sizeof(C8_Win_D3d_Vertex));
 
 	HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->vb);
 	if (unlocked != D3D_OK)
@@ -160,7 +160,8 @@ void c8_win_render(C8_Win_State* state) {
 		state->d3d_dev,
 		D3DPT_TRIANGLELIST,
 		0,
-		1);
+		state->vertex_count / 3
+	);
 
 	if (drawn != D3D_OK) {
 		OutputDebugStringA("DrawPrimitive failed\n");
@@ -174,6 +175,7 @@ void c8_win_render(C8_Win_State* state) {
 		OutputDebugStringA("Present failed\n");
 	}
 
+	state->vertex_count = 0;
 }
 
 bool c8_win_initd3d(C8_Win_State* state, HWND window)
@@ -292,7 +294,7 @@ HWND c8_win_create_window(HINSTANCE instance)
 	return window;
 }
 
-bool c8_win_process_msgs(C8_Win_State *state, HWND window) {
+bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	MSG msg;
 	while (PeekMessage(&msg, window, 0, 0, PM_REMOVE)) {
 		TranslateMessage(&msg);
@@ -305,6 +307,28 @@ bool c8_win_process_msgs(C8_Win_State *state, HWND window) {
 	}
 
 	return true;
+}
+
+void c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
+	assert(state->vertex_count < c8_arr_count(state->vertices));
+
+	if (state->vertex_count < c8_arr_count(state->vertices))
+	{
+		state->vertices[state->vertex_count].x = x;
+		state->vertices[state->vertex_count].y = y;
+		state->vertices[state->vertex_count].color = D3DCOLOR_XRGB(r, g, b);
+		state->vertex_count++;
+	}
+	else {
+		OutputDebugStringA("Vertex buffer size exceeded");
+	}
+	
+}
+
+void c8_win_push_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
+	c8_win_push_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
+	c8_win_push_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
+	c8_win_push_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
@@ -326,17 +350,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					break;
 				}
 
-				global_state.vertices[0].x = 0.0f;
-				global_state.vertices[0].y = 0.0f;
-				global_state.vertices[0].color = D3DCOLOR_XRGB(100, 0, 0);
+				C8_V2 p1 = { 0.0f, 0.0f };
+				C8_V2 p2 = { 200.0f, 0.0f };
+				C8_V2 p3 = { 200.0f, 200.0f };
+				C8_V2 p4 = { 0.0f, 200.0f };
 
-				global_state.vertices[1].x = 200.0f;
-				global_state.vertices[1].y = 0.0f;
-				global_state.vertices[1].color = D3DCOLOR_XRGB(100, 0, 0);
+				C8_Rgb rgb = { 100, 0, 0 };
 
-				global_state.vertices[2].x = 200.0f;
-				global_state.vertices[2].y = 200.0f;
-				global_state.vertices[2].color = D3DCOLOR_XRGB(100, 0, 0);
+				c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
+				c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
 
 				c8_win_render(&global_state);
 
