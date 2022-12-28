@@ -3,8 +3,7 @@
 
 #include "c8_app.h"
 
-bool c8_app_update()
-{
+bool c8_app_update(){
 	C8_Rgb rgb = { 255, 0, 0 };
 
 	C8_Arena arena;

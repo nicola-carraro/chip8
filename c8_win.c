@@ -401,4 +401,6 @@ void* c8_plat_allocate(psz size) {
 
 	return result;
 }
+
+#include "c8_app.c"
 #endif // !C8_WIN_C
