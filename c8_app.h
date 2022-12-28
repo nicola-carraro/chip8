@@ -58,4 +58,4 @@ void c8_arena_free_all(C8_Arena* arena);
 
 bool c8_app_update();
 
-#endif 
+#endif // !C8_APP

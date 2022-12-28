@@ -34,4 +34,4 @@ typedef struct {
 
 C8_Win_State global_state;
 
-#endif 
+#endif // !C8_WIN

@@ -2,9 +2,11 @@
 
 #include "../c8_win.c"
 
+#define c8_test_def(a)(printf("TEST : %s\n", a))
+
 void c8_test_arena_init()
 {
-	printf("TEST : initialize arena\n");
+	c8_test_def("initialize arena");
 
 	C8_Arena arena;
 
@@ -23,7 +25,7 @@ void c8_test_arena_init()
 
 void c8_test_arena_alloc_free()
 {
-	printf("TEST : allocate and free with arena\n");
+	c8_test_def("allocate and free with arena");
 
 	C8_Arena arena1;
 
