@@ -7,8 +7,11 @@
 
 typedef int32_t i32;
 typedef int64_t i64;
+typedef uint16_t u16;
 typedef size_t psz;
 typedef char u8;
+
+#define C8_RAM_BYTE_SIZE 4096
 
 #define c8_clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
@@ -18,6 +21,14 @@ typedef struct {
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
+	bool pixels[32][64];
+	void* ram;
+	u8 delay_timer;
+	u8 sound_timer;
+	u16 index_register;
+	u8 var_registers[16];
+	u16 stack[16];
+	
 } C8_App_State;
 
 typedef struct {
