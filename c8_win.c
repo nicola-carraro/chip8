@@ -1,3 +1,6 @@
+
+#ifndef C8_WIN_C
+#define C8_WIN_C
 #include "c8_win.h"
 
 D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
@@ -311,7 +314,7 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 
 bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
 	bool result = false;
-	
+
 	assert(state->vertex_count < c8_arr_count(state->vertices));
 
 	if (state->vertex_count < c8_arr_count(state->vertices))
@@ -387,3 +390,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		OutputDebugStringA("Could not open window\n");
 	}
 }
+
+void* c8_plat_allocate(psz size) {
+	void* result = VirtualAlloc(
+		0,
+		size,
+		MEM_COMMIT,
+		PAGE_READWRITE
+	);
+
+	return result;
+}
+#endif // !C8_WIN_C
