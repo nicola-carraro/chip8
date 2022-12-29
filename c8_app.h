@@ -12,6 +12,8 @@ typedef uint16_t u16;
 typedef size_t psz;
 typedef char u8;
 
+#define C8_WIN_DWORD_MAX 4294967295
+
 #define C8_RAM_BYTE_SIZE 4096
 
 #define C8_FRAME_WIDTH 4
@@ -64,14 +66,19 @@ typedef struct {
 	u8 r;
 	u8 g;
 	u8 b;
-}C8_Rgb;
+} C8_Rgb;
 
 typedef struct {
 	void* data;
 	psz max_bytes;
 	i32 alignement;
 	psz offset;
-}C8_Arena;
+} C8_Arena;
+
+typedef struct {
+	psz size;
+	void* data;
+} C8_File;
 
 bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb);
 

@@ -388,13 +388,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 				if (!c8_app_update(&global_state.app_state))
 				{
-					OutputDebugStringA("Could not update app");
+					OutputDebugStringA("Could not update app\n");
 					assert(false);
 				}
 
 				if (!c8_win_render(&global_state))
 				{
-					OutputDebugStringA("Could not render");
+					OutputDebugStringA("Could not render\n");
 					assert(false);
 				}
 
@@ -421,6 +421,79 @@ void* c8_plat_allocate(psz size) {
 		MEM_COMMIT,
 		PAGE_READWRITE
 	);
+
+	return result;
+}
+
+C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena) {
+	C8_File result;
+	c8_clear_struct(result);
+
+	char buf[256];
+
+	OFSTRUCT ofstruct;
+	HFILE f = OpenFile(
+		name,
+		&ofstruct,
+		OF_READ
+	);
+
+	if (f != HFILE_ERROR) {
+		LARGE_INTEGER f_size;
+		BOOL has_sz = GetFileSizeEx(
+			f,
+			&f_size
+		);
+
+		if (has_sz) {
+			if (f_size.QuadPart <= C8_WIN_DWORD_MAX) {
+				DWORD bytes_read;
+				void* data = c8_arena_alloc(arena, f_size.QuadPart);
+
+				if (data != 0)
+				{
+					BOOL read = ReadFile(
+						f,
+						data,
+						f_size.QuadPart,
+						&bytes_read,
+						0
+					);
+
+					if (read) {
+						result.size = bytes_read;
+						result.data = data;
+					}
+					else {
+						sprintf(buf, "Could not read\n", name);
+						OutputDebugStringA(buf);
+					}
+
+				}
+				else {
+					OutputDebugStringA("Failed to allocate memory for file");
+				}
+			}
+			else {
+				sprintf(buf, "%s is too large\n", name);
+				OutputDebugStringA(buf);
+			}
+
+		}
+		else {
+			sprintf(buf, "Could not get size of %s\n", name);
+			OutputDebugStringA(buf);
+		}
+
+		if (!CloseHandle(f)) {
+			sprintf(buf, "Could not close %s\n", name);
+			OutputDebugStringA(buf);
+		}
+	}
+	else {
+		sprintf(buf, "Could not open %s\n", name);
+		OutputDebugStringA(buf);
+	}
 
 	return result;
 }

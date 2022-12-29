@@ -91,7 +91,16 @@ bool c8_push_pixels(C8_App_State* state) {
 	return true;
 }
 
-bool c8_app_update(C8_App_State *state){
+bool c8_app_update(C8_App_State* state) {
+
+	C8_Arena arena;
+	c8_arena_init(&arena, 1024, 4);
+	char f_name[] = "data\\ibm_logo.ch8";
+	C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &arena);
+
+	if (file.data == 0) {
+		return false;
+	}
 
 	state->pixels[state->frame_count % C8_PIXEL_ROWS][state->frame_count % C8_PIXEL_COLS] = true;
 
