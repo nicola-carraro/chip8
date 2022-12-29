@@ -13,6 +13,22 @@ typedef char u8;
 
 #define C8_RAM_BYTE_SIZE 4096
 
+#define C8_FRAME_WIDTH 4
+
+#define C8_PIXEL_SIDE 8
+
+#define C8_PIXEL_ROWS 32
+
+#define C8_PIXEL_COLS 64
+
+#define C8_SCREEN_WIDTH (C8_PIXEL_SIDE * C8_PIXEL_COLS)
+
+#define C8_SCREEN_HEIGHT (C8_PIXEL_SIDE * C8_PIXEL_ROWS)
+
+#define C8_MONITOR_WIDTH (C8_SCREEN_WIDTH + (2 * C8_FRAME_WIDTH))
+
+#define C8_MONITOR_HEIGHT (C8_SCREEN_HEIGHT + (2 * C8_FRAME_WIDTH))
+
 #define c8_clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
 
 #define c8_arr_count(a)(sizeof(a) / sizeof(a[0]))
@@ -21,7 +37,7 @@ typedef struct {
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
-	bool pixels[32][64];
+	bool pixels[C8_PIXEL_ROWS][C8_PIXEL_COLS];
 	void* ram;
 	u8 delay_timer;
 	u8 sound_timer;

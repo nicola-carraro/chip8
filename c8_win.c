@@ -103,7 +103,7 @@ void c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(0, 40, 100),
+		D3DCOLOR_XRGB(255, 255, 255),
 		1.0f,
 		0
 	);
@@ -251,6 +251,9 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_SIZE:
 	{
 
+		global_state.app_state.cli_width = LOWORD(lparam);
+		global_state.app_state.cli_height = HIWORD(lparam);
+
 		if (global_state.d3d_dev != 0)
 		{
 			D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
@@ -371,7 +374,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					break;
 				}
 
-				c8_app_update();
+				c8_app_update(&global_state.app_state);
 
 				c8_win_render(&global_state);
 
