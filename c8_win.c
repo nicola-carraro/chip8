@@ -95,7 +95,7 @@ float c8_win_millis_elapsed(C8_Win_Timer* timer, bool reset_timer)
 	return millis_elapsed;
 }
 
-void c8_win_render(C8_Win_State* state) {
+bool c8_win_render(C8_Win_State* state) {
 
 	bool result = false;
 
@@ -110,10 +110,12 @@ void c8_win_render(C8_Win_State* state) {
 
 	if (cleared != D3D_OK) {
 		OutputDebugStringA("Could not clear screen\n");
+		return false;
 	}
 
 	if (IDirect3DDevice9_BeginScene(state->d3d_dev) != D3D_OK) {
 		OutputDebugStringA("BeginScene failed\n");
+		return false;
 	}
 
 	VOID* vp;
@@ -126,6 +128,7 @@ void c8_win_render(C8_Win_State* state) {
 	if (locked != D3D_OK)
 	{
 		OutputDebugStringA("Failed to lock vertex buffer\n");
+		return false;
 	}
 
 	memcpy(vp, state->vertices, state->vertex_count * sizeof(C8_Win_D3d_Vertex));
@@ -134,6 +137,7 @@ void c8_win_render(C8_Win_State* state) {
 	if (unlocked != D3D_OK)
 	{
 		OutputDebugStringA("Failed to unlock vertex buffer\n");
+		return false;
 	}
 
 	HRESULT fvf_set = IDirect3DDevice9_SetFVF(
@@ -144,6 +148,8 @@ void c8_win_render(C8_Win_State* state) {
 	if (fvf_set != D3D_OK)
 	{
 		OutputDebugStringA("SetFVF failed\n");
+		return false;
+
 	}
 
 	HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
@@ -157,6 +163,7 @@ void c8_win_render(C8_Win_State* state) {
 	if (stream_src_set != D3D_OK)
 	{
 		OutputDebugStringA("SetStreamSource failed\n");
+		return false;
 	}
 
 	HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
@@ -168,17 +175,22 @@ void c8_win_render(C8_Win_State* state) {
 
 	if (drawn != D3D_OK) {
 		OutputDebugStringA("DrawPrimitive failed\n");
+		return false;
 	}
 
 	if (IDirect3DDevice9_EndScene(state->d3d_dev) != D3D_OK) {
 		OutputDebugStringA("EndScene failed\n");
+		return false;
 	}
 
 	if (IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0) != D3D_OK) {
 		OutputDebugStringA("Present failed\n");
+		return false;
 	}
 
 	state->vertex_count = 0;
+
+	return true;
 }
 
 bool c8_win_initd3d(C8_Win_State* state, HWND window)
@@ -374,9 +386,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					break;
 				}
 
-				c8_app_update(&global_state.app_state);
+				if (!c8_app_update(&global_state.app_state))
+				{
+					OutputDebugStringA("Could not update app");
+					assert(false);
+				}
 
-				c8_win_render(&global_state);
+				if (!c8_win_render(&global_state))
+				{
+					OutputDebugStringA("Could not render");
+					assert(false);
+				}
 
 				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
 

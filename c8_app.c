@@ -3,14 +3,28 @@
 
 #include "c8_app.h"
 
-bool c8_draw_frame(C8_App_State* state) {
-	C8_Rgb frame_color = { 0, 0, 0 };
+i32 c8_frame_x(C8_App_State* state)
+{
+	i32 result = (state->cli_width / 2) - (C8_MONITOR_WIDTH / 2);
+
+	return result;
+}
+
+i32 c8_frame_y(C8_App_State* state)
+{
+	i32 result = (state->cli_height / 2) - (C8_MONITOR_HEIGHT / 2);
+
+	return result;
+}
+
+bool c8_push_frame(C8_App_State* state) {
+	C8_Rgb frame_color = { 100, 100, 255 };
 
 	C8_Arena arena;
 
-	i32 frame_x = (state->cli_width / 2) - (C8_MONITOR_WIDTH / 2);
+	i32 frame_x = c8_frame_x(state);
 
-	i32 frame_y = (state->cli_height / 2) - (C8_MONITOR_HEIGHT / 2);
+	i32 frame_y = c8_frame_y(state);
 
 	bool push1 = c8_plat_push_rect(
 		frame_x,
@@ -46,8 +60,48 @@ bool c8_draw_frame(C8_App_State* state) {
 	return push1 && push2 && push3 && push4;
 }
 
+bool c8_push_pixels(C8_App_State* state) {
+
+	C8_Rgb pixel_color = { 0, 0, 0 };
+
+	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
+	{
+		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++)
+		{
+			if (state->pixels[r][c])
+			{
+				i32 frame_x = c8_frame_x(state);
+				i32 frame_y = c8_frame_y(state);
+
+				bool push = c8_plat_push_rect(
+					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
+					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
+					C8_PIXEL_SIDE,
+					C8_PIXEL_SIDE,
+					pixel_color
+				);
+
+				if(!push){
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 bool c8_app_update(C8_App_State *state){
-	return c8_draw_frame(state);
+
+	state->pixels[state->frame_count % C8_PIXEL_ROWS][state->frame_count % C8_PIXEL_COLS] = true;
+
+	bool push_frame = c8_push_frame(state);
+
+	bool push_pixels = c8_push_pixels(state);
+
+	state->frame_count++;
+
+	return push_frame && push_pixels;
 }
 
 bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {

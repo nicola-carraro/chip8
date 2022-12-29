@@ -7,6 +7,7 @@
 
 typedef int32_t i32;
 typedef int64_t i64;
+typedef uint64_t u64;
 typedef uint16_t u16;
 typedef size_t psz;
 typedef char u8;
@@ -44,6 +45,7 @@ typedef struct {
 	u16 index_register;
 	u8 var_registers[16];
 	u16 stack[16];
+	u64 frame_count;
 	
 } C8_App_State;
 
