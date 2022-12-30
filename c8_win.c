@@ -97,7 +97,7 @@ float c8_win_millis_elapsed(C8_Win_Timer* timer, bool reset_timer)
 
 bool c8_win_render(C8_Win_State* state) {
 
-	bool result = false;
+	bool result = true;
 
 	HRESULT cleared = IDirect3DDevice9_Clear(state->d3d_dev,
 		0,
@@ -113,18 +113,18 @@ bool c8_win_render(C8_Win_State* state) {
 
 		if (cleared == D3DERR_INVALIDCALL)
 		{
-			OutputDebugStringA("Invalid call");
+			OutputDebugStringA("Invalid call\n");
 		}
 		else {
 			OutputDebugStringA("Something else");
 
 		}
-		return false;
+		result =  false;
 	}
 
 	if (IDirect3DDevice9_BeginScene(state->d3d_dev) != D3D_OK) {
 		OutputDebugStringA("BeginScene failed\n");
-		return false;
+		result = false;
 	}
 
 	VOID* vp;
@@ -137,7 +137,7 @@ bool c8_win_render(C8_Win_State* state) {
 	if (locked != D3D_OK)
 	{
 		OutputDebugStringA("Failed to lock vertex buffer\n");
-		return false;
+		result = false;
 	}
 
 	memcpy(vp, state->vertices, state->vertex_count * sizeof(C8_Win_D3d_Vertex));
@@ -146,7 +146,7 @@ bool c8_win_render(C8_Win_State* state) {
 	if (unlocked != D3D_OK)
 	{
 		OutputDebugStringA("Failed to unlock vertex buffer\n");
-		return false;
+		result = false;
 	}
 
 	HRESULT fvf_set = IDirect3DDevice9_SetFVF(
@@ -157,7 +157,7 @@ bool c8_win_render(C8_Win_State* state) {
 	if (fvf_set != D3D_OK)
 	{
 		OutputDebugStringA("SetFVF failed\n");
-		return false;
+		result = false;
 
 	}
 
@@ -172,7 +172,7 @@ bool c8_win_render(C8_Win_State* state) {
 	if (stream_src_set != D3D_OK)
 	{
 		OutputDebugStringA("SetStreamSource failed\n");
-		return false;
+		result = false;
 	}
 
 	HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
@@ -184,22 +184,22 @@ bool c8_win_render(C8_Win_State* state) {
 
 	if (drawn != D3D_OK) {
 		OutputDebugStringA("DrawPrimitive failed\n");
-		return false;
+		result = false;
 	}
 
 	if (IDirect3DDevice9_EndScene(state->d3d_dev) != D3D_OK) {
 		OutputDebugStringA("EndScene failed\n");
-		return false;
+		result = false;
 	}
 
 	if (IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0) != D3D_OK) {
 		OutputDebugStringA("Present failed\n");
-		return false;
+		result = false;
 	}
 
 	state->vertex_count = 0;
 
-	return true;
+	return result;
 }
 
 bool c8_win_initd3d(C8_Win_State* state, HWND window)
@@ -250,6 +250,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 }
 
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
+	char buf[256];
 	switch (msg) {
 	case WM_CLOSE:
 	{
@@ -281,6 +282,58 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
 		}
 
+	}break;
+	case WM_KEYDOWN:
+	case WM_KEYUP: {
+		WORD key_flags = HIWORD(lparam);
+		WORD scan_code = LOBYTE(key_flags);
+		WORD vkey_code = LOWORD(wparam);
+
+		C8_Keypad* keypad = &(global_state.app_state.keypad);
+		switch(scan_code) {
+		case 2: {
+			BOOL is_up = (key_flags & KF_UP) == KF_UP;
+			BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
+			if (is_up != was_up) {
+				C8_Key* key = &(keypad->kp_0);
+
+				if (is_up) {
+					key->ended_down = false;
+					key->was_lifted = true;
+				}
+				else {
+					key->ended_down = true;
+					key->was_down = true;
+					key->was_pressed = true;
+				}
+
+				key->half_transitions++;
+
+			}
+			//OutputDebugStringA("key");
+			//i32 count = c8_arr_count(buf);
+			//c8_plat_debug_printf(buf, c8_arr_count(buf), "Scan code : %d, Keyup : %i, \n", scan_code, keyup);
+
+		}break;
+
+		case 3: {}break;
+		case 4: {}break;
+		case 5: {}break;
+		case 16: {}break;
+		case 17: {}break;
+		case 18: {}break;
+		case 19: {}break;
+		case 30: {}break;
+		case 31: {}break;
+		case 32: {}break;
+		case 33: {}break;
+		case 44: {}break;
+		case 45: {}break;
+		case 46: {}break;
+		case 47: {}break;
+
+		}
+	
 	}break;
 
 	}
@@ -404,14 +457,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				if (!c8_win_render(&global_state))
 				{
 					OutputDebugStringA("Could not render\n");
-					assert(false);
+					// TODO: understand why clear sometimes fails
+					//assert(false);
 				}
 
 				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
+				
 				char str[255];
 				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-				OutputDebugStringA(str);
+				//OutputDebugStringA(str);
 			}
 		}
 		else {
@@ -509,6 +563,15 @@ C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena) {
 
 void c8_plat_debug_out(char* str) {
 	OutputDebugStringA(str);
+}
+
+int c8_plat_debug_printf(char* str, psz size, char* format,  ...) {
+	va_list argp;
+	va_start(argp, format);
+	int result = vsnprintf(str, size, format, argp);
+	va_end(argp);
+	OutputDebugStringA(str);
+	return result;
 }
 
 #include "c8_app.c"

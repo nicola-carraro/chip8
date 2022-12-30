@@ -34,4 +34,6 @@ typedef struct {
 
 C8_Win_State global_state;
 
+int c8_plat_debug_printf(char* str, char* format, psz size, ...);
+
 #endif // !C8_WIN

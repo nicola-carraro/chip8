@@ -52,6 +52,51 @@ typedef struct {
 } C8_Arena;
 
 typedef struct {
+	bool started_down;
+	bool ended_down;
+	bool was_down;
+	bool was_pressed;
+	bool was_lifted;
+	i32 half_transitions;
+}C8_Key;
+
+typedef struct {
+	union {
+		struct {
+			C8_Key kp_0;
+			C8_Key kp_1;
+			C8_Key kp_2;
+			C8_Key kp_3;
+			C8_Key kp_4;
+			C8_Key kp_5;
+			C8_Key kp_6;
+			C8_Key kp_7;
+			C8_Key kp_8;
+			C8_Key kp_9;
+			C8_Key kp_a;
+			C8_Key kp_b;
+			C8_Key kp_c;
+			C8_Key kp_d;
+			C8_Key kp_e;
+			C8_Key kp_f;
+		};
+		C8_Key keys[16];
+	};
+}C8_Keypad;
+
+typedef struct {
+	union {
+		struct {
+			C8_Key enter;
+			C8_Key esc;
+			C8_Key q;
+			C8_Key space;
+		};
+		C8_Key keys[4];
+	};
+}C8_Control_Keys;
+
+typedef struct {
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
@@ -67,7 +112,8 @@ typedef struct {
 	u16 pc;
 	bool initialised;
 	bool program_loaded;
-	
+	C8_Keypad keypad;
+	C8_Control_Keys control_keys;
 } C8_App_State;
 
 typedef struct {

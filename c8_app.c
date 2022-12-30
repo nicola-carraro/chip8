@@ -98,6 +98,8 @@ bool c8_push_pixels(C8_App_State* state) {
 }
 
 bool c8_app_update(C8_App_State* state) {
+
+	char buf[256];
 	if (!state->initialised)
 	{
 		c8_clear_struct(state->arena);
@@ -122,6 +124,28 @@ bool c8_app_update(C8_App_State* state) {
 
 	}
 
+	if (state->keypad.kp_0.started_down) {
+		OutputDebugStringA("0 started down\n");
+	}
+
+	if (state->keypad.kp_0.was_down) {
+		OutputDebugStringA("0 was down\n");
+	}
+
+	if (state->keypad.kp_0.ended_down) {
+		OutputDebugStringA("0 ended down\n");
+	}
+	if (state->keypad.kp_0.was_pressed) {
+		OutputDebugStringA("0 was pressed\n");
+	}
+	if (state->keypad.kp_0.was_lifted) {
+		OutputDebugStringA("0 was lifted\n");
+	}
+
+	if (state->keypad.kp_0.half_transitions != 0) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "Half transitions : %d\n\n", state->keypad.kp_0.half_transitions);
+	}
+
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{
 		assert(state->pc < sizeof(state->ram));
@@ -137,14 +161,14 @@ bool c8_app_update(C8_App_State* state) {
 		u16 nnn = (instruction & 0x0fff);
 
 		sprintf(buf, "Instruction : %04X \n", instruction);
-		c8_plat_debug_out(buf);
+		//c8_plat_debug_out(buf);
 
 		if (instruction == 0x00e0) {
 			c8_plat_debug_out("Clear\n");
 			c8_clear_struct(state->pixels);
 		}
 		else if (n0 == 0x1) {
-			c8_plat_debug_out("Jump\n");
+		//	c8_plat_debug_out("Jump\n");
 			state->pc = nnn;
 			continue;
 		}
@@ -204,6 +228,15 @@ bool c8_app_update(C8_App_State* state) {
 	bool push_frame = c8_push_frame(state);
 
 	bool push_pixels = c8_push_pixels(state);
+
+	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
+	{
+		state->keypad.keys[kp].started_down = state->keypad.keys[kp].ended_down;
+		state->keypad.keys[kp].was_down = state->keypad.keys[kp].ended_down;
+		state->keypad.keys[kp].was_lifted = false;
+		state->keypad.keys[kp].was_pressed = false;
+		state->keypad.keys[kp].half_transitions = 0;
+	}
 
 	state->frame_count++;
 
