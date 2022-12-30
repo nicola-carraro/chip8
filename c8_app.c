@@ -116,6 +116,7 @@ bool c8_app_update(C8_App_State* state) {
 				memcpy(state->ram + state->pc, file.data, file.size);
 
 				c8_arena_free_all(&state->arena);
+				state->program_loaded = true;
 			}
 		}
 
@@ -129,32 +130,61 @@ bool c8_app_update(C8_App_State* state) {
 
 		u8 n0 = instruction >> 12;
 
-		u8 x = (instruction & 0x0100) >> 8;
-		u8 y = (instruction & 0x0010) >> 4;
-		u8 n = (instruction & 0x0001);
-		u8 nn = (instruction & 0x0011);
-		u16 nnn = (instruction & 0x0111);
+		u8 x = (instruction & 0x0f00) >> 8;
+		u8 y = (instruction & 0x00f0) >> 4;
+		u8 n = (instruction & 0x000f);
+		u8 nn = (instruction & 0x00ff);
+		u16 nnn = (instruction & 0x0fff);
 
 		sprintf(buf, "Instruction : %04X \n", instruction);
 		c8_plat_debug_out(buf);
 
 		if (instruction == 0x00e0) {
 			c8_plat_debug_out("Clear\n");
+			c8_clear_struct(state->pixels);
 		}
 		else if (n0 == 0x1) {
 			c8_plat_debug_out("Jump\n");
+			state->pc = nnn;
+			continue;
 		}
 		else if (n0 == 0x6) {
 			c8_plat_debug_out("Set register\n");
+			state->var_registers[x] = nn;
 		}
 		else if (n0 == 0x7) {
 			c8_plat_debug_out("Add to register\n");
+			state->var_registers[x] += nn;
 		}
 		else if (n0 == 0xa) {
 			c8_plat_debug_out("Set index register\n");
+			state->index_register = nnn;
 		}
 		else if (n0 == 0xd) {
 			c8_plat_debug_out("Display\n");
+			u16 flag_register = 0;
+
+			u8 row_count = n;
+			u16 sprite_x = *(state->ram + state->var_registers[x]);
+			u16 sprite_y = *(state->ram + state->var_registers[y]);
+			u8 sprite_start = state->ram + state->index_register;
+
+			for(u8 r = 0; r < n; r++){
+				u8 sprite_row = sprite_start + r;
+				for (u8 c = 7; c >= 0; c--) {
+					u8 on = (sprite_row >> c) & 0x01;
+					if (on == 0x01)
+					{
+						state->pixels[sprite_y + r][sprite_x + c] = !state->pixels[sprite_y + r][sprite_x + c];
+						flag_register = 1;
+					}
+					else {
+						assert(on == 0x00);
+					}
+				}
+			}
+
+			state->var_registers[0xf] = flag_register;
 		}
 		else {
 			c8_plat_debug_out("Unimplemented instruction\n");
