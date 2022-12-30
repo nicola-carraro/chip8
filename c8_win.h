@@ -7,7 +7,7 @@
 
 #define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
-#define C8_WIN_MAX_VERTICES 1024
+#define C8_WIN_MAX_VERTICES (C8_PIXEL_ROWS * C8_PIXEL_COLS * 2 * 3)
 
 typedef struct {
 	FLOAT x;

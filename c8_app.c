@@ -165,17 +165,24 @@ bool c8_app_update(C8_App_State* state) {
 			u16 flag_register = 0;
 
 			u8 row_count = n;
-			u16 sprite_x = *(state->ram + state->var_registers[x]);
-			u16 sprite_y = *(state->ram + state->var_registers[y]);
-			u8 sprite_start = state->ram + state->index_register;
+			u16 sprite_x = state->var_registers[x];
+			u16 sprite_y = state->var_registers[y];
+			u8 *sprite_start = state->ram + state->index_register;
 
-			for(u8 r = 0; r < n; r++){
-				u8 sprite_row = sprite_start + r;
-				for (u8 c = 7; c >= 0; c--) {
-					u8 on = (sprite_row >> c) & 0x01;
+			for(i32 r = 0; r < n; r++){
+				u8 sprite_row = *(sprite_start + r);
+				sprintf(buf, "Row : %x \n", instruction);
+				c8_plat_debug_out(buf);
+				for (i32 c = 0; c < 8; c++) {
+					u8 on = (sprite_row >> (7 -c)) & 0x01;
 					if (on == 0x01)
 					{
-						state->pixels[sprite_y + r][sprite_x + c] = !state->pixels[sprite_y + r][sprite_x + c];
+						if (state->pixels[sprite_y + r][sprite_x + c]) {
+							state->pixels[sprite_y + r][sprite_x + c] = false;
+						}
+						else {
+							state->pixels[sprite_y + r][sprite_x + c] = true;
+						}
 						flag_register = 1;
 					}
 					else {
@@ -193,8 +200,6 @@ bool c8_app_update(C8_App_State* state) {
 
 		state->pc += 2;
 	}
-
-	state->pixels[state->frame_count % C8_PIXEL_ROWS][state->frame_count % C8_PIXEL_COLS] = true;
 
 	bool push_frame = c8_push_frame(state);
 
