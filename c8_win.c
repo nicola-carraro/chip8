@@ -498,5 +498,9 @@ C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena) {
 	return result;
 }
 
+void c8_plat_debug_out(char* str) {
+	OutputDebugStringA(str);
+}
+
 #include "c8_app.c"
 #endif // !C8_WIN_C

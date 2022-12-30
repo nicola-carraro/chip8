@@ -10,7 +10,9 @@ typedef int64_t i64;
 typedef uint64_t u64;
 typedef uint16_t u16;
 typedef size_t psz;
-typedef char u8;
+typedef uint8_t u8;
+
+#define C8_PROG_ADDR 0x200
 
 #define C8_WIN_DWORD_MAX 4294967295
 
@@ -36,18 +38,35 @@ typedef char u8;
 
 #define c8_arr_count(a)(sizeof(a) / sizeof(a[0]))
 
+#define C8_INSTRUCTIONS_PER_SEC 700
+
+#define C8_FRAMES_PER_SEC 60
+
+#define C8_INSTRUCTIONS_PER_FRAME (C8_INSTRUCTIONS_PER_SEC /C8_FRAMES_PER_SEC )
+
+typedef struct {
+	void* data;
+	psz max_bytes;
+	i32 alignement;
+	psz offset;
+} C8_Arena;
+
 typedef struct {
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
 	bool pixels[C8_PIXEL_ROWS][C8_PIXEL_COLS];
-	void* ram;
+	u8 ram[C8_RAM_BYTE_SIZE];
 	u8 delay_timer;
 	u8 sound_timer;
 	u16 index_register;
 	u8 var_registers[16];
 	u16 stack[16];
 	u64 frame_count;
+	C8_Arena arena;
+	u16 pc;
+	bool initialised;
+	bool program_loaded;
 	
 } C8_App_State;
 
@@ -69,13 +88,6 @@ typedef struct {
 } C8_Rgb;
 
 typedef struct {
-	void* data;
-	psz max_bytes;
-	i32 alignement;
-	psz offset;
-} C8_Arena;
-
-typedef struct {
 	psz size;
 	void* data;
 } C8_File;
@@ -93,5 +105,7 @@ bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement);
 void c8_arena_free_all(C8_Arena* arena);
 
 bool c8_app_update();
+
+void c8_plat_debug_out(char* str);
 
 #endif // !C8_APP

@@ -3,6 +3,12 @@
 
 #include "c8_app.h"
 
+u16 c8_read_instruction(u16 bytes)
+{
+	u16 result = ((bytes & 0x00ff) << 8) | ((bytes & 0xff00) >> 8);
+	return result;
+}
+
 i32 c8_frame_x(C8_App_State* state)
 {
 	i32 result = (state->cli_width / 2) - (C8_MONITOR_WIDTH / 2);
@@ -92,14 +98,70 @@ bool c8_push_pixels(C8_App_State* state) {
 }
 
 bool c8_app_update(C8_App_State* state) {
+	if (!state->initialised)
+	{
+		c8_clear_struct(state->arena);
+		if (c8_arena_init(&state->arena, 1024, 4)) {
+			state->initialised = true;
+		}
+	}
 
-	C8_Arena arena;
-	c8_arena_init(&arena, 1024, 4);
-	char f_name[] = "data\\ibm_logo.ch8";
-	C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &arena);
+	if (!state->program_loaded) {
+		char f_name[] = "data\\ibm_logo.ch8";
+		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
-	if (file.data == 0) {
-		return false;
+		if (file.data != 0) {
+			if (file.size <= sizeof(state->ram)) {
+				state->pc = C8_PROG_ADDR;
+				memcpy(state->ram + state->pc, file.data, file.size);
+
+				c8_arena_free_all(&state->arena);
+			}
+		}
+
+	}
+
+	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
+	{
+		assert(state->pc < sizeof(state->ram));
+		char buf[255];
+		u16 instruction = c8_read_instruction( * ((u16*)(state->ram + state->pc)));
+
+		u8 n0 = instruction >> 12;
+
+		u8 x = (instruction & 0x0100) >> 8;
+		u8 y = (instruction & 0x0010) >> 4;
+		u8 n = (instruction & 0x0001);
+		u8 nn = (instruction & 0x0011);
+		u16 nnn = (instruction & 0x0111);
+
+		sprintf(buf, "Instruction : %04X \n", instruction);
+		c8_plat_debug_out(buf);
+
+		if (instruction == 0x00e0) {
+			c8_plat_debug_out("Clear\n");
+		}
+		else if (n0 == 0x1) {
+			c8_plat_debug_out("Jump\n");
+		}
+		else if (n0 == 0x6) {
+			c8_plat_debug_out("Set register\n");
+		}
+		else if (n0 == 0x7) {
+			c8_plat_debug_out("Add to register\n");
+		}
+		else if (n0 == 0xa) {
+			c8_plat_debug_out("Set index register\n");
+		}
+		else if (n0 == 0xd) {
+			c8_plat_debug_out("Display\n");
+		}
+		else {
+			c8_plat_debug_out("Unimplemented instruction\n");
+			assert(false);
+		}
+
+		state->pc += 2;
 	}
 
 	state->pixels[state->frame_count % C8_PIXEL_ROWS][state->frame_count % C8_PIXEL_COLS] = true;
