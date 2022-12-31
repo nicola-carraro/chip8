@@ -89,7 +89,7 @@ typedef struct {
 		struct {
 			C8_Key enter;
 			C8_Key esc;
-			C8_Key q;
+			C8_Key p;
 			C8_Key space;
 		};
 		C8_Key keys[4];

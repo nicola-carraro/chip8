@@ -306,35 +306,32 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		WORD key_flags = HIWORD(lparam);
 		WORD scan_code = LOBYTE(key_flags);
 		WORD vkey_code = LOWORD(wparam);
+		C8_Control_Keys* controls = &(global_state.app_state.control_keys);
+		switch (vkey_code) {
+		case VK_RETURN: {
+			C8_Key* key = &(controls->enter);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case VK_ESCAPE: {
+			C8_Key* key = &(controls->esc);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case 'P': {
+			C8_Key* key = &(controls->p);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case VK_SPACE: {
+			C8_Key* key = &(controls->space);
+			c8_win_process_key(key, key_flags);
+		}break;
+		}
 
 		C8_Keypad* keypad = &(global_state.app_state.keypad);
 		switch(scan_code) {
 		case 2: {
 			C8_Key* key = &(keypad->kp_1);
 			c8_win_process_key(key, key_flags);
-			/*BOOL is_up = (key_flags & KF_UP) == KF_UP;
-			BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
-			if (is_up != was_up) {
-
-				if (is_up) {
-					key->ended_down = false;
-					key->was_lifted = true;
-				}
-				else {
-					key->ended_down = true;
-					key->was_down = true;
-					key->was_pressed = true;
-				}
-
-				key->half_transitions++;
-
-			}*/
-			//OutputDebugStringA("key");
-			//i32 count = c8_arr_count(buf);
-			//c8_plat_debug_printf(buf, c8_arr_count(buf), "Scan code : %d, Keyup : %i, \n", scan_code, keyup);
-
 		}break;
-
 		case 3: {
 			C8_Key* key = &(keypad->kp_2);
 			c8_win_process_key(key, key_flags); }break;
@@ -393,7 +390,6 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 			C8_Key* key = &(keypad->kp_f);
 			c8_win_process_key(key, key_flags); 
 		}break;
-
 		}
 	
 	}break;

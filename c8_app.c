@@ -138,6 +138,14 @@ void c8_debug_keyboard(C8_Key *key, char* n) {
 	}
 }
 
+void c8_reset_key(C8_Key *k) {
+	k->started_down = k->ended_down;
+	k->was_down = k->ended_down;
+	k->was_lifted = false;
+	k->was_pressed = false;
+	k->half_transitions = 0;
+}
+
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
@@ -250,13 +258,21 @@ bool c8_app_update(C8_App_State* state) {
 
 	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
 	{
-		snprintf(buf, c8_arr_count(buf), "%x", kp);
-		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
-		state->keypad.keys[kp].started_down = state->keypad.keys[kp].ended_down;
-		state->keypad.keys[kp].was_down = state->keypad.keys[kp].ended_down;
-		state->keypad.keys[kp].was_lifted = false;
-		state->keypad.keys[kp].was_pressed = false;
-		state->keypad.keys[kp].half_transitions = 0;
+		/*snprintf(buf, c8_arr_count(buf), "%x", kp);
+		c8_debug_keyboard((&state->keypad.keys[kp]), buf);*/
+		C8_Key* k = &(state->keypad.keys[kp]);
+		c8_reset_key(k);
+	}
+
+	//c8_debug_keyboard((&state->control_keys.esc), "Esc");
+	//c8_debug_keyboard((&state->control_keys.p), "P");
+	//c8_debug_keyboard((&state->control_keys.space), "Space");
+	//c8_debug_keyboard((&state->control_keys.enter), "Enter");
+
+	for (int ck = 0; ck < c8_arr_count(state->control_keys.keys); ck++)
+	{
+		C8_Key* k = &(state->control_keys.keys[ck]);
+		c8_reset_key(k);
 	}
 
 	state->frame_count++;
