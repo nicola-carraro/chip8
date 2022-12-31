@@ -97,6 +97,47 @@ bool c8_push_pixels(C8_App_State* state) {
 	return true;
 }
 
+void c8_debug_keyboard(C8_Key *key, char* n) {
+	bool printed = false;
+	char buf[256];
+	if (key->started_down) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s started down\n",n);
+		printed = true;
+	}
+
+	if (key->was_down) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s was down\n", n);
+		printed = true;
+
+	}
+
+	if (key->ended_down) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s ended down\n", n);
+		printed = true;
+
+	}
+	if (key->was_pressed) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s was pressed\n", n);
+		printed = true;
+
+	}
+	if (key->was_lifted) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s was lifted\n", n);
+		printed = true;
+
+	}
+
+	if (key->half_transitions != 0) {
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s half transitions : %d\n", n, key->half_transitions);
+	
+		printed = true;
+	}
+
+	if (printed) {
+		c8_plat_debug_out("\n");
+	}
+}
+
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
@@ -122,28 +163,6 @@ bool c8_app_update(C8_App_State* state) {
 			}
 		}
 
-	}
-
-	if (state->keypad.kp_0.started_down) {
-		OutputDebugStringA("0 started down\n");
-	}
-
-	if (state->keypad.kp_0.was_down) {
-		OutputDebugStringA("0 was down\n");
-	}
-
-	if (state->keypad.kp_0.ended_down) {
-		OutputDebugStringA("0 ended down\n");
-	}
-	if (state->keypad.kp_0.was_pressed) {
-		OutputDebugStringA("0 was pressed\n");
-	}
-	if (state->keypad.kp_0.was_lifted) {
-		OutputDebugStringA("0 was lifted\n");
-	}
-
-	if (state->keypad.kp_0.half_transitions != 0) {
-		c8_plat_debug_printf(buf, c8_arr_count(buf), "Half transitions : %d\n\n", state->keypad.kp_0.half_transitions);
 	}
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
@@ -231,6 +250,8 @@ bool c8_app_update(C8_App_State* state) {
 
 	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
 	{
+		snprintf(buf, c8_arr_count(buf), "%x", kp);
+		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
 		state->keypad.keys[kp].started_down = state->keypad.keys[kp].ended_down;
 		state->keypad.keys[kp].was_down = state->keypad.keys[kp].ended_down;
 		state->keypad.keys[kp].was_lifted = false;
