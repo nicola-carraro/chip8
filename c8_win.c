@@ -249,6 +249,24 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 
 }
 
+void c8_win_process_key(C8_Key *key, WORD key_flags) {
+
+	BOOL is_up = (key_flags & KF_UP) == KF_UP;
+	BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
+
+	if (is_up) {
+		key->ended_down = false;
+		key->was_lifted = true;
+	}
+	else {
+		key->ended_down = true;
+		key->was_down = true;
+		key->was_pressed = true;
+	}
+
+	key->half_transitions++;
+}
+
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
 	char buf[256];
 	switch (msg) {
@@ -292,10 +310,11 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		C8_Keypad* keypad = &(global_state.app_state.keypad);
 		switch(scan_code) {
 		case 2: {
-			BOOL is_up = (key_flags & KF_UP) == KF_UP;
+			C8_Key* key = &(keypad->kp_1);
+			c8_win_process_key(key, key_flags);
+			/*BOOL is_up = (key_flags & KF_UP) == KF_UP;
 			BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
 			if (is_up != was_up) {
-				C8_Key* key = &(keypad->kp_0);
 
 				if (is_up) {
 					key->ended_down = false;
@@ -309,28 +328,71 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				key->half_transitions++;
 
-			}
+			}*/
 			//OutputDebugStringA("key");
 			//i32 count = c8_arr_count(buf);
 			//c8_plat_debug_printf(buf, c8_arr_count(buf), "Scan code : %d, Keyup : %i, \n", scan_code, keyup);
 
 		}break;
 
-		case 3: {}break;
-		case 4: {}break;
-		case 5: {}break;
-		case 16: {}break;
-		case 17: {}break;
-		case 18: {}break;
-		case 19: {}break;
-		case 30: {}break;
-		case 31: {}break;
-		case 32: {}break;
-		case 33: {}break;
-		case 44: {}break;
-		case 45: {}break;
-		case 46: {}break;
-		case 47: {}break;
+		case 3: {
+			C8_Key* key = &(keypad->kp_2);
+			c8_win_process_key(key, key_flags); }break;
+		case 4: {
+			C8_Key* key = &(keypad->kp_3);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case 5: {	
+			C8_Key* key = &(keypad->kp_c);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case 16: {
+			C8_Key* key = &(keypad->kp_4);
+			c8_win_process_key(key, key_flags); }break;
+		case 17: {
+			C8_Key* key = &(keypad->kp_5);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 18: {
+			C8_Key* key = &(keypad->kp_6);
+			c8_win_process_key(key, key_flags);
+		}break;
+		case 19: {
+			C8_Key* key = &(keypad->kp_d);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 30: {
+			C8_Key* key = &(keypad->kp_7);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 31: {
+			C8_Key* key = &(keypad->kp_8);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 32: {
+			C8_Key* key = &(keypad->kp_9);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 33: {
+			C8_Key* key = &(keypad->kp_e);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 44: {
+			C8_Key* key = &(keypad->kp_a);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 45: {
+			C8_Key* key = &(keypad->kp_0);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 46: {
+			C8_Key* key = &(keypad->kp_b);
+			c8_win_process_key(key, key_flags); 
+		}break;
+		case 47: {
+			C8_Key* key = &(keypad->kp_f);
+			c8_win_process_key(key, key_flags); 
+		}break;
 
 		}
 	
