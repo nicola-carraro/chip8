@@ -119,7 +119,7 @@ bool c8_win_render(C8_Win_State* state) {
 			OutputDebugStringA("Something else");
 
 		}
-		result =  false;
+		result = false;
 	}
 
 	if (IDirect3DDevice9_BeginScene(state->d3d_dev) != D3D_OK) {
@@ -249,7 +249,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 
 }
 
-void c8_win_process_key(C8_Key *key, WORD key_flags) {
+void c8_win_process_key(C8_Key* key, WORD key_flags) {
 
 	BOOL is_up = (key_flags & KF_UP) == KF_UP;
 	BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
@@ -265,6 +265,80 @@ void c8_win_process_key(C8_Key *key, WORD key_flags) {
 	}
 
 	key->half_transitions++;
+}
+
+bool c8_win_init_dsound(C8_Win_State* state, HWND window) {
+	bool result = false;
+
+	LPDIRECTSOUND dsound;
+
+	HRESULT ds_created = DirectSoundCreate(0, &dsound, 0);
+
+	DWORD samples_per_sec = 8000;
+	DWORD buf_bytes = 8000 * sizeof(i16) * 2;
+
+	WAVEFORMATEX wformat;
+	wformat.wFormatTag = WAVE_FORMAT_PCM;
+	wformat.nChannels = 1;
+	wformat.nSamplesPerSec = samples_per_sec;
+	wformat.wBitsPerSample = 16;
+	wformat.nBlockAlign = (wformat.nChannels * wformat.wBitsPerSample) / 8;
+	wformat.nAvgBytesPerSec = wformat.nSamplesPerSec * wformat.nBlockAlign;
+	wformat.cbSize = 8;
+
+	if (SUCCEEDED(ds_created))
+	{
+		HRESULT cl = IDirectSound_SetCooperativeLevel(dsound, window, DSSCL_PRIORITY);
+		if (SUCCEEDED(cl)) {
+			DSBUFFERDESC pbuf_desc;
+			c8_clear_struct(pbuf_desc);
+			pbuf_desc.dwSize = sizeof(pbuf_desc);
+			pbuf_desc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+			LPDIRECTSOUNDBUFFER pbuf;
+
+			HRESULT pbuf_created = IDirectSound_CreateSoundBuffer(dsound, &pbuf_desc, &pbuf, 0);
+
+			if (SUCCEEDED(pbuf_created)) {
+				HRESULT fset = IDirectSoundBuffer_SetFormat(pbuf, &wformat);
+				if (SUCCEEDED(fset)) {
+					DSBUFFERDESC sbuf_desc;
+					c8_clear_struct(sbuf_desc);
+					sbuf_desc.dwSize = sizeof(sbuf_desc);
+					sbuf_desc.dwBufferBytes = buf_bytes;
+					sbuf_desc.lpwfxFormat = &wformat;
+					LPDIRECTSOUNDBUFFER sbuf;
+
+					HRESULT sbuf_created = IDirectSound_CreateSoundBuffer(dsound, &sbuf_desc, &sbuf, 0);
+
+					if (SUCCEEDED(sbuf_created)) {
+						state->ds = dsound;
+						state->ds_sec_buf = sbuf;
+						result = true;
+					}
+					else {
+						OutputDebugStringA("Could not create secondary buffer\n");
+					}
+
+				}
+				else {
+					OutputDebugStringA("Could not set wave format of buffer\n");
+				}
+			}
+			else {
+				OutputDebugStringA("Failed to create primary buffer\n");
+			}
+
+		}
+		else {
+			OutputDebugStringA("Failed to set cooperative level\n");
+		}
+
+	}
+	else {
+		OutputDebugStringA("Could not create dsound interface\n");
+	}
+
+	return result;
 }
 
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -327,7 +401,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 
 		C8_Keypad* keypad = &(global_state.app_state.keypad);
-		switch(scan_code) {
+		switch (scan_code) {
 		case 2: {
 			C8_Key* key = &(keypad->kp_1);
 			c8_win_process_key(key, key_flags);
@@ -339,7 +413,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 			C8_Key* key = &(keypad->kp_3);
 			c8_win_process_key(key, key_flags);
 		}break;
-		case 5: {	
+		case 5: {
 			C8_Key* key = &(keypad->kp_c);
 			c8_win_process_key(key, key_flags);
 		}break;
@@ -348,7 +422,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 			c8_win_process_key(key, key_flags); }break;
 		case 17: {
 			C8_Key* key = &(keypad->kp_5);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 18: {
 			C8_Key* key = &(keypad->kp_6);
@@ -356,42 +430,42 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		}break;
 		case 19: {
 			C8_Key* key = &(keypad->kp_d);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 30: {
 			C8_Key* key = &(keypad->kp_7);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 31: {
 			C8_Key* key = &(keypad->kp_8);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 32: {
 			C8_Key* key = &(keypad->kp_9);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 33: {
 			C8_Key* key = &(keypad->kp_e);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 44: {
 			C8_Key* key = &(keypad->kp_a);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 45: {
 			C8_Key* key = &(keypad->kp_0);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 46: {
 			C8_Key* key = &(keypad->kp_b);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		case 47: {
 			C8_Key* key = &(keypad->kp_f);
-			c8_win_process_key(key, key_flags); 
+			c8_win_process_key(key, key_flags);
 		}break;
 		}
-	
+
 	}break;
 
 	}
@@ -495,9 +569,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	C8_Win_Timer timer = c8_win_init_timer();
 
 	if (window != 0) {
+
 		if (c8_win_initd3d(&global_state, window)) {
 			ShowWindow(window, cmd_show);
 			global_state.app_state.running = true;
+
+			global_state.has_sound = false;
+			if (c8_win_init_dsound(&global_state, window)) {
+				global_state.has_sound = true;
+			}
+			else {
+				assert(false);
+				OutputDebugStringA("Could not initialize Direct Sound\n");
+			}
+
 			while (global_state.app_state.running)
 			{
 
@@ -520,7 +605,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				}
 
 				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-				
+
 				char str[255];
 				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
 				//OutputDebugStringA(str);
@@ -529,6 +614,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		else {
 			OutputDebugStringA("Could not initialize Direct3D\n");
 		}
+
 	}
 	else {
 		OutputDebugStringA("Could not open window\n");
@@ -623,7 +709,7 @@ void c8_plat_debug_out(char* str) {
 	OutputDebugStringA(str);
 }
 
-int c8_plat_debug_printf(char* str, psz size, char* format,  ...) {
+int c8_plat_debug_printf(char* str, psz size, char* format, ...) {
 	va_list argp;
 	va_start(argp, format);
 	int result = vsnprintf(str, size, format, argp);

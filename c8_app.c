@@ -187,15 +187,19 @@ bool c8_app_update(C8_App_State* state) {
 		u8 nn = (instruction & 0x00ff);
 		u16 nnn = (instruction & 0x0fff);
 
+# if 0
 		sprintf(buf, "Instruction : %04X \n", instruction);
-		//c8_plat_debug_out(buf);
+		c8_plat_debug_out(buf);
+# endif
 
 		if (instruction == 0x00e0) {
 			c8_plat_debug_out("Clear\n");
 			c8_clear_struct(state->pixels);
 		}
 		else if (n0 == 0x1) {
-		//	c8_plat_debug_out("Jump\n");
+# if 0
+			c8_plat_debug_out("Jump\n");
+# endif
 			state->pc = nnn;
 			continue;
 		}
@@ -258,17 +262,20 @@ bool c8_app_update(C8_App_State* state) {
 
 	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
 	{
-		/*snprintf(buf, c8_arr_count(buf), "%x", kp);
-		c8_debug_keyboard((&state->keypad.keys[kp]), buf);*/
+# if 0
+		snprintf(buf, c8_arr_count(buf), "%x", kp);
+		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
+# endif
 		C8_Key* k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
 	}
 
-	//c8_debug_keyboard((&state->control_keys.esc), "Esc");
-	//c8_debug_keyboard((&state->control_keys.p), "P");
-	//c8_debug_keyboard((&state->control_keys.space), "Space");
-	//c8_debug_keyboard((&state->control_keys.enter), "Enter");
-
+# if 0
+	c8_debug_keyboard((&state->control_keys.esc), "Esc");
+	c8_debug_keyboard((&state->control_keys.p), "P");
+	c8_debug_keyboard((&state->control_keys.space), "Space");
+	c8_debug_keyboard((&state->control_keys.enter), "Enter");
+# endif
 	for (int ck = 0; ck < c8_arr_count(state->control_keys.keys); ck++)
 	{
 		C8_Key* k = &(state->control_keys.keys[ck]);

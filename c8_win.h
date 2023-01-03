@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <d3d9.h>
+#include<DSound.h>
 #include "c8_app.h"
 
 #define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
@@ -21,9 +22,12 @@ typedef struct {
 	LPDIRECT3D9 d3d;
 	LPDIRECT3DDEVICE9 d3d_dev;
 	LPDIRECT3DVERTEXBUFFER9 vb;
+	LPDIRECTSOUND ds;
+	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
 	C8_Win_D3d_Vertex vertices[C8_WIN_MAX_VERTICES];
 	i32 vertex_count;
+	bool has_sound;
 } C8_Win_State;
 
 typedef struct {
