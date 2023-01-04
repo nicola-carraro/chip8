@@ -146,6 +146,21 @@ void c8_reset_key(C8_Key* k) {
 	k->half_transitions = 0;
 }
 
+void c8_debug_display(C8_App_State* state) {
+	for (i32 r = 0; r < c8_arr_count(state->pixels); r++) {
+		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++) {
+			
+			if (state->pixels[r][c]) {
+				c8_plat_debug_out("x");
+			}
+			else {
+				c8_plat_debug_out(".");
+			}
+		}
+		c8_plat_debug_out("\n");
+	}
+}
+
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
@@ -217,7 +232,7 @@ bool c8_app_update(C8_App_State* state) {
 			c8_clear_struct(state->pixels);
 		}
 		else if (op == 0x1) {
-# if 0
+# if 1
 			c8_plat_debug_out("Jump\n");
 # endif
 			state->pc = nnn;
@@ -264,15 +279,15 @@ bool c8_app_update(C8_App_State* state) {
 			u16 flag_register = 0;
 
 			u8 row_count = n;
-			u16 sprite_x = state->var_registers[x];
-			u16 sprite_y = state->var_registers[y];
+			u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
+			u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
 			u8* sprite_start = state->ram + state->index_register;
 
-			for (i32 r = 0; r < n; r++) {
+			for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++) {
 				u8 sprite_row = *(sprite_start + r);
 				//sprintf(buf, "Row : %x \n", instruction);
-				c8_plat_debug_out(buf);
-				for (i32 c = 0; c < 8; c++) {
+				//c8_plat_debug_out(buf);
+				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++) {
 					u8 on = (sprite_row >> (7 - c)) & 0x01;
 					if (on == 0x01)
 					{
@@ -291,6 +306,12 @@ bool c8_app_update(C8_App_State* state) {
 			}
 
 			state->var_registers[C8_FLAG_REG] = flag_register;
+
+#if 0
+			c8_debug_display(state);
+			c8_plat_debug_out("\n");
+# endif
+
 		}
 		else if (op == 0x3) {
 			c8_plat_debug_out("Skip if x equals nn\n");
@@ -397,7 +418,7 @@ bool c8_app_update(C8_App_State* state) {
 
 			u16 start = state->index_register;
 
-			for (int i = 0; i < c8_arr_count(state->var_registers); i++)
+			for (int i = 0; i < x; i++)
 			{
 				state->ram[start + i] = state->var_registers[i];
 			}
@@ -408,7 +429,7 @@ bool c8_app_update(C8_App_State* state) {
 
 			u16 start = state->index_register;
 
-			for (int i = 0; i < c8_arr_count(state->var_registers); i++)
+			for (int i = 0; i < x; i++)
 			{
 				state->var_registers[i] = state->ram[start + i];
 			}
