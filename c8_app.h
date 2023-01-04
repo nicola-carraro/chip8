@@ -115,6 +115,7 @@ typedef struct {
 	u16 index_register;
 	u8 var_registers[16];
 	u16 stack[16];
+	u8 stack_pointer;
 	u64 frame_count;
 	C8_Arena arena;
 	u16 pc;

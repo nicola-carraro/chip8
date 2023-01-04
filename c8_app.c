@@ -158,7 +158,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\bc_test.ch8";
+		char f_name[] = "data\\test_opcode.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -223,6 +223,30 @@ bool c8_app_update(C8_App_State* state) {
 			state->pc = nnn;
 			continue;
 		}
+		else if (op == 0x2) {
+			c8_plat_debug_out("Call\n");
+			state->stack[state->stack_pointer] = state->pc;
+			state->stack_pointer++;
+			if (state->stack_pointer >= c8_arr_count(state->stack))
+			{
+				assert(false);
+				// TODO: handle stackoverflow
+			}
+			state->pc = nnn;
+			continue;
+
+		}
+		else if(instruction == 0x00ee) {
+			c8_plat_debug_out("Return\n");
+
+			state->stack_pointer--;
+			if (state->stack_pointer < 0)
+			{
+				assert(false);
+				// TODO: handle stackundeflow (?)
+			}
+			state->pc = state->stack[state->stack_pointer];
+		}
 		else if (op == 0x6) {
 			c8_plat_debug_out("Set register\n");
 			state->var_registers[x] = nn;
@@ -246,7 +270,7 @@ bool c8_app_update(C8_App_State* state) {
 
 			for (i32 r = 0; r < n; r++) {
 				u8 sprite_row = *(sprite_start + r);
-				sprintf(buf, "Row : %x \n", instruction);
+				//sprintf(buf, "Row : %x \n", instruction);
 				c8_plat_debug_out(buf);
 				for (i32 c = 0; c < 8; c++) {
 					u8 on = (sprite_row >> (7 - c)) & 0x01;
@@ -298,6 +322,10 @@ bool c8_app_update(C8_App_State* state) {
 				state->pc += 2;
 			}
 		}
+		else if ((instruction & 0xf00f) == 0x8000) {
+			c8_plat_debug_out("Set x register to value of y register\n");
+			state->var_registers[x] = state->var_registers[y];
+         }
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
 			state->var_registers[x] =
