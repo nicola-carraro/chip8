@@ -339,16 +339,23 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
 		}
 		else if ((instruction & 0xf00f) == 0x8004) {
-	      c8_plat_debug_out("x + y\n");
-		  u16 result = state->var_registers[x] + state->var_registers[y];
-		  if (result > 0xff) {
-			  state->var_registers[C8_FLAG_REG] = 1;
-		  }
-		  else {
-			  state->var_registers[C8_FLAG_REG] = 0;
-		  }
-		  state->var_registers[x] = (u8)result;
+			c8_plat_debug_out("x + y\n");
+			u16 result = state->var_registers[x] + state->var_registers[y];
+			if (result > 0xff) {
+				state->var_registers[C8_FLAG_REG] = 1;
+			}
+			else {
+				state->var_registers[C8_FLAG_REG] = 0;
+			}
+			state->var_registers[x] = (u8)result;
 
+		}
+		else if ((instruction & 0xf00f) == 0x8006) {
+			c8_plat_debug_out("Shift right\n");
+
+			u8 bit = state->var_registers[x] & 0x1;
+			state->var_registers[x] = state->var_registers[x] >> 1;
+			state->var_registers[C8_FLAG_REG] = bit;
 		}
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
@@ -362,6 +369,13 @@ bool c8_app_update(C8_App_State* state) {
 				state->var_registers[y] -
 				state->var_registers[x];
 		}
+		else if ((instruction & 0xf00f) == 0x800e) {
+			c8_plat_debug_out("Shift left\n");
+
+			u8 bit = state->var_registers[x] >> 7;
+			state->var_registers[x] = state->var_registers[x] << 1;
+			state->var_registers[C8_FLAG_REG] = bit;
+		}
 		else if ((instruction & 0xf0ff) == 0xF029) {
 			c8_plat_debug_out("Point index to font\n");
 			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * state->var_registers[x]);
@@ -373,7 +387,7 @@ bool c8_app_update(C8_App_State* state) {
 
 		state->pc += 2;
 
-	}
+		}
 
 	bool push_frame = c8_push_frame(state);
 
@@ -408,7 +422,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	return push_frame && push_pixels;
-	}
+}
 
 bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 	bool result = false;
