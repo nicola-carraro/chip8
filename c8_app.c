@@ -380,6 +380,27 @@ bool c8_app_update(C8_App_State* state) {
 			c8_plat_debug_out("Point index to font\n");
 			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * state->var_registers[x]);
 		}
+		else if ((instruction & 0xf0ff) == 0xF055) {
+			c8_plat_debug_out("Store registers to memory\n");
+
+			u16 start = state->index_register;
+
+			for (int i = 0; i < c8_arr_count(state->var_registers); i++)
+			{
+				state->ram[start + i] = state->var_registers[i];
+			}
+
+		}
+		else if ((instruction & 0xf0ff) == 0xF065) {
+			c8_plat_debug_out("Load registers from memory\n");
+
+			u16 start = state->index_register;
+
+			for (int i = 0; i < c8_arr_count(state->var_registers); i++)
+			{
+				state->var_registers[i] = state->ram[start + i];
+			}
+		}
 		else {
 			c8_plat_debug_out("Unimplemented instruction\n");
 			assert(false);
@@ -387,7 +408,7 @@ bool c8_app_update(C8_App_State* state) {
 
 		state->pc += 2;
 
-		}
+	}
 
 	bool push_frame = c8_push_frame(state);
 
@@ -401,7 +422,7 @@ bool c8_app_update(C8_App_State* state) {
 # endif
 		C8_Key* k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
-	}
+}
 
 # if 0
 	c8_debug_keyboard((&state->control_keys.esc), "Esc");
@@ -422,7 +443,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	return push_frame && push_pixels;
-}
+	}
 
 bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 	bool result = false;
