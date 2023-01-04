@@ -46,6 +46,12 @@ typedef uint8_t u8;
 
 #define C8_INSTRUCTIONS_PER_FRAME (C8_INSTRUCTIONS_PER_SEC /C8_FRAMES_PER_SEC )
 
+#define C8_FONT_SIZE 5
+
+#define C8_FONT_COUNT 16
+
+#define C8_FONT_ADDR 0x050
+
 typedef struct {
 	void* data;
 	psz max_bytes;
@@ -124,7 +130,7 @@ typedef struct {
 			float x;
 			float y;
 		};
-	
+
 		float coords[2];
 	};
 } C8_V2;

@@ -87,7 +87,7 @@ bool c8_push_pixels(C8_App_State* state) {
 					pixel_color
 				);
 
-				if(!push){
+				if (!push) {
 					return false;
 				}
 			}
@@ -97,11 +97,11 @@ bool c8_push_pixels(C8_App_State* state) {
 	return true;
 }
 
-void c8_debug_keyboard(C8_Key *key, char* n) {
+void c8_debug_keyboard(C8_Key* key, char* n) {
 	bool printed = false;
 	char buf[256];
 	if (key->started_down) {
-		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s started down\n",n);
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s started down\n", n);
 		printed = true;
 	}
 
@@ -129,7 +129,7 @@ void c8_debug_keyboard(C8_Key *key, char* n) {
 
 	if (key->half_transitions != 0) {
 		c8_plat_debug_printf(buf, c8_arr_count(buf), "%s half transitions : %d\n", n, key->half_transitions);
-	
+
 		printed = true;
 	}
 
@@ -138,7 +138,7 @@ void c8_debug_keyboard(C8_Key *key, char* n) {
 	}
 }
 
-void c8_reset_key(C8_Key *k) {
+void c8_reset_key(C8_Key* k) {
 	k->started_down = k->ended_down;
 	k->was_down = k->ended_down;
 	k->was_lifted = false;
@@ -170,13 +170,34 @@ bool c8_app_update(C8_App_State* state) {
 				state->program_loaded = true;
 			}
 		}
+
+		const u16 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+			0x20, 0x60, 0x20, 0x20, 0x70, // 1
+			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+		};
+
+		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{
 		assert(state->pc < sizeof(state->ram));
 		char buf[255];
-		u16 instruction = c8_read_instruction( * ((u16*)(state->ram + state->pc)));
+		u16 instruction = c8_read_instruction(*((u16*)(state->ram + state->pc)));
 
 		u8 op = instruction >> 12;
 
@@ -221,14 +242,14 @@ bool c8_app_update(C8_App_State* state) {
 			u8 row_count = n;
 			u16 sprite_x = state->var_registers[x];
 			u16 sprite_y = state->var_registers[y];
-			u8 *sprite_start = state->ram + state->index_register;
+			u8* sprite_start = state->ram + state->index_register;
 
-			for(i32 r = 0; r < n; r++){
+			for (i32 r = 0; r < n; r++) {
 				u8 sprite_row = *(sprite_start + r);
 				sprintf(buf, "Row : %x \n", instruction);
 				c8_plat_debug_out(buf);
 				for (i32 c = 0; c < 8; c++) {
-					u8 on = (sprite_row >> (7 -c)) & 0x01;
+					u8 on = (sprite_row >> (7 - c)) & 0x01;
 					if (on == 0x01)
 					{
 						if (state->pixels[sprite_y + r][sprite_x + c]) {
@@ -279,8 +300,8 @@ bool c8_app_update(C8_App_State* state) {
 		}
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
-			state->var_registers[x] = 
-				state->var_registers[x] - 
+			state->var_registers[x] =
+				state->var_registers[x] -
 				state->var_registers[y];
 		}
 		else if ((instruction & 0xf00f) == 0x8007) {
@@ -288,6 +309,10 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] =
 				state->var_registers[y] -
 				state->var_registers[x];
+		}
+		else if ((instruction & 0xf0ff) == 0xF029) {
+			c8_plat_debug_out("Point index to font\n");
+			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * state->var_registers[x]);
 		}
 		else {
 			c8_plat_debug_out("Unimplemented instruction\n");
