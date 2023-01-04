@@ -621,12 +621,28 @@ bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb) 
 bool c8_win_start_beep(C8_Win_State * state) {
 	bool result = false;
 
-	HRESULT play = IDirectSoundBuffer_Play(global_state.ds_sec_buf, 0, 0, DSBPLAY_LOOPING);
+	HRESULT play = IDirectSoundBuffer_Play(state->ds_sec_buf, 0, 0, DSBPLAY_LOOPING);
 	if (SUCCEEDED(play)) {
 		result = true;
+		state->is_beeping = true;
 	}
 	else {
-		OutputDebugStringA("Could not start playing");
+		OutputDebugStringA("Could not start beeping\n");
+	}
+
+	return result;
+}
+
+bool c8_win_stop_beep(C8_Win_State* state) {
+	bool result = false;
+
+	HRESULT stop = IDirectSoundBuffer_Stop(state->ds_sec_buf);
+	if (SUCCEEDED(stop)) {
+		result = true;
+		state->is_beeping = false;
+	}
+	else {
+		OutputDebugStringA("Could not stop beeping\n");
 	}
 
 	return result;
@@ -663,12 +679,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 			//DWORD wave_counter = 0;
 
-			HRESULT play = IDirectSoundBuffer_Play(global_state.ds_sec_buf, 0, 0, DSBPLAY_LOOPING);
+		/*	HRESULT play = IDirectSoundBuffer_Play(global_state.ds_sec_buf, 0, 0, DSBPLAY_LOOPING);
 
 			if (FAILED(play)) {
 				OutputDebugStringA("Could not play");
 				assert(false);
-			}
+			}*/
 
 			while (global_state.app_state.running)
 			{
@@ -691,89 +707,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					//assert(false);
 				}
 
-				//DWORD write_curs;
-				//DWORD play_curs;
-				//if (SUCCEEDED(
-				//	IDirectSoundBuffer_GetCurrentPosition(
-				//	global_state.ds_sec_buf,
-				//		&play_curs,
-				//	&write_curs
-				//	)
-				//))
-				//{
-				//	DWORD buf_size = samples_per_sec;
-				//	DWORD byte_to_lock = sample_index * bytes_per_sample % buf_size;
-				//	DWORD bytes_to_write;
+				if (!global_state.is_beeping && global_state.app_state.sound_timer > 0) {
+					assert(c8_win_start_beep(&global_state));
+				}
 
-				//	if (byte_to_lock > play_curs) {
-				//		bytes_to_write = (buf_size - byte_to_lock);
-				//		byte_to_lock += play_curs;
-				//	}
-				//	else {
-				//		bytes_to_write = play_curs - byte_to_lock;
-				//	}
-
-				//	LPVOID reg_1 = 0;
-				//	DWORD reg_1_size = 0;
-				//	LPVOID reg_2 = 0;
-				//	DWORD reg_2_size = 0;
-
-				//	HRESULT buf_locked = IDirectSoundBuffer_Lock(
-				//		global_state.ds_sec_buf,
-				//		play_curs,
-				//		bytes_to_write,
-				//		reg_1,
-				//		&reg_1_size,
-				//		reg_2, 
-				//		&reg_2_size, 
-				//		0
-				//	);
-
-				//	if (SUCCEEDED(buf_locked)) {
-				//		DWORD reg_1_nsamples = reg_1_size / 16;
-				//		i16* sample_out = (i16*)reg_1;
-				//		for (DWORD i = 0; i < reg_1_nsamples; i++) {
-
-				//			i16 sample_value = ((sample_index / half_wave_period) % 2) ? 16000 : -16000;
-				//			sample_out[i] = sample_value;
-				//			sample_index++;
-				//		}
-
-				//		DWORD reg_2_nsamples = reg_2_size / 16;
-				//		sample_out = (i16*)reg_2;
-				//		for (DWORD i = 0; i < reg_2_nsamples; i++) {
-				//	
-				//			i16 sample_value = ((sample_index / half_wave_period) % 2) ? 16000 : -16000;
-				//			sample_out[i] = sample_value;
-				//			sample_index++;
-
-				//		}
-
-				//		HRESULT unlocked = IDirectSoundBuffer_Unlock(
-				//			global_state.ds_sec_buf,
-				//			reg_1,
-				//			reg_1_size,
-				//			reg_2,
-				//			reg_2_size
-				//		);
-
-				//		if (FAILED(unlocked))
-				//		{
-				//			OutputDebugStringA("Could not unlock buffer\n");
-				//			assert(false);
-				//		}
-				//	}
-				//	else {
-				//		OutputDebugStringA("Could not lock buffer\n");
-				//		//assert(false);
-				//	}
-				//	
-				//}
-				//else {
-				//	OutputDebugStringA("Could not get current position of write cursors\n");
-				//	assert(false);
-
-				//}
+				if (global_state.is_beeping && global_state.app_state.sound_timer == 0) {
+					assert(c8_win_stop_beep(&global_state));
+				}
 
 				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
 

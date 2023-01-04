@@ -170,7 +170,6 @@ bool c8_app_update(C8_App_State* state) {
 				state->program_loaded = true;
 			}
 		}
-
 	}
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
@@ -254,6 +253,7 @@ bool c8_app_update(C8_App_State* state) {
 		}
 
 		state->pc += 2;
+
 	}
 
 	bool push_frame = c8_push_frame(state);
@@ -283,6 +283,10 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	state->frame_count++;
+
+	if (state->sound_timer > 0) {
+		state->sound_timer--;
+	}
 
 	return push_frame && push_pixels;
 }

@@ -28,6 +28,7 @@ typedef struct {
 	C8_Win_D3d_Vertex vertices[C8_WIN_MAX_VERTICES];
 	i32 vertex_count;
 	bool has_sound;
+	bool is_beeping;
 } C8_Win_State;
 
 typedef struct {
