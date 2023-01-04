@@ -158,7 +158,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\ibm_logo.ch8";
+		char f_name[] = "data\\bc_test.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -178,7 +178,7 @@ bool c8_app_update(C8_App_State* state) {
 		char buf[255];
 		u16 instruction = c8_read_instruction( * ((u16*)(state->ram + state->pc)));
 
-		u8 n0 = instruction >> 12;
+		u8 op = instruction >> 12;
 
 		u8 x = (instruction & 0x0f00) >> 8;
 		u8 y = (instruction & 0x00f0) >> 4;
@@ -186,7 +186,7 @@ bool c8_app_update(C8_App_State* state) {
 		u8 nn = (instruction & 0x00ff);
 		u16 nnn = (instruction & 0x0fff);
 
-# if 0
+# if 1
 		sprintf(buf, "Instruction : %04X \n", instruction);
 		c8_plat_debug_out(buf);
 # endif
@@ -195,26 +195,26 @@ bool c8_app_update(C8_App_State* state) {
 			c8_plat_debug_out("Clear\n");
 			c8_clear_struct(state->pixels);
 		}
-		else if (n0 == 0x1) {
+		else if (op == 0x1) {
 # if 0
 			c8_plat_debug_out("Jump\n");
 # endif
 			state->pc = nnn;
 			continue;
 		}
-		else if (n0 == 0x6) {
+		else if (op == 0x6) {
 			c8_plat_debug_out("Set register\n");
 			state->var_registers[x] = nn;
 		}
-		else if (n0 == 0x7) {
+		else if (op == 0x7) {
 			c8_plat_debug_out("Add to register\n");
 			state->var_registers[x] += nn;
 		}
-		else if (n0 == 0xa) {
+		else if (op == 0xa) {
 			c8_plat_debug_out("Set index register\n");
 			state->index_register = nnn;
 		}
-		else if (n0 == 0xd) {
+		else if (op == 0xd) {
 			c8_plat_debug_out("Display\n");
 			u16 flag_register = 0;
 
@@ -246,6 +246,48 @@ bool c8_app_update(C8_App_State* state) {
 			}
 
 			state->var_registers[0xf] = flag_register;
+		}
+		else if (op == 0x3) {
+			c8_plat_debug_out("Skip if x equals nn\n");
+
+			if (state->var_registers[x] == nn) {
+				state->pc += 2;
+			}
+		}
+		else if (op == 0x4) {
+			c8_plat_debug_out("Skip if x not equals nn\n");
+
+			if (state->var_registers[x] != nn) {
+				state->pc += 2;
+			}
+		}
+		else if ((instruction & 0xf00f) == 0x5000) {
+			c8_plat_debug_out("Skip if x equals y\n");
+
+			if (state->var_registers[x] == state->var_registers[y])
+			{
+				state->pc += 2;
+			}
+		}
+		else if ((instruction & 0xf00f) == 0x9000) {
+			c8_plat_debug_out("Skip if x not equals y\n");
+
+			if (state->var_registers[x] != state->var_registers[y])
+			{
+				state->pc += 2;
+			}
+		}
+		else if ((instruction & 0xf00f) == 0x8005) {
+			c8_plat_debug_out("x - y\n");
+			state->var_registers[x] = 
+				state->var_registers[x] - 
+				state->var_registers[y];
+		}
+		else if ((instruction & 0xf00f) == 0x8007) {
+			c8_plat_debug_out("y - x\n");
+			state->var_registers[x] =
+				state->var_registers[y] -
+				state->var_registers[x];
 		}
 		else {
 			c8_plat_debug_out("Unimplemented instruction\n");
