@@ -236,7 +236,7 @@ bool c8_app_update(C8_App_State* state) {
 			continue;
 
 		}
-		else if(instruction == 0x00ee) {
+		else if (instruction == 0x00ee) {
 			c8_plat_debug_out("Return\n");
 
 			state->stack_pointer--;
@@ -325,7 +325,19 @@ bool c8_app_update(C8_App_State* state) {
 		else if ((instruction & 0xf00f) == 0x8000) {
 			c8_plat_debug_out("Set x register to value of y register\n");
 			state->var_registers[x] = state->var_registers[y];
-         }
+		}
+		else if ((instruction & 0xf00f) == 0x8001) {
+			c8_plat_debug_out("Binary or\n");
+			state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
+		}
+		else if ((instruction & 0xf00f) == 0x8002) {
+			c8_plat_debug_out("Binary and\n");
+			state->var_registers[x] = state->var_registers[x] & state->var_registers[y];
+		}
+		else if ((instruction & 0xf00f) == 0x8003) {
+			c8_plat_debug_out("Binary xor\n");
+			state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
+		}
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
 			state->var_registers[x] =
@@ -384,7 +396,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	return push_frame && push_pixels;
-}
+	}
 
 bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 	bool result = false;
