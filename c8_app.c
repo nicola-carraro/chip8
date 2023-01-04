@@ -380,6 +380,18 @@ bool c8_app_update(C8_App_State* state) {
 			c8_plat_debug_out("Point index to font\n");
 			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * state->var_registers[x]);
 		}
+		else if ((instruction & 0xf0ff) == 0xF033) {
+			c8_plat_debug_out("Decimal conversion\n");
+			u16 start = state->index_register;
+			u8 dividend = state->var_registers[x];
+			u8 divisor = 100;
+			for (i32 i = 0; i < 3; i++)
+			{
+				state->ram[start + i] = dividend / divisor;
+				dividend %= divisor;
+				divisor /= 10;
+			}
+		}
 		else if ((instruction & 0xf0ff) == 0xF055) {
 			c8_plat_debug_out("Store registers to memory\n");
 
