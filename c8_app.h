@@ -52,6 +52,8 @@ typedef uint8_t u8;
 
 #define C8_FONT_ADDR 0x050
 
+#define C8_FLAG_REG 0xf
+
 typedef struct {
 	void* data;
 	psz max_bytes;

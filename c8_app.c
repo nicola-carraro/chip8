@@ -290,7 +290,7 @@ bool c8_app_update(C8_App_State* state) {
 				}
 			}
 
-			state->var_registers[0xf] = flag_register;
+			state->var_registers[C8_FLAG_REG] = flag_register;
 		}
 		else if (op == 0x3) {
 			c8_plat_debug_out("Skip if x equals nn\n");
@@ -337,6 +337,18 @@ bool c8_app_update(C8_App_State* state) {
 		else if ((instruction & 0xf00f) == 0x8003) {
 			c8_plat_debug_out("Binary xor\n");
 			state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
+		}
+		else if ((instruction & 0xf00f) == 0x8004) {
+	      c8_plat_debug_out("x + y\n");
+		  u16 result = state->var_registers[x] + state->var_registers[y];
+		  if (result > 0xff) {
+			  state->var_registers[C8_FLAG_REG] = 1;
+		  }
+		  else {
+			  state->var_registers[C8_FLAG_REG] = 0;
+		  }
+		  state->var_registers[x] = (u8)result;
+
 		}
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
