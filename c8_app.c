@@ -149,7 +149,7 @@ void c8_reset_key(C8_Key* k) {
 void c8_debug_display(C8_App_State* state) {
 	for (i32 r = 0; r < c8_arr_count(state->pixels); r++) {
 		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++) {
-			
+
 			if (state->pixels[r][c]) {
 				c8_plat_debug_out("x");
 			}
@@ -159,6 +159,23 @@ void c8_debug_display(C8_App_State* state) {
 		}
 		c8_plat_debug_out("\n");
 	}
+}
+
+void c8_debug_row(u8 row) {
+	
+	for (i32 i = 0; i < 8; i++) {
+		u8 pixel = (row >> (7 - i)) & 0x01;
+
+		if (pixel == 1) {
+			c8_plat_debug_out("x");
+		}
+		else {
+			c8_plat_debug_out(".");
+		}
+	}
+
+	c8_plat_debug_out("\n");
+
 }
 
 bool c8_app_update(C8_App_State* state) {
@@ -186,7 +203,7 @@ bool c8_app_update(C8_App_State* state) {
 			}
 		}
 
-		const u16 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+		const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
 			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
 			0x20, 0x60, 0x20, 0x20, 0x70, // 1
 			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -294,6 +311,7 @@ bool c8_app_update(C8_App_State* state) {
 				u8 sprite_row = *(sprite_start + r);
 				//sprintf(buf, "Row : %x \n", instruction);
 				//c8_plat_debug_out(buf);
+				c8_debug_row(sprite_row);
 				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++) {
 					u8 on = (sprite_row >> (7 - c)) & 0x01;
 					if (on == 0x01)
@@ -314,7 +332,7 @@ bool c8_app_update(C8_App_State* state) {
 
 			state->var_registers[C8_FLAG_REG] = flag_register;
 
-#if 0
+#if 1
 			c8_debug_display(state);
 			c8_plat_debug_out("\n");
 # endif
@@ -404,31 +422,48 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] = state->var_registers[x] << 1;
 			state->var_registers[C8_FLAG_REG] = bit;
 		}
+		else if ((instruction & 0xf0ff) == 0xE09E) {
+			c8_plat_debug_out("Skip if key is pressed\n");
+			u8 key = state->var_registers[x];
+
+			if (state->keypad.keys[key].ended_down) {
+				state->pc += 2;
+			}
+
+		}
+		else if ((instruction & 0xf0ff) == 0xE0A1) {
+		c8_plat_debug_out("Skip if key is not pressed\n");
+		u8 key = state->var_registers[x];
+    	if (!state->keypad.keys[key].ended_down) {
+			state->pc += 2;
+		}
+
+		}
 		else if ((instruction & 0xf0ff) == 0xF007) {
-		c8_plat_debug_out("Set register to delay timer\n");
-		 state->var_registers[x] = state->delay_timer;
+			c8_plat_debug_out("Set register to delay timer\n");
+			state->var_registers[x] = state->delay_timer;
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF015) {
-		c8_plat_debug_out("Set delay timer\n");
-		state->delay_timer = state->var_registers[x];
+			c8_plat_debug_out("Set delay timer\n");
+			state->delay_timer = state->var_registers[x];
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF018) {
-		c8_plat_debug_out("Set sound timer\n");
-		state->sound_timer = state->var_registers[x];
+			c8_plat_debug_out("Set sound timer\n");
+			state->sound_timer = state->var_registers[x];
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF01E) {
-		  c8_plat_debug_out("Add to index\n");
-		  u16 result = state->index_register + state->var_registers[x];
+			c8_plat_debug_out("Add to index\n");
+			u16 result = state->index_register + state->var_registers[x];
 
-		  if (result > 0x0fff) {
-			  state->var_registers[C8_FLAG_REG] = 1;
-			  result &= 0x0fff;
-		  }
+			if (result > 0x0fff) {
+				state->var_registers[C8_FLAG_REG] = 1;
+				result &= 0x0fff;
+			}
 
-		  state->index_register = result;
+			state->index_register = result;
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF029) {
@@ -489,7 +524,7 @@ bool c8_app_update(C8_App_State* state) {
 # endif
 		C8_Key* k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
-}
+	}
 
 # if 0
 	c8_debug_keyboard((&state->control_keys.esc), "Esc");
@@ -519,7 +554,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	return push_frame && push_pixels;
-	}
+}
 
 bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 	bool result = false;
