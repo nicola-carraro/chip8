@@ -173,7 +173,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\sierpinski.ch8";
+		char f_name[] = "data\\airplane.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -403,6 +403,21 @@ bool c8_app_update(C8_App_State* state) {
 			u8 bit = state->var_registers[x] >> 7;
 			state->var_registers[x] = state->var_registers[x] << 1;
 			state->var_registers[C8_FLAG_REG] = bit;
+		}
+		else if ((instruction & 0xf0ff) == 0xF007) {
+		c8_plat_debug_out("Set register to delay timer\n");
+		 state->var_registers[x] = state->delay_timer;
+
+		}
+		else if ((instruction & 0xf0ff) == 0xF015) {
+		c8_plat_debug_out("Set delay timer\n");
+		state->delay_timer = state->var_registers[x];
+
+		}
+		else if ((instruction & 0xf0ff) == 0xF018) {
+		c8_plat_debug_out("Set sound timer\n");
+		state->sound_timer = state->var_registers[x];
+
 		}
 		else if ((instruction & 0xf0ff) == 0xF01E) {
 		  c8_plat_debug_out("Add to index\n");
