@@ -173,7 +173,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\test_opcode.ch8";
+		char f_name[] = "data\\maze.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -273,6 +273,13 @@ bool c8_app_update(C8_App_State* state) {
 		else if (op == 0xa) {
 			c8_plat_debug_out("Set index register\n");
 			state->index_register = nnn;
+		}
+		else if (op == 0xc) {
+			c8_plat_debug_out("Random\n");
+
+			int random = rand();
+			u8 result = (u8)((u16)random & nn);
+			state->var_registers[x] = result;
 		}
 		else if (op == 0xd) {
 			c8_plat_debug_out("Display\n");
