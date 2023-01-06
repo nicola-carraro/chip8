@@ -173,7 +173,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\maze.ch8";
+		char f_name[] = "data\\sierpinski.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -403,6 +403,18 @@ bool c8_app_update(C8_App_State* state) {
 			u8 bit = state->var_registers[x] >> 7;
 			state->var_registers[x] = state->var_registers[x] << 1;
 			state->var_registers[C8_FLAG_REG] = bit;
+		}
+		else if ((instruction & 0xf0ff) == 0xF01E) {
+		  c8_plat_debug_out("Add to index\n");
+		  u16 result = state->index_register + state->var_registers[x];
+
+		  if (result > 0x0fff) {
+			  state->var_registers[C8_FLAG_REG] = 1;
+			  result &= 0x0fff;
+		  }
+
+		  state->index_register = result;
+
 		}
 		else if ((instruction & 0xf0ff) == 0xF029) {
 			c8_plat_debug_out("Point index to font\n");
