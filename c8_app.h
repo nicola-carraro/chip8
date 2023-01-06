@@ -126,6 +126,7 @@ typedef struct {
 	bool program_loaded;
 	C8_Keypad keypad;
 	C8_Control_Keys control_keys;
+	bool should_beep;
 } C8_App_State;
 
 typedef struct {

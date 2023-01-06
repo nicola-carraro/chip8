@@ -707,11 +707,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					//assert(false);
 				}
 
-				if (!global_state.is_beeping && global_state.app_state.sound_timer > 0) {
+				if (!global_state.is_beeping && global_state.app_state.should_beep) {
 					assert(c8_win_start_beep(&global_state));
 				}
 
-				if (global_state.is_beeping && global_state.app_state.sound_timer == 0) {
+				if (global_state.is_beeping && !global_state.app_state.should_beep) {
 					assert(c8_win_stop_beep(&global_state));
 				}
 
