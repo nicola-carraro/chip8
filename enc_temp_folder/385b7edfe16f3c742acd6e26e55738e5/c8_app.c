@@ -416,28 +416,12 @@ bool c8_app_update(C8_App_State* state) {
 		}
 		else if ((instruction & 0xf00f) == 0x8005) {
 			c8_plat_debug_out("x - y\n");
-
-			if (state->var_registers[x] > state->var_registers[y]) {
-				state->var_registers[C8_FLAG_REG] = 1;
-			}
-
-			if (state->var_registers[x] < state->var_registers[y]) {
-				state->var_registers[C8_FLAG_REG] = 0;
-			}
 			state->var_registers[x] =
 				state->var_registers[x] -
 				state->var_registers[y];
 		}
 		else if ((instruction & 0xf00f) == 0x8007) {
 			c8_plat_debug_out("y - x\n");
-
-			if (state->var_registers[y] > state->var_registers[x]) {
-				state->var_registers[C8_FLAG_REG] = 1;
-			}
-
-			if (state->var_registers[y] < state->var_registers[x]) {
-				state->var_registers[C8_FLAG_REG] = 0;
-			}
 			state->var_registers[x] =
 				state->var_registers[y] -
 				state->var_registers[x];
