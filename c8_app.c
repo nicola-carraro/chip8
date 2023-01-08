@@ -162,7 +162,7 @@ void c8_debug_display(C8_App_State* state) {
 }
 
 void c8_debug_row(u8 row) {
-	
+
 	for (i32 i = 0; i < 8; i++) {
 		u8 pixel = (row >> (7 - i)) & 0x01;
 
@@ -190,7 +190,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\pong.ch8";
+		char f_name[] = "data\\15puzzle.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -249,7 +249,7 @@ bool c8_app_update(C8_App_State* state) {
 			c8_clear_struct(state->pixels);
 		}
 		else if (op == 0x1) {
-# if 1
+# if 0
 			c8_plat_debug_out("Jump\n");
 # endif
 			state->pc = nnn;
@@ -285,7 +285,16 @@ bool c8_app_update(C8_App_State* state) {
 		}
 		else if (op == 0x7) {
 			c8_plat_debug_out("Add to register\n");
-			state->var_registers[x] += nn;
+			u16 result = state->var_registers[x] + nn;
+			if (result > 0xff) {
+				state->var_registers[C8_FLAG_REG] = 1;
+			}
+			else {
+				state->var_registers[C8_FLAG_REG] = 0;
+			}
+
+			state->var_registers[x] += (result & 0xf);
+
 		}
 		else if (op == 0xa) {
 			c8_plat_debug_out("Set index register\n");
@@ -311,7 +320,7 @@ bool c8_app_update(C8_App_State* state) {
 				u8 sprite_row = *(sprite_start + r);
 				//sprintf(buf, "Row : %x \n", instruction);
 				//c8_plat_debug_out(buf);
-				c8_debug_row(sprite_row);
+				//c8_debug_row(sprite_row);
 				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++) {
 					u8 on = (sprite_row >> (7 - c)) & 0x01;
 					if (on == 0x01)
@@ -347,8 +356,8 @@ bool c8_app_update(C8_App_State* state) {
 		}
 		else if (op == 0x4) {
 			c8_plat_debug_out("Skip if x not equals nn\n");
-
-			if (state->var_registers[x] != nn) {
+			u8 vx = state->var_registers[x];
+			if (vx != nn) {
 				state->pc += 2;
 			}
 		}
@@ -432,11 +441,11 @@ bool c8_app_update(C8_App_State* state) {
 
 		}
 		else if ((instruction & 0xf0ff) == 0xE0A1) {
-		c8_plat_debug_out("Skip if key is not pressed\n");
-		u8 key = state->var_registers[x];
-    	if (!state->keypad.keys[key].ended_down) {
-			state->pc += 2;
-		}
+			c8_plat_debug_out("Skip if key is not pressed\n");
+			u8 key = state->var_registers[x];
+			if (!state->keypad.keys[key].ended_down) {
+				state->pc += 2;
+			}
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF007) {
@@ -468,7 +477,8 @@ bool c8_app_update(C8_App_State* state) {
 		}
 		else if ((instruction & 0xf0ff) == 0xF029) {
 			c8_plat_debug_out("Point index to font\n");
-			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * state->var_registers[x]);
+			u8 c = (state->var_registers[x]) & 0x0f;
+			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
 		}
 		else if ((instruction & 0xf0ff) == 0xF033) {
 			c8_plat_debug_out("Decimal conversion\n");
@@ -487,18 +497,17 @@ bool c8_app_update(C8_App_State* state) {
 
 			u16 start = state->index_register;
 
-			for (int i = 0; i < x; i++)
+			for (int i = 0; i <= x; i++)
 			{
 				state->ram[start + i] = state->var_registers[i];
 			}
-
 		}
 		else if ((instruction & 0xf0ff) == 0xF065) {
 			c8_plat_debug_out("Load registers from memory\n");
 
 			u16 start = state->index_register;
 
-			for (int i = 0; i < x; i++)
+			for (int i = 0; i <= x; i++)
 			{
 				state->var_registers[i] = state->ram[start + i];
 			}

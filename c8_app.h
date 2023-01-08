@@ -41,7 +41,7 @@ typedef uint8_t u8;
 
 #define c8_arr_count(a)(sizeof(a) / sizeof(a[0]))
 
-#define C8_INSTRUCTIONS_PER_SEC 700
+#define C8_INSTRUCTIONS_PER_SEC 880
 
 #define C8_FRAMES_PER_SEC 60
 
