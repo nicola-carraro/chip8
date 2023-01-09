@@ -184,7 +184,7 @@ bool c8_app_update(C8_App_State* state) {
 	if (!state->initialised)
 	{
 		c8_clear_struct(state->arena);
-		if (c8_arena_init(&state->arena, 1024, 4)) {
+		if (c8_arena_init(&state->arena, 1024 * 1024, 4)) {
 			state->initialised = true;
 		}
 	}
@@ -239,7 +239,12 @@ bool c8_app_update(C8_App_State* state) {
 		u8 nn = (instruction & 0x00ff);
 		u16 nnn = (instruction & 0x0fff);
 
+		u8 vx = state->var_registers[x];
+		u8 vy = state->var_registers[y];
+
 		state->pc += 2;
+
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "Pc %02x\n", state->pc);
 
 # if 1
 		sprintf(buf, "Instruction : %04X \n", instruction);
@@ -250,17 +255,13 @@ bool c8_app_update(C8_App_State* state) {
 			c8_plat_debug_out("Clear\n");
 			c8_clear_struct(state->pixels);
 		}
-		else if (op == 0x0) {
-
-			assert(false && "Unimplemented instruction");
-		}
 		else if (op == 0x1) {
-			c8_plat_debug_out("Jump\n");
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Jump to %03X\n", nnn);
 
 			state->pc = nnn;
 		}
 		else if (op == 0x2) {
-			c8_plat_debug_out("Call\n");
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Call %03x\n", nnn);
 			state->stack[state->stack_pointer] = state->pc;
 			state->stack_pointer++;
 			if (state->stack_pointer >= c8_arr_count(state->stack))
@@ -282,12 +283,13 @@ bool c8_app_update(C8_App_State* state) {
 			state->pc = state->stack[state->stack_pointer];
 		}
 		else if (op == 0x6) {
-			c8_plat_debug_out("Set register\n");
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Set register %X to %02X\n", x,nn);
 			state->var_registers[x] = nn;
 		}
 		else if (op == 0x7) {
-			c8_plat_debug_out("Add to register\n");
-			u16 result = state->var_registers[x] + nn;
+			u16 result = vx + nn;
+
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Add %2x to v%x (%2x) = %2x\n", nn, x, vx, result);
 			if (result > 0xff) {
 				state->var_registers[C8_FLAG_REG] = 1;
 			}
@@ -299,7 +301,7 @@ bool c8_app_update(C8_App_State* state) {
 
 		}
 		else if (op == 0xa) {
-			c8_plat_debug_out("Set index register\n");
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Set index register to %03x\n", nnn);
 			state->index_register = nnn;
 		}
 		else if (op == 0xc) {
@@ -350,18 +352,18 @@ bool c8_app_update(C8_App_State* state) {
 
 		}
 		else if (op == 0x3) {
-			c8_plat_debug_out("Skip if x equals nn\n");
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Skip if v%x (%x) equals %02x\n", x, vx, nn);
 
-			if (state->var_registers[x] == nn) {
+			if (vx == nn) {
 				state->pc += 2;
 			}
 		}
 		else if (op == 0x4) {
-			c8_plat_debug_out("Skip if x not equals nn\n");
-			u8 vx = state->var_registers[x];
 			if (vx != nn) {
 				state->pc += 2;
 			}
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Skip if v%x (%x) not equals %02x\n", x, vx, nn);
+
 		}
 		else if ((instruction & 0xf00f) == 0x5000) {
 			c8_plat_debug_out("Skip if x equals y\n");
@@ -388,8 +390,9 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
 		}
 		else if ((instruction & 0xf00f) == 0x8002) {
-			c8_plat_debug_out("Binary and\n");
-			state->var_registers[x] = state->var_registers[x] & state->var_registers[y];
+		u8 result = vx & vy;
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
+			state->var_registers[x] = result;
 		}
 		else if ((instruction & 0xf00f) == 0x8003) {
 			c8_plat_debug_out("Binary xor\n");
@@ -494,7 +497,7 @@ bool c8_app_update(C8_App_State* state) {
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF029) {
-			c8_plat_debug_out("Point index to font\n");
+		c8_plat_debug_printf(buf, c8_arr_count(buf), "Point index  to font v%x (%x) \n", x, vx);
 			u8 c = (state->var_registers[x]) & 0x0f;
 			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
 		}
@@ -511,9 +514,11 @@ bool c8_app_update(C8_App_State* state) {
 			}
 		}
 		else if ((instruction & 0xf0ff) == 0xF055) {
-			c8_plat_debug_out("Store registers to memory\n");
 
-			u16 start = state->index_register;
+		u16 start = state->index_register;
+
+		c8_plat_debug_printf(buf, c8_arr_count(buf),
+		"Store registers 0 to %x at memory  location %2x\n", x, start);
 
 			for (int i = 0; i <= x; i++)
 			{
@@ -521,9 +526,10 @@ bool c8_app_update(C8_App_State* state) {
 			}
 		}
 		else if ((instruction & 0xf0ff) == 0xF065) {
-			c8_plat_debug_out("Load registers from memory\n");
+		u16 start = state->index_register;
 
-			u16 start = state->index_register;
+		c8_plat_debug_printf(buf, c8_arr_count(buf),
+			"Load registers 0 to %x from memory location %2x\n", x, start);
 
 			for (int i = 0; i <= x; i++)
 			{
