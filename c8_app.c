@@ -297,7 +297,7 @@ bool c8_app_update(C8_App_State* state) {
 				state->var_registers[C8_FLAG_REG] = 0;
 			}
 
-			state->var_registers[x] += (result & 0xf);
+			state->var_registers[x] = (result & 0xf);
 
 		}
 		else if (op == 0xa) {
@@ -312,13 +312,24 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] = result;
 		}
 		else if (op == 0xd) {
-			c8_plat_debug_out("Display\n");
+		
 			u16 flag_register = 0;
 
 			u8 row_count = n;
 			u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
 			u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
 			u8* sprite_start = state->ram + state->index_register;
+
+			c8_plat_debug_printf(
+				buf,
+				c8_arr_count(buf),
+				"Display sprite at %04x at x = v%x (%x), y = v%x (%x) \n",
+				state->index_register,
+				x,
+				sprite_x,
+				y,
+				sprite_y
+				);
 
 			for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++) {
 				u8 sprite_row = *(sprite_start + r);
@@ -485,13 +496,18 @@ bool c8_app_update(C8_App_State* state) {
 
 		}
 		else if ((instruction & 0xf0ff) == 0xF01E) {
-			c8_plat_debug_out("Add to index\n");
-			u16 result = state->index_register + state->var_registers[x];
+			u16 result = state->index_register + vx;
 
 			if (result > 0x0fff) {
 				state->var_registers[C8_FLAG_REG] = 1;
 				result &= 0x0fff;
 			}
+
+			c8_plat_debug_printf(buf, c8_arr_count(buf), "Add v%x (%x) to index (%x) giving %x\n",
+				x,
+				vx,
+				state->index_register,
+				result);
 
 			state->index_register = result;
 
@@ -523,6 +539,8 @@ bool c8_app_update(C8_App_State* state) {
 			for (int i = 0; i <= x; i++)
 			{
 				state->ram[start + i] = state->var_registers[i];
+				c8_plat_debug_printf(buf, c8_arr_count(buf),
+					"v%x = %x\n", i, state->var_registers[i]);
 			}
 		}
 		else if ((instruction & 0xf0ff) == 0xF065) {
@@ -531,9 +549,11 @@ bool c8_app_update(C8_App_State* state) {
 		c8_plat_debug_printf(buf, c8_arr_count(buf),
 			"Load registers 0 to %x from memory location %2x\n", x, start);
 
-			for (int i = 0; i <= x; i++)
+			for (i32 i = 0; i <= x; i++)
 			{
 				state->var_registers[i] = state->ram[start + i];
+				c8_plat_debug_printf(buf, c8_arr_count(buf),
+					"v%x = %x\n", i, state->var_registers[i]);
 			}
 		}
 		else {
