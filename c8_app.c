@@ -178,6 +178,22 @@ void c8_debug_row(u8 row) {
 
 }
 
+bool c8_call(C8_App_State* state, u16 nnn) {
+	char buf[256];
+
+	c8_plat_debug_printf(buf, c8_arr_count(buf), "Call %03x\n", nnn);
+	state->stack[state->stack_pointer] = state->pc;
+	state->stack_pointer++;
+	if (state->stack_pointer >= c8_arr_count(state->stack))
+	{
+		assert(false);
+		// TODO: handle stackoverflow
+	}
+	state->pc = nnn;
+
+	return true;
+}
+
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
@@ -261,15 +277,8 @@ bool c8_app_update(C8_App_State* state) {
 			state->pc = nnn;
 		}
 		else if (op == 0x2) {
-			c8_plat_debug_printf(buf, c8_arr_count(buf), "Call %03x\n", nnn);
-			state->stack[state->stack_pointer] = state->pc;
-			state->stack_pointer++;
-			if (state->stack_pointer >= c8_arr_count(state->stack))
-			{
-				assert(false);
-				// TODO: handle stackoverflow
-			}
-			state->pc = nnn;
+
+			c8_call(state, nnn);
 		}
 		else if (instruction == 0x00ee) {
 			c8_plat_debug_out("Return\n");

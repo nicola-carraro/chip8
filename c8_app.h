@@ -15,8 +15,6 @@ typedef uint16_t u16;
 typedef size_t psz;
 typedef uint8_t u8;
 
-#define C8_PROG_ADDR 0x200
-
 #define C8_WIN_DWORD_MAX 4294967295
 
 #define C8_RAM_BYTE_SIZE 4096
@@ -52,6 +50,8 @@ typedef uint8_t u8;
 #define C8_FONT_COUNT 16
 
 #define C8_FONT_ADDR 0x050
+
+#define C8_PROG_ADDR 0x200
 
 #define C8_FLAG_REG 0xf
 
