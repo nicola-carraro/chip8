@@ -72,10 +72,48 @@ void c8_test_call()
 
 }
 
+void c8_test_add_number_to_register_no_overflow()
+{
+	c8_test_def("Add number to register without overflow");
+
+	C8_App_State state;
+
+	c8_clear_struct(state);
+
+	state.var_registers[0] = 8;
+
+	state.var_registers[C8_FLAG_REG] = 123;
+
+	c8_add_number_to_register(&state, 0, 9);
+
+	assert(state.var_registers[0] == 17 && "Addition result is incorrect");
+	assert(state.var_registers[C8_FLAG_REG] == 0 && "Overflow flag incorrect");
+
+}
+
+void c8_test_add_number_to_register_overflow()
+{
+
+	c8_test_def("Add number to register with overflow");
+	C8_App_State state;
+
+	c8_clear_struct(state);
+
+	state.var_registers[0] = 252;
+
+	state.var_registers[C8_FLAG_REG] = 222;
+
+	c8_add_number_to_register(&state, 0, 5);
+
+	assert(state.var_registers[0] == 1 && "Addition result is incorrect");
+	assert(state.var_registers[C8_FLAG_REG] == 1 && "Overflow flag incorrect");
+}
+
 int main(char** args, int argv)
 {
 	c8_test_arena_init();
-
 	c8_test_arena_alloc_free();
 	c8_test_call();
+	c8_test_add_number_to_register_no_overflow();
+	c8_test_add_number_to_register_overflow();
 }

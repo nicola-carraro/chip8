@@ -178,6 +178,22 @@ void c8_debug_row(u8 row) {
 
 }
 
+void c8_add_number_to_register(C8_App_State *state, u8 x, u8 nn) {
+
+	u8 vx = state->var_registers[x];
+	u16 result = (u16)vx + (u16)nn;
+
+	c8_plat_debug_printf("Add %2x to v%x (%2x) = %2x\n", nn, x, vx, result);
+	if (result > 0xff) {
+		state->var_registers[C8_FLAG_REG] = 1;
+	}
+	else {
+		state->var_registers[C8_FLAG_REG] = 0;
+	}
+
+	state->var_registers[x] = (result & 0xff);
+}
+
 bool c8_call(C8_App_State* state, u16 nnn) {
 	char buf[256];
 
@@ -296,18 +312,8 @@ bool c8_app_update(C8_App_State* state) {
 			state->var_registers[x] = nn;
 		}
 		else if (op == 0x7) {
-			u16 result = vx + nn;
 
-			c8_plat_debug_printf( "Add %2x to v%x (%2x) = %2x\n", nn, x, vx, result);
-			if (result > 0xff) {
-				state->var_registers[C8_FLAG_REG] = 1;
-			}
-			else {
-				state->var_registers[C8_FLAG_REG] = 0;
-			}
-
-			state->var_registers[x] = (result & 0xff);
-
+			c8_add_number_to_register(state, x, nn);
 		}
 		else if (op == 0xa) {
 			c8_plat_debug_printf( "Set index register to %03x\n", nnn);
