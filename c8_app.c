@@ -222,7 +222,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\15puzzle.ch8";
+		char f_name[] = "data\\airplane.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
@@ -278,7 +278,7 @@ bool c8_app_update(C8_App_State* state) {
 
 		c8_plat_debug_printf( "Pc %02x\n", state->pc);
 
-# if 1
+# if 0
 		sprintf(buf, "Instruction : %04X \n", instruction);
 		c8_plat_debug_out(buf);
 # endif
@@ -371,15 +371,16 @@ bool c8_app_update(C8_App_State* state) {
 
 			state->var_registers[C8_FLAG_REG] = flag_register;
 
-#if 1
+#if 0
 			c8_debug_display(state);
 			c8_plat_debug_out("\n");
 # endif
 
 		}
 		else if (op == 0x3) {
+#if 0
 			c8_plat_debug_printf( "Skip if v%x (%x) equals %02x\n", x, vx, nn);
-
+# endif
 			if (vx == nn) {
 				state->pc += 2;
 			}
@@ -388,7 +389,11 @@ bool c8_app_update(C8_App_State* state) {
 			if (vx != nn) {
 				state->pc += 2;
 			}
+#if 0
+
 			c8_plat_debug_printf( "Skip if v%x (%x) not equals %02x\n", x, vx, nn);
+
+# endif
 
 		}
 		else if ((instruction & 0xf00f) == 0x5000) {

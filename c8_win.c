@@ -817,10 +817,16 @@ C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena) {
 }
 
 void c8_plat_debug_out(char* str) {
+#if C8_DEBUG_PRINT
+
 	OutputDebugStringA(str);
+#endif
+
 }
 
 int c8_plat_debug_printf(char* format, ...) {
+
+#if C8_DEBUG_PRINT
 	char buf[256];
 	va_list argp;
 	va_start(argp, format);
@@ -828,6 +834,10 @@ int c8_plat_debug_printf(char* format, ...) {
 	va_end(argp);
 	OutputDebugStringA(buf);
 	return result;
+#else
+	return 0;
+#endif
+
 }
 
 #include "c8_app.c"
