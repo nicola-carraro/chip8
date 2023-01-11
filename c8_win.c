@@ -820,12 +820,13 @@ void c8_plat_debug_out(char* str) {
 	OutputDebugStringA(str);
 }
 
-int c8_plat_debug_printf(char* str, psz size, char* format, ...) {
+int c8_plat_debug_printf(char* format, ...) {
+	char buf[256];
 	va_list argp;
 	va_start(argp, format);
-	int result = vsnprintf(str, size, format, argp);
+	int result = vsnprintf(buf, sizeof(buf), format, argp);
 	va_end(argp);
-	OutputDebugStringA(str);
+	OutputDebugStringA(buf);
 	return result;
 }
 
