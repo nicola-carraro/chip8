@@ -306,7 +306,7 @@ bool c8_app_update(C8_App_State* state) {
 				state->var_registers[C8_FLAG_REG] = 0;
 			}
 
-			state->var_registers[x] = (result & 0xf);
+			state->var_registers[x] = (result & 0xff);
 
 		}
 		else if (op == 0xa) {
