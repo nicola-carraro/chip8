@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define C8_DEBUG_PRINT 0
+#define C8_DEBUG_PRINT 1
 
 typedef int16_t i16;
 typedef int32_t i32;
