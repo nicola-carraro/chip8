@@ -222,7 +222,7 @@ bool c8_app_update(C8_App_State* state) {
 	}
 
 	if (!state->program_loaded) {
-		char f_name[] = "data\\blinky.ch8";
+		char f_name[] = "data\\invaders.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
 		if (file.data != 0) {
