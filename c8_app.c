@@ -24,7 +24,7 @@ i32 c8_frame_y(C8_App_State* state)
 }
 
 bool c8_push_frame(C8_App_State* state) {
-	C8_Rgb frame_color = { 100, 100, 255 };
+	C8_Rgb frame_color = { 255, 255, 255 };
 
 	C8_Arena arena;
 
@@ -68,7 +68,7 @@ bool c8_push_frame(C8_App_State* state) {
 
 bool c8_push_pixels(C8_App_State* state) {
 
-	C8_Rgb pixel_color = { 0, 0, 0 };
+	C8_Rgb pixel_color = { 255,255, 255 };
 
 	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
 	{

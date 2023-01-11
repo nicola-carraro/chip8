@@ -103,7 +103,7 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(255, 255, 255),
+		D3DCOLOR_XRGB(0, 0, 0),
 		0.0f,
 		0
 	);
