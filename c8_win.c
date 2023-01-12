@@ -670,10 +670,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	i32 samples_per_sec = 8000;
 	i32 bytes_per_sample = 2;
 
-	//i32 wave_counter = 0;
-	//i32 half_wave_period = wave_period / 2;
-	//u32 sample_index = 0;
-
 	if (window != 0) {
 
 		if (c8_win_initd3d(&global_state, window)) {
@@ -688,15 +684,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				OutputDebugStringA("Could not initialize Direct Sound\n");
 				assert(false);
 			}
-
-			//DWORD wave_counter = 0;
-
-		/*	HRESULT play = IDirectSoundBuffer_Play(global_state.ds_sec_buf, 0, 0, DSBPLAY_LOOPING);
-
-			if (FAILED(play)) {
-				OutputDebugStringA("Could not play");
-				assert(false);
-			}*/
 
 			while (global_state.app_state.running)
 			{
@@ -715,16 +702,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				if (!c8_win_render(&global_state))
 				{
 					OutputDebugStringA("Could not render\n");
-					// TODO: understand why clear sometimes fails
 					assert(false);
 				}
 
 				if (!global_state.is_beeping && global_state.app_state.should_beep) {
-					assert(c8_win_start_beep(&global_state));
+					bool beeped = c8_win_start_beep(&global_state);
+					assert(beeped);
 				}
 
 				if (global_state.is_beeping && !global_state.app_state.should_beep) {
-					assert(c8_win_stop_beep(&global_state));
+					bool stopped = c8_win_stop_beep(&global_state);
+					assert(stopped);
 				}
 
 				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
@@ -734,6 +722,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				//OutputDebugStringA(str);
 			}
 		}
+
 		else {
 			OutputDebugStringA("Could not initialize Direct3D\n");
 		}

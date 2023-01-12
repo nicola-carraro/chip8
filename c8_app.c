@@ -649,6 +649,7 @@ bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 		arena->alignement = alignement;
 		arena->offset = 0;
 		arena->data = mem;
+		result = true;
 	}
 	else {
 		OutputDebugStringA("Arena initialization failed");
