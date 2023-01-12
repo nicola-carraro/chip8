@@ -207,6 +207,7 @@ bool c8_win_render(C8_Win_State* state) {
 
 		}
 
+		return result;
 	}
 
 	state->vertex_count = 0;
@@ -231,7 +232,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 			&state->d3d_dev
 		);
 
-		if (SUCCEEDED(device_created)) {
+		if (device_created == D3D_OK) {
 			c8_clear_struct(state->vertices);
 
 			HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
@@ -244,7 +245,7 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 				0
 			);
 
-			if (SUCCEEDED(vb_created)) {
+			if (vb_created == D3D_OK) {
 				result = true;
 			}
 			else {
