@@ -363,8 +363,7 @@ bool c8_win_init_dsound(C8_Win_State* state, HWND window, i32 samples_per_sec) {
 								buf_data,
 								buf_size,
 								0,
-								0,
-								);
+								0);
 
 							if (SUCCEEDED(unlocked)) {
 
@@ -411,7 +410,6 @@ bool c8_win_init_dsound(C8_Win_State* state, HWND window, i32 samples_per_sec) {
 }
 
 LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam) {
-	char buf[256];
 	switch (msg) {
 	case WM_CLOSE:
 	{
@@ -677,7 +675,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			global_state.app_state.running = true;
 
 			global_state.has_sound = false;
-			if (c8_win_init_dsound(&global_state, window, samples_per_sec, bytes_per_sample)) {
+			if (c8_win_init_dsound(&global_state, window, samples_per_sec)) {
 				global_state.has_sound = true;
 			}
 			else {
@@ -751,13 +749,17 @@ C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena) {
 	char buf[256];
 
 	OFSTRUCT ofstruct;
-	HFILE f = OpenFile(
+	HANDLE f = CreateFileA(
 		name,
-		&ofstruct,
-		OF_READ
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		0,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL,
+		0
 	);
 
-	if (f != HFILE_ERROR) {
+	if (f != INVALID_HANDLE_VALUE) {
 		LARGE_INTEGER f_size;
 		BOOL has_sz = GetFileSizeEx(
 			f,
