@@ -26,8 +26,6 @@ i32 c8_frame_y(C8_App_State* state)
 bool c8_push_frame(C8_App_State* state) {
 	C8_Rgb frame_color = { 255, 255, 255 };
 
-	C8_Arena arena;
-
 	i32 frame_x = c8_frame_x(state);
 
 	i32 frame_y = c8_frame_y(state);
@@ -213,13 +211,6 @@ bool c8_call(C8_App_State* state, u16 nnn) {
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
-	if (!state->initialised)
-	{
-		c8_clear_struct(state->arena);
-		if (c8_arena_init(&state->arena, 1024 * 1024, 4)) {
-			state->initialised = true;
-		}
-	}
 
 	if (!state->program_loaded) {
 		char f_name[] = "data\\invaders.ch8";

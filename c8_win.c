@@ -3,6 +3,186 @@
 #define C8_WIN_C
 #include "c8_win.h"
 
+BOOL c8_win_draw_texture(C8_Win_State* state, FLOAT left, FLOAT top, FLOAT right, FLOAT bottom) {
+
+	BOOL result = false;
+
+	if (SUCCEEDED(IDirect3DDevice9_SetFVF(state->d3d_dev, C8_WIN_TEX_FVF))) {
+		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->texture_vb, 0, sizeof(C8_Win_Texture_Vertex)))) {
+
+			C8_Win_Texture_Vertex* vertices;
+
+			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->texture_vb, 0, 0, (void**)&vertices, NULL);
+			D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 255, 255);
+			if (SUCCEEDED(locked)) {
+				vertices[0].color = color;
+				vertices[0].x = left - 0.5f;
+				vertices[0].y = top - 0.5f;
+				vertices[0].z = 0.0f;
+				vertices[0].rhw = 1.0f;
+				vertices[0].u = 0.0f;
+				vertices[0].v = 0.0f;
+
+				vertices[1].color = color;
+				vertices[1].x = right - 0.5f;
+				vertices[1].y = top - 0.5f;
+				vertices[1].z = 0.0f;
+				vertices[1].rhw = 1.0f;
+				vertices[1].u = 1.0f;
+				vertices[1].v = 0.0f;
+
+				vertices[2].color = color;
+				vertices[2].x = right - 0.5f;
+				vertices[2].y = bottom - 0.5f;
+				vertices[2].z = 0.0f;
+				vertices[2].rhw = 1.0f;
+				vertices[2].u = 1.0f;
+				vertices[2].v = 1.0f;
+
+				vertices[3].color = color;
+				vertices[3].x = left - 0.5f;
+				vertices[3].y = bottom - 0.5f;
+				vertices[3].z = 0.0f;
+				vertices[3].rhw = 1.0f;
+				vertices[3].u = 0.0f;
+				vertices[3].v = 1.0f;
+
+				HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->texture_vb);
+				if (SUCCEEDED(unlocked)) {
+
+					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
+						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLEFAN, 0, 2))) {
+							result = TRUE;
+						}
+						else {
+							OutputDebugStringA("Could not draw primitive\n");
+
+						}
+					}
+					else {
+						OutputDebugStringA("Could not set texture\n");
+
+					}
+				}
+				else {
+					OutputDebugStringA("Could not unlock vertex buffer\n");
+
+				}
+			}
+			else {
+				OutputDebugStringA("Could not lock vertex buffer\n");
+			}
+		}
+		else {
+			OutputDebugStringA("Could not set stream source texture\n");
+		}
+
+	}
+	else {
+		OutputDebugStringA("Could not set FVF for texture\n");
+	}
+
+	return result;
+}
+
+BOOL c8_win_load_texture(C8_Win_State* state, char* file_name, i32 name_length)
+{
+
+	BOOL result = false;
+
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
+
+	if (file.data) {
+		UINT width = ((UINT*)file.data)[0];
+		UINT height = ((UINT*)file.data)[1];
+		uint8_t* input_bitmap = ((UINT*)file.data) + 2;
+		HRESULT textureCreated =
+			IDirect3DDevice9_CreateTexture(
+				state->d3d_dev,
+				width,
+				height,
+				0,
+				0,
+				D3DFMT_A32B32G32R32F,
+				D3DPOOL_MANAGED,
+				&state->texture,
+				NULL
+			);
+
+		if (SUCCEEDED(textureCreated)) {
+			D3DLOCKED_RECT out_rect = { 0 };
+
+			HRESULT locked = IDirect3DTexture9_LockRect(state->texture, 0, &out_rect, 0, 0);
+			if (SUCCEEDED(locked)) {
+
+				uint8_t* row_start = (uint8_t*)(out_rect.pBits);
+				for (uint32_t row = 0; row < height; row++) {
+
+					uint32_t f_index = 0;
+					for (uint32_t column = 0; column < width; column++) {
+						uint8_t src_pixel = input_bitmap[(row * width) + column];
+
+						uint8_t* dest_pixel = ((uint8_t*)out_rect.pBits) + (row * out_rect.Pitch) + (column * 4);
+
+						float color = ((float)src_pixel) / 255.0f;
+
+						((float*)row_start)[column * 4] = color;
+
+						((float*)row_start)[column * 4 + 1] = color;
+						((float*)row_start)[column * 4 + 2] = color;
+						((float*)row_start)[column * 4 + 3] = color;
+
+					}
+
+					row_start += out_rect.Pitch;
+				}
+
+			}
+			else {
+				OutputDebugStringA("Could not lock triangle\n");
+			}
+
+			int count = 0;
+
+			uint8_t* input_bitmap = ((UINT)file.data + 2);
+
+			uint8_t* row_start = (uint8_t*)(out_rect.pBits);
+
+			HRESULT unlocked = IDirect3DTexture9_UnlockRect(state->texture, 0);
+			if (SUCCEEDED(unlocked)) {
+
+				HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
+					state->d3d_dev,
+					sizeof(C8_Win_Texture_Vertex) * 4,
+					0,
+					C8_WIN_TEX_FVF,
+					D3DPOOL_MANAGED,
+					&state->texture_vb,
+					0
+				);
+
+				if (SUCCEEDED(vb_created)) {
+					result = TRUE;
+				}
+				else {
+					OutputDebugStringA("Could not create vertex buffer\n");
+				}
+			}
+			else {
+				OutputDebugStringA("Could not unlock rect\n");
+			}
+		}
+		else {
+			OutputDebugStringA("Could not create texture\n");
+
+		}
+
+	}
+
+	return result;
+
+}
+
 D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 {
 	D3DPRESENT_PARAMETERS result;
@@ -103,7 +283,7 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(0, 0, 0),
+		D3DCOLOR_XRGB(255, 255, 255),
 		0.0f,
 		0
 	);
@@ -111,16 +291,18 @@ bool c8_win_render(C8_Win_State* state) {
 	if (SUCCEEDED(cleared))
 	{
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
+
 			VOID* vp;
+
 			HRESULT locked = IDirect3DVertexBuffer9_Lock(
-				state->vb,
+				state->color_vb,
 				0,
 				0,
 				&vp,
 				0);
 			if (SUCCEEDED(locked)) {
-				memcpy(vp, state->vertices, state->vertex_count * sizeof(C8_Win_D3d_Vertex));
-				if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->vb))) {
+				memcpy(vp, state->color_vertices, state->color_vertex_count * sizeof(C8_Win_Color_Vertex));
+				if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->color_vb))) {
 
 					HRESULT fvf_set = IDirect3DDevice9_SetFVF(
 						state->d3d_dev,
@@ -133,9 +315,9 @@ bool c8_win_render(C8_Win_State* state) {
 						HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
 							state->d3d_dev,
 							0,
-							state->vb,
+							state->color_vb,
 							0,
-							sizeof(C8_Win_D3d_Vertex)
+							sizeof(C8_Win_Color_Vertex)
 						);
 
 						if (SUCCEEDED(stream_src_set))
@@ -144,8 +326,10 @@ bool c8_win_render(C8_Win_State* state) {
 								state->d3d_dev,
 								D3DPT_TRIANGLELIST,
 								0,
-								state->vertex_count / 3
+								state->color_vertex_count / 3
 							);
+
+							c8_win_draw_texture(state, 10.0f, 10.0f, 60.0f, 60.0f);
 
 							if (SUCCEEDED(drawn)) {
 
@@ -209,7 +393,91 @@ bool c8_win_render(C8_Win_State* state) {
 
 	}
 
-	state->vertex_count = 0;
+	state->color_vertex_count = 0;
+
+	return result;
+}
+
+bool c8_win_init_texture(C8_Win_State* state, char* file_name, i32 name_length) {
+
+	bool result = false;
+
+	C8_Arena arena;
+
+	c8_arena_init(&arena, 1024 * 1024, 4);
+	C8_File file = c8_plat_read_file(file_name, name_length, &arena);
+
+	if (file.data != 0) {
+
+		UINT width = ((UINT*)file.data)[0];
+		UINT height = ((UINT*)file.data)[1];
+
+		HRESULT textureCreated =
+			IDirect3DDevice9_CreateTexture(
+				state->d3d_dev,
+				width,
+				height,
+				0,
+				0,
+				D3DFMT_A32B32G32R32F,
+				D3DPOOL_MANAGED,
+				&state->texture,
+				NULL
+			);
+
+		if (SUCCEEDED(textureCreated)) {
+
+			D3DLOCKED_RECT rect;
+			rect.Pitch = width;
+			rect.pBits = 0;
+
+			u8* input_bitmap = (u8*)(((UINT*)file.data) + 2);
+			HRESULT locked = IDirect3DTexture9_LockRect(state->texture, 0, &rect, 0, 0);
+
+			if (SUCCEEDED(locked)) {
+
+				u32 float_count = 0;
+				for (u32 row = 0; row < height; row++) {
+					for (u32 column = 0; column < width; column++) {
+						u8 pixel = input_bitmap[(row * width) + column];
+						if (pixel != 0) {
+							OutputDebugStringA("x");
+
+						}
+						else {
+							OutputDebugStringA(".");
+
+						}
+
+						for (u32 channel = 0; channel < 4; channel++) {
+
+							float color = (float)pixel / 255.0f;
+							((float*)rect.pBits)[float_count] = color;
+							float_count++;
+						}
+					}
+					OutputDebugStringA("\n");
+				}
+
+				HRESULT unlocked = IDirect3DTexture9_UnlockRect(state->texture, 0);
+
+				if (SUCCEEDED(unlocked)) {
+					result = true;
+
+				}
+				else {
+					OutputDebugStringA("Failed to unlock texture\n");
+				}
+
+			}
+			else {
+				OutputDebugStringA("Failed to lock texture\n");
+			}
+		}
+		else {
+			OutputDebugStringA("Failed to create texture\n");
+		}
+	}
 
 	return result;
 }
@@ -217,6 +485,7 @@ bool c8_win_render(C8_Win_State* state) {
 bool c8_win_initd3d(C8_Win_State* state, HWND window)
 {
 	bool result = false;
+
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
 	if (state->d3d != 0)
 	{
@@ -226,26 +495,28 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 			D3DADAPTER_DEFAULT,
 			D3DDEVTYPE_HAL,
 			window,
-			D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+			D3DCREATE_HARDWARE_VERTEXPROCESSING,
 			&d3dpp,
 			&state->d3d_dev
 		);
 
 		if (SUCCEEDED(device_created)) {
-			c8_clear_struct(state->vertices);
+			c8_clear_struct(state->color_vertices);
 
 			HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
 				state->d3d_dev,
-				sizeof(state->vertices),
+				sizeof(state->color_vertices),
 				0,
 				C8_WIN_D3D_FVF,
 				D3DPOOL_MANAGED,
-				&state->vb,
+				&state->color_vb,
 				0
 			);
 
 			if (SUCCEEDED(vb_created)) {
 				result = true;
+				char file_name[] = "data/0";
+				c8_win_load_texture(state, file_name, c8_arr_count(file_name) - 1);
 			}
 			else {
 				OutputDebugStringA("Failed to create vertex buffer");
@@ -591,14 +862,14 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
 	bool result = false;
 
-	assert(state->vertex_count < c8_arr_count(state->vertices));
+	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
 
-	if (state->vertex_count < c8_arr_count(state->vertices))
+	if (state->color_vertex_count < c8_arr_count(state->color_vertices))
 	{
-		state->vertices[state->vertex_count].x = x;
-		state->vertices[state->vertex_count].y = y;
-		state->vertices[state->vertex_count].color = D3DCOLOR_XRGB(r, g, b);
-		state->vertex_count++;
+		state->color_vertices[state->color_vertex_count].x = x;
+		state->color_vertices[state->color_vertex_count].y = y;
+		state->color_vertices[state->color_vertex_count].color = D3DCOLOR_XRGB(r, g, b);
+		state->color_vertex_count++;
 		result = true;
 	}
 	else {
@@ -668,67 +939,74 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	i32 samples_per_sec = 8000;
 	i32 bytes_per_sample = 2;
 
-	if (window != 0) {
+	if (c8_arena_init(&global_state.app_state.arena, 1024 * 1024, 4)) {
 
-		if (c8_win_initd3d(&global_state, window)) {
-			ShowWindow(window, cmd_show);
-			global_state.app_state.running = true;
+		if (window != 0) {
 
-			global_state.has_sound = false;
-			if (c8_win_init_dsound(&global_state, window, samples_per_sec)) {
-				global_state.has_sound = true;
+			if (c8_win_initd3d(&global_state, window)) {
+				ShowWindow(window, cmd_show);
+				global_state.app_state.running = true;
+
+				global_state.has_sound = false;
+				if (c8_win_init_dsound(&global_state, window, samples_per_sec)) {
+					global_state.has_sound = true;
+				}
+				else {
+					OutputDebugStringA("Could not initialize Direct Sound\n");
+					assert(false);
+				}
+
+				while (global_state.app_state.running)
+				{
+
+					if (!c8_win_process_msgs(&global_state, window))
+					{
+						break;
+					}
+
+					if (!c8_app_update(&global_state.app_state))
+					{
+						OutputDebugStringA("Could not update app\n");
+						assert(false);
+					}
+
+					if (!c8_win_render(&global_state))
+					{
+						OutputDebugStringA("Could not render\n");
+						assert(false);
+					}
+
+					if (!global_state.is_beeping && global_state.app_state.should_beep) {
+						bool beeped = c8_win_start_beep(&global_state);
+						assert(beeped);
+					}
+
+					if (global_state.is_beeping && !global_state.app_state.should_beep) {
+						bool stopped = c8_win_stop_beep(&global_state);
+						assert(stopped);
+					}
+
+					float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+
+					char str[255];
+					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+					//OutputDebugStringA(str);
+				}
 			}
+
 			else {
-				OutputDebugStringA("Could not initialize Direct Sound\n");
-				assert(false);
+				OutputDebugStringA("Could not initialize Direct3D\n");
 			}
 
-			while (global_state.app_state.running)
-			{
-
-				if (!c8_win_process_msgs(&global_state, window))
-				{
-					break;
-				}
-
-				if (!c8_app_update(&global_state.app_state))
-				{
-					OutputDebugStringA("Could not update app\n");
-					assert(false);
-				}
-
-				if (!c8_win_render(&global_state))
-				{
-					OutputDebugStringA("Could not render\n");
-					assert(false);
-				}
-
-				if (!global_state.is_beeping && global_state.app_state.should_beep) {
-					bool beeped = c8_win_start_beep(&global_state);
-					assert(beeped);
-				}
-
-				if (global_state.is_beeping && !global_state.app_state.should_beep) {
-					bool stopped = c8_win_stop_beep(&global_state);
-					assert(stopped);
-				}
-
-				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
-				char str[255];
-				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-				//OutputDebugStringA(str);
-			}
 		}
-
 		else {
-			OutputDebugStringA("Could not initialize Direct3D\n");
+			OutputDebugStringA("Could not open window\n");
 		}
-
 	}
 	else {
-		OutputDebugStringA("Could not open window\n");
+		OutputDebugStringA("Failed to initialize arena\n");
 	}
+
 }
 
 void* c8_plat_allocate(psz size) {
