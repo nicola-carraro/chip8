@@ -275,6 +275,80 @@ float c8_win_millis_elapsed(C8_Win_Timer* timer, bool reset_timer)
 	return millis_elapsed;
 }
 
+bool c8_draw_color(C8_Win_State *state) {
+
+	BOOL result = FALSE;
+
+	VOID* vp;
+
+	HRESULT locked = IDirect3DVertexBuffer9_Lock(
+		state->color_vb,
+		0,
+		0,
+		&vp,
+		0);
+	if (SUCCEEDED(locked)) {
+		memcpy(vp, state->color_vertices, state->color_vertex_count * sizeof(C8_Win_Color_Vertex));
+		if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->color_vb))) {
+			HRESULT fvf_set = IDirect3DDevice9_SetFVF(
+				state->d3d_dev,
+				C8_WIN_D3D_FVF
+			);
+
+			if (SUCCEEDED(fvf_set))
+			{
+
+				HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
+					state->d3d_dev,
+					0,
+					state->color_vb,
+					0,
+					sizeof(C8_Win_Color_Vertex)
+				);
+
+				if (SUCCEEDED(stream_src_set))
+				{
+					HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
+						state->d3d_dev,
+						D3DPT_TRIANGLELIST,
+						0,
+						state->color_vertex_count / 3
+					);
+
+					if (SUCCEEDED(drawn)) {
+
+						result = TRUE;
+
+					}
+					else {
+						OutputDebugStringA("DrawPrimitive failed\n");
+					}
+
+				}
+				else {
+					OutputDebugStringA("SetStreamSource failed\n");
+				}
+			}
+			else
+			{
+				OutputDebugStringA("SetFVF failed\n");
+
+			}
+
+		}
+		else
+		{
+			OutputDebugStringA("Failed to unlock vertex buffer\n");
+		}
+	}
+	else
+	{
+		OutputDebugStringA("Failed to lock vertex buffer\n");
+	}
+
+	return result;
+}
+
 bool c8_win_render(C8_Win_State* state) {
 
 	bool result = false;
@@ -291,88 +365,10 @@ bool c8_win_render(C8_Win_State* state) {
 	if (SUCCEEDED(cleared))
 	{
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
+			c8_draw_color(state);
 
-			VOID* vp;
+			c8_win_draw_texture(state, 10.0f, 10.0f, 60.0f, 60.0f);
 
-			HRESULT locked = IDirect3DVertexBuffer9_Lock(
-				state->color_vb,
-				0,
-				0,
-				&vp,
-				0);
-			if (SUCCEEDED(locked)) {
-				memcpy(vp, state->color_vertices, state->color_vertex_count * sizeof(C8_Win_Color_Vertex));
-				if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->color_vb))) {
-
-					HRESULT fvf_set = IDirect3DDevice9_SetFVF(
-						state->d3d_dev,
-						C8_WIN_D3D_FVF
-					);
-
-					if (SUCCEEDED(fvf_set))
-					{
-
-						HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
-							state->d3d_dev,
-							0,
-							state->color_vb,
-							0,
-							sizeof(C8_Win_Color_Vertex)
-						);
-
-						if (SUCCEEDED(stream_src_set))
-						{
-							HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
-								state->d3d_dev,
-								D3DPT_TRIANGLELIST,
-								0,
-								state->color_vertex_count / 3
-							);
-
-							c8_win_draw_texture(state, 10.0f, 10.0f, 60.0f, 60.0f);
-
-							if (SUCCEEDED(drawn)) {
-
-								if (SUCCEEDED(IDirect3DDevice9_EndScene(state->d3d_dev)))
-								{
-									if (SUCCEEDED(IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0)))
-									{
-										result = true;
-									}
-									else
-									{
-										OutputDebugStringA("Present failed\n");
-									}
-								}
-								else {
-									OutputDebugStringA("EndScene failed\n");
-								}
-
-							}
-							else {
-								OutputDebugStringA("DrawPrimitive failed\n");
-							}
-
-						}
-						else {
-							OutputDebugStringA("SetStreamSource failed\n");
-						}
-					}
-					else
-					{
-						OutputDebugStringA("SetFVF failed\n");
-
-					}
-				}
-				else
-				{
-					OutputDebugStringA("Failed to unlock vertex buffer\n");
-				}
-			}
-			else
-			{
-				OutputDebugStringA("Failed to lock vertex buffer\n");
-			}
 		}
 		else
 		{
@@ -391,6 +387,21 @@ bool c8_win_render(C8_Win_State* state) {
 
 		}
 
+	}
+
+	if (SUCCEEDED(IDirect3DDevice9_EndScene(state->d3d_dev)))
+	{
+		if (SUCCEEDED(IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0)))
+		{
+			result = true;
+		}
+		else
+		{
+			OutputDebugStringA("Present failed\n");
+		}
+	}
+	else {
+		OutputDebugStringA("EndScene failed\n");
 	}
 
 	state->color_vertex_count = 0;
