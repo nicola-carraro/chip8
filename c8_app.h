@@ -57,6 +57,36 @@ typedef uint8_t u8;
 
 #define C8_FLAG_REG 0xf
 
+//typedef enum  {
+//	Command_Type_Triangles,
+//	Command_Type_Fonts
+//}C8_Draw_Command_Type;
+//
+//typedef struct {
+//	FLOAT x;
+//	FLOAT y;
+//	u8 red;
+//	u8 green;
+//	u8 blue;
+//	u8 alpha;
+//} C8_Color_Vertex;
+//
+//typedef struct{
+//	psz capacity;
+//	psz size;
+//	C8_Color_Vertex* vertices;
+//	C8_Arena* arena;
+//}
+//C8_Color_Vertex_Vector;
+
+//typedef struct {
+//} Draw_Command_Triangles;
+
+//typedef struct {
+//	C8_Draw_Command_Type type;
+//	C8_Color_Vertex_Vector* triangles;
+//}Draw_Command;
+
 typedef struct {
 	void* data;
 	psz max_bytes;
