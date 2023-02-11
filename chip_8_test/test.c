@@ -4,6 +4,23 @@
 
 #define c8_test_def(a)(printf("TEST : %s\n", a))
 
+//void c8_test_dynarray_add()
+//{
+//	c8_test_def("add to dynamic array");
+//
+//	C8_Arena arena;
+//
+//	i32 alignement = 4;
+//
+//	psz size = 100;
+//
+//	c8_arena_init(&arena, size, alignement);
+//
+//	int_dynarray arr = { 0 };
+//
+//	dynarray_add(&arr, 3, int, &arena);
+//}
+
 void c8_test_arena_init()
 {
 	c8_test_def("initialize arena");

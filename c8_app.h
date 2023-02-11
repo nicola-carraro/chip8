@@ -57,6 +57,10 @@ typedef uint8_t u8;
 
 #define C8_FLAG_REG 0xf
 
+typedef struct {
+
+}AtlasHeader;
+
 //typedef enum  {
 //	Command_Type_Triangles,
 //	Command_Type_Fonts
@@ -198,5 +202,36 @@ void c8_arena_free_all(C8_Arena* arena);
 bool c8_app_update();
 
 void c8_plat_debug_out(char* str);
+
+//#define dynarray_add(dynarray, item, type, arena)							\
+//do {																		\
+//	if ((dynarray)->count <= (dynarray)->capacity) {						\
+//																			\
+//		if ((dynarray)->capacity == 0) {									\
+//			(dynarray)->capacity = 50;										\
+//		}																	\
+//		else {																\
+//			psz old_capacity = (dynarray)->capacity;						\
+//			(dynarray)->capacity *= 2; /									\
+//				type * tmp = c8_arena_alloc(arena, (dynarray)->capacity);	\
+//			if (!tmp) {														\
+//				return false;												\
+//			}																\
+//			for (psz i = 0; i < old_capacity; i++)							\
+//			{																\
+//				((u8*)tmp)[i] = ((u8*)(dynarray)->items))[i];				\
+//			}																\
+//			(dynarray)->items = tmp; 										\
+//		}																	\
+//		(dynarray)->items[(dynarray)->count] = item;						\
+//		(dynarray)->count++;												\
+//	}																		\
+//} while (0)	
+//
+//typedef struct {
+//	int* items;
+//	psz count;
+//	psz capacity;
+//} int_dynarray;
 
 #endif // !C8_APP
