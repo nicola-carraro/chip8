@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include<stdbool.h>
+#include"../c8_app.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
@@ -84,12 +86,7 @@ void write_bmp(stbtt_fontinfo* font, char c) {
 	stbtt_FreeBitmap(bitmap, 0);
 }
 
-void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char) {
-
-	int32_t char_width;
-	int32_t char_height;
-	int32_t char_x_offset;
-	int32_t char_y_offset;
+void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, bool write_ppm) {
 
 	int32_t total_width = 0;
 
@@ -103,8 +100,16 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char) 
 
 	int32_t* heights = malloc(sizeof(*heights) * (char_count));
 
+	int32_t* y_offsets = malloc(sizeof(*y_offsets) * (char_count));
+
+	int32_t max_y_offset = 0;
+
 	for (int32_t i = 0; i < (char_count); i++)
 	{
+		int32_t glyph_width;
+		int32_t glyph_height;
+		int32_t glyph_x_offset;
+		int32_t glyph_y_offset;
 
 		char c = start_char + i;
 
@@ -113,23 +118,65 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char) 
 			0,
 			stbtt_ScaleForPixelHeight(font, 120),
 			c,
-			&char_width,
-			&char_height,
-			&char_x_offset,
-			&char_y_offset
+			&glyph_width,
+			&glyph_height,
+			&glyph_x_offset,
+			&glyph_y_offset
 		);
 
-		widths[i] = char_width;
-		heights[i] = char_height;
+		widths[i] = glyph_width;
+		heights[i] = glyph_height;
+		y_offsets[i] = glyph_y_offset;
 
-		total_width += char_width;
+		total_width += glyph_width;
 
-		if (char_height > total_height) {
-			total_height = char_height;
+		if (glyph_height > total_height) {
+			total_height = glyph_height;
+		}
+
+		if (glyph_y_offset > max_y_offset) {
+			max_y_offset = glyph_y_offset;
 		}
 	}
 
-	char f_name[256] = "out\\atlas.ppm";
+	C8_Atlas_Header header = { 0 };
+
+	header.aspect_ratio = (float)total_width / (float)total_height;
+
+	{
+		int32_t current_x = 0;
+		for (int32_t glyph_index = 0; glyph_index < c8_arr_count(header.glyphs); glyph_index++) {
+			char c = start_char + glyph_index;
+
+			C8_Atlas_Glyph glyph = { 0 };
+			int32_t width = widths[glyph_index];
+			int32_t height = heights[glyph_index];
+
+			glyph.u_left = (1.0f / (float)total_width) * ((float)current_x);
+			glyph.v_top = 0.0f;
+			current_x += width;
+			glyph.u_right = (1.0f / (float)total_width) * ((float)current_x);
+			glyph.v_bottom = (1.0f / (float)total_height) * ((float)height);
+
+			int32_t y_offset_from_line_top = y_offsets[glyph_index] - max_y_offset;
+
+			int advance;
+
+			int left_side_bearing;
+
+			stbtt_GetGlyphHMetrics(font, stbtt_FindGlyphIndex(font, c), &advance, &left_side_bearing);
+		}
+
+	}
+
+	char f_name[256];
+		
+	if (write_ppm) {
+		strcpy(f_name, "out\\atlas.ppm");
+	}
+	else {
+		strcpy(f_name, "out\\atlas.c8");
+	}
 
 	FILE* o = fopen(f_name, "wb");
 
@@ -140,72 +187,82 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char) 
 
 	//stbtt_GetFontBoundingBox(font, &x0, &y0, &x1, &y1);
 
-	int advanceWidth;
+	{
+		int32_t current_x = 0;
+		int32_t current_y = 0;
 
-	int leftSideBearing;
+		if (o != 0) {
 
-	//stbtt_GetGlyphHMetrics(font, stbtt_FindGlyphIndex(font, c), &advanceWidth, &leftSideBearing);
-
-	int32_t current_x = 0;
-	int32_t current_y = 0;
-
-	if (o != 0) {
-		fprintf(o, "P6\n");
-		fprintf(o, "%d\n", total_width);
-		fprintf(o, "%d\n", total_height);
-		fprintf(o, "255\n");
-
-		//fwrite(&width, sizeof(width), 1, o);
-		//fwrite(&height, sizeof(height), 1, o);
-		//fwrite(bitmap, sizeof(*bitmap), width * height, o);
-
-		for (int bmp_row = 0; bmp_row < total_height; bmp_row++) {
-
-			int32_t char_index = 0;
-
-			int32_t char_x = 0;
-
-			int32_t char_width = widths[0];
-
-			int32_t char_height = heights[0];
-
-			for (int bmp_col = 0; bmp_col < total_width; bmp_col++) {
-
-				if (char_x >= char_width) {
-					char_x = 0;
-					char_index++;
-					char_width = widths[char_index];
-					char_height = heights[char_index];
-				}
-
-				int pixel_i = (bmp_row * char_width) + char_x;
-
-				uint8_t color = 0;
-
-				if (bmp_row < char_height) {
-					color = char_bitmaps[char_index][pixel_i];
-				}
-
-				for (int channel = 0; channel < 3; channel++) {
-					fputc(color, o);
-				}
-
-				if (color) {
-					printf("X");
-				}
-				else {
-					printf(" ");
-				}
-
-				char_x++;
+			if (write_ppm)
+			{
+				fprintf(o, "P6\n");
+				fprintf(o, "%d\n", total_width);
+				fprintf(o, "%d\n", total_height);
+				fprintf(o, "255\n");
+			}
+			else {
+				fwrite(&header, sizeof(header), 1, o);
 			}
 
-			printf("\n");
+			for (int bmp_row = 0; bmp_row < total_height; bmp_row++) {
+
+				int32_t char_index = 0;
+
+				int32_t char_x = 0;
+
+				int32_t char_width = widths[0];
+
+				int32_t char_height = heights[0];
+
+				for (int bmp_col = 0; bmp_col < total_width; bmp_col++) {
+
+					if (char_x >= char_width) {
+						char_x = 0;
+						char_index++;
+						char_width = widths[char_index];
+						char_height = heights[char_index];
+					}
+
+					int pixel_i = (bmp_row * char_width) + char_x;
+
+					uint8_t alpha = 0;
+
+					if (bmp_row < char_height) {
+						alpha = char_bitmaps[char_index][pixel_i];
+					}
+
+					if (write_ppm) {
+						for (int channel = 0; channel < 3; channel++) {
+							fputc(alpha, o);
+						}
+					}
+					else {
+
+						uint8_t color = alpha == 0 ? 0 : 255;
+						for (int channel = 0; channel < 3; channel++) {
+							fputc(color, o);
+						}
+
+						fputc(alpha, o);
+					}
+
+					if (alpha) {
+						printf("X");
+					}
+					else {
+						printf(" ");
+					}
+
+					char_x++;
+				}
+
+				printf("\n");
+
+			}
+
+			fflush(o);
 
 		}
-
-		fflush(o);
-
 	}
 
 	//stbtt_FreeBitmap(bitmap, 0);
@@ -242,7 +299,7 @@ int main(char** args, int argv) {
 			stbtt_fontinfo font;
 			stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
 
-			write_atlas(&font, 'B', 'F');
+			write_atlas(&font, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR, true);
 
 		}
 

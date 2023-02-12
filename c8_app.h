@@ -57,9 +57,25 @@ typedef uint8_t u8;
 
 #define C8_FLAG_REG 0xf
 
-typedef struct {
+#define C8_FIRST_CHAR '!'
 
-}AtlasHeader;
+#define C8_ONE_PAST_LAST_CHAR 0x7f
+
+#define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
+
+typedef struct {
+	float u_left;
+	float u_right;
+	float v_top;
+	float v_bottom;
+	float v_offset;
+	float u_advancement;
+}C8_Atlas_Glyph;
+
+typedef struct {
+	float aspect_ratio;
+	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
+}C8_Atlas_Header;
 
 //typedef enum  {
 //	Command_Type_Triangles,
