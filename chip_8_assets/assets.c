@@ -10,6 +10,8 @@
 
 void write_bmp(stbtt_fontinfo* font, char c) {
 
+	float scale_factor = stbtt_ScaleForPixelHeight(font, 120);
+
 	int32_t width;
 	int32_t height;
 	int32_t x_offset;
@@ -17,7 +19,7 @@ void write_bmp(stbtt_fontinfo* font, char c) {
 	uint8_t* bitmap = stbtt_GetCodepointBitmap(
 		font,
 		0,
-		stbtt_ScaleForPixelHeight(font, 120),
+		scale_factor,
 		c,
 		&width,
 		&height,
@@ -100,33 +102,39 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, 
 
 	int32_t* heights = malloc(sizeof(*heights) * (char_count));
 
-	int32_t* y_offsets = malloc(sizeof(*y_offsets) * (char_count));
+	int32_t* ascenders = malloc(sizeof(*ascenders) * (char_count));
 
-	int32_t max_y_offset = 0;
+	int32_t max_ascender = 0;
+
+	int32_t max_descender = 0;
+
+	float scale_factor = stbtt_ScaleForPixelHeight(font, 120);
 
 	for (int32_t i = 0; i < (char_count); i++)
 	{
 		int32_t glyph_width;
 		int32_t glyph_height;
 		int32_t glyph_x_offset;
-		int32_t glyph_y_offset;
+		int32_t glyph_ascender;
 
 		char c = start_char + i;
 
 		char_bitmaps[i] = stbtt_GetCodepointBitmap(
 			font,
 			0,
-			stbtt_ScaleForPixelHeight(font, 120),
+			scale_factor,
 			c,
 			&glyph_width,
 			&glyph_height,
 			&glyph_x_offset,
-			&glyph_y_offset
+			&glyph_ascender
 		);
 
 		widths[i] = glyph_width;
 		heights[i] = glyph_height;
-		y_offsets[i] = glyph_y_offset;
+		glyph_ascender = -glyph_ascender;
+		ascenders[i] = glyph_ascender;
+		int32_t glyph_descender = glyph_height - glyph_ascender;
 
 		total_width += glyph_width;
 
@@ -134,14 +142,23 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, 
 			total_height = glyph_height;
 		}
 
-		if (glyph_y_offset > max_y_offset) {
-			max_y_offset = glyph_y_offset;
+		if (glyph_ascender > max_ascender) {
+			max_ascender = glyph_ascender;
+		}
+
+		if (glyph_descender > max_descender) {
+			max_descender = glyph_descender;
 		}
 	}
 
 	C8_Atlas_Header header = { 0 };
 
-	header.aspect_ratio = (float)total_width / (float)total_height;
+	header.total_width_in_pixels = total_width;
+	header.total_height_in_pixels = total_height;
+	float u_pixel = (1.0f / (float)total_width);
+	float v_pixel = (1.0f / (float)total_height);
+	int32_t line_height_in_pixels = max_ascender + max_descender;
+	header.v_line_height = v_pixel * line_height_in_pixels;
 
 	{
 		int32_t current_x = 0;
@@ -152,19 +169,27 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, 
 			int32_t width = widths[glyph_index];
 			int32_t height = heights[glyph_index];
 
-			glyph.u_left = (1.0f / (float)total_width) * ((float)current_x);
+			glyph.u_left = u_pixel * ((float)current_x);
+
 			glyph.v_top = 0.0f;
 			current_x += width;
-			glyph.u_right = (1.0f / (float)total_width) * ((float)current_x);
-			glyph.v_bottom = (1.0f / (float)total_height) * ((float)height);
+			glyph.u_right = u_pixel * ((float)current_x);
+			glyph.v_bottom = v_pixel * ((float)height);
 
-			int32_t y_offset_from_line_top = y_offsets[glyph_index] - max_y_offset;
+			int32_t y_offset_from_line_top =  max_ascender - ascenders[glyph_index];
+			glyph.v_offset = v_pixel * (float)y_offset_from_line_top;
 
 			int advance;
 
 			int left_side_bearing;
 
 			stbtt_GetGlyphHMetrics(font, stbtt_FindGlyphIndex(font, c), &advance, &left_side_bearing);
+
+			int32_t advance_in_pixels = advance * scale_factor;
+
+			glyph.u_advancement = u_pixel * advance_in_pixels;
+
+			header.glyphs[glyph_index] = glyph;
 		}
 
 	}
@@ -172,10 +197,10 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, 
 	char f_name[256];
 		
 	if (write_ppm) {
-		strcpy(f_name, "out\\atlas.ppm");
+		strcpy(f_name, "out/atlas.ppm");
 	}
 	else {
-		strcpy(f_name, "out\\atlas.c8");
+		strcpy(f_name, "../data/atlas.c8");
 	}
 
 	FILE* o = fopen(f_name, "wb");
@@ -239,9 +264,6 @@ void write_atlas(stbtt_fontinfo* font, char start_char, char one_past_end_char, 
 					else {
 
 						uint8_t color = alpha == 0 ? 0 : 255;
-						for (int channel = 0; channel < 3; channel++) {
-							fputc(color, o);
-						}
 
 						fputc(alpha, o);
 					}
@@ -285,16 +307,6 @@ int main(char** args, int argv) {
 			memset(data, 0, sz);
 
 			size_t read = fread(data, sz, 1, i);
-
-			//for (char c = '0'; c <= 'Z'; c++) {
-			//	if (read != 0) {
-			//		stbtt_fontinfo font;
-			//		stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
-			//		//write_bmp(&font, c);
-
-			//		
-			//	}
-			//}
 
 			stbtt_fontinfo font;
 			stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));

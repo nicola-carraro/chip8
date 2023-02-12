@@ -3,51 +3,26 @@
 #define C8_WIN_C
 #include "c8_win.h"
 
-BOOL c8_win_draw_texture(C8_Win_State* state, FLOAT left, FLOAT top, FLOAT right, FLOAT bottom) {
+BOOL c8_win_draw_text(C8_Win_State* state) {
 
 	BOOL result = false;
 
 	if (SUCCEEDED(IDirect3DDevice9_SetFVF(state->d3d_dev, C8_WIN_TEX_FVF))) {
-		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->texture_vb, 0, sizeof(C8_Win_Texture_Vertex)))) {
+		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->text_vb, 0, sizeof(C8_Win_Texture_Vertex)))) {
 
 			C8_Win_Texture_Vertex* vertices;
 
-			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->texture_vb, 0, 0, (void**)&vertices, NULL);
+			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, NULL);
 			D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 255, 255);
 			if (SUCCEEDED(locked)) {
-				vertices[0].color = color;
-				vertices[0].x = left - 0.5f;
-				vertices[0].y = top - 0.5f;
-				vertices[0].z = 0.0f;
-				vertices[0].rhw = 1.0f;
-				vertices[0].u = 0.0f;
-				vertices[0].v = 0.0f;
 
-				vertices[1].color = color;
-				vertices[1].x = right - 0.5f;
-				vertices[1].y = top - 0.5f;
-				vertices[1].z = 0.0f;
-				vertices[1].rhw = 1.0f;
-				vertices[1].u = 1.0f;
-				vertices[1].v = 0.0f;
+				for (i32 i = 0; i < state->text_vertex_count; i++) {
 
-				vertices[2].color = color;
-				vertices[2].x = right - 0.5f;
-				vertices[2].y = bottom - 0.5f;
-				vertices[2].z = 0.0f;
-				vertices[2].rhw = 1.0f;
-				vertices[2].u = 1.0f;
-				vertices[2].v = 1.0f;
+					C8_Win_Texture_Vertex vertex = state->text_vertices[i];
+					vertices[i] = vertex;
+				}
 
-				vertices[3].color = color;
-				vertices[3].x = left - 0.5f;
-				vertices[3].y = bottom - 0.5f;
-				vertices[3].z = 0.0f;
-				vertices[3].rhw = 1.0f;
-				vertices[3].u = 0.0f;
-				vertices[3].v = 1.0f;
-
-				HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->texture_vb);
+				HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->text_vb);
 				if (SUCCEEDED(unlocked)) {
 
 					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
@@ -85,7 +60,7 @@ BOOL c8_win_draw_texture(C8_Win_State* state, FLOAT left, FLOAT top, FLOAT right
 	return result;
 }
 
-BOOL c8_win_load_texture(C8_Win_State* state, char* file_name, i32 name_length)
+BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 {
 
 	BOOL result = false;
@@ -93,14 +68,16 @@ BOOL c8_win_load_texture(C8_Win_State* state, char* file_name, i32 name_length)
 	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
 
 	if (file.data) {
-		UINT width = ((UINT*)file.data)[0];
-		UINT height = ((UINT*)file.data)[1];
-		uint8_t* input_bitmap = ((UINT*)file.data) + 2;
+		C8_Atlas_Header header = *((C8_Atlas_Header*)file.data);
+
+		state->app_state.atlas = header;
+
+		u8* input_bitmap = (u8*)file.data + sizeof(header);
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
-				width,
-				height,
+				header.total_width_in_pixels,
+				header.total_height_in_pixels,
 				0,
 				0,
 				D3DFMT_A32B32G32R32F,
@@ -116,23 +93,32 @@ BOOL c8_win_load_texture(C8_Win_State* state, char* file_name, i32 name_length)
 			if (SUCCEEDED(locked)) {
 
 				uint8_t* row_start = (uint8_t*)(out_rect.pBits);
-				for (uint32_t row = 0; row < height; row++) {
+				for (uint32_t row = 0; row < header.total_height_in_pixels; row++) {
 
 					uint32_t f_index = 0;
-					for (uint32_t column = 0; column < width; column++) {
-						uint8_t src_pixel = input_bitmap[(row * width) + column];
+					for (uint32_t column = 0; column < header.total_width_in_pixels; column++) {
+						uint8_t src_pixel = input_bitmap[(row * header.total_width_in_pixels) + column];
 
 						uint8_t* dest_pixel = ((uint8_t*)out_rect.pBits) + (row * out_rect.Pitch) + (column * 4);
 
-						float color = ((float)src_pixel) / 255.0f;
+						float alpha = ((float)src_pixel) / 255.0f;
 
-						((float*)row_start)[column * 4] = color;
+					/*	if (alpha) {
+							OutputDebugStringA("x");
+						}
+						else {
+							OutputDebugStringA(" ");
+						}*/
 
-						((float*)row_start)[column * 4 + 1] = color;
-						((float*)row_start)[column * 4 + 2] = color;
-						((float*)row_start)[column * 4 + 3] = color;
+						((float*)row_start)[column * 4] = alpha;
+
+						((float*)row_start)[column * 4 + 1] = alpha;
+						((float*)row_start)[column * 4 + 2] = alpha;
+						((float*)row_start)[column * 4 + 3] = alpha;
 
 					}
+
+					OutputDebugStringA("\n");
 
 					row_start += out_rect.Pitch;
 				}
@@ -157,7 +143,7 @@ BOOL c8_win_load_texture(C8_Win_State* state, char* file_name, i32 name_length)
 					0,
 					C8_WIN_TEX_FVF,
 					D3DPOOL_MANAGED,
-					&state->texture_vb,
+					&state->text_vb,
 					0
 				);
 
@@ -357,7 +343,7 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(255, 255, 255),
+		D3DCOLOR_XRGB(0, 0, 0),
 		0.0f,
 		0
 	);
@@ -367,7 +353,7 @@ bool c8_win_render(C8_Win_State* state) {
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
 			c8_draw_color(state);
 
-			c8_win_draw_texture(state, 10.0f, 10.0f, 60.0f, 60.0f);
+			//c8_win_draw_text(state);
 
 		}
 		else
@@ -413,10 +399,7 @@ bool c8_win_init_texture(C8_Win_State* state, char* file_name, i32 name_length) 
 
 	bool result = false;
 
-	C8_Arena arena;
-
-	c8_arena_init(&arena, 1024 * 1024, 4);
-	C8_File file = c8_plat_read_file(file_name, name_length, &arena);
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
 
 	if (file.data != 0) {
 
@@ -526,8 +509,8 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 
 			if (SUCCEEDED(vb_created)) {
 				result = true;
-				char file_name[] = "data/0";
-				c8_win_load_texture(state, file_name, c8_arr_count(file_name) - 1);
+				char file_name[] = "data/atlas.c8";
+				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
 			}
 			else {
 				OutputDebugStringA("Failed to create vertex buffer");
@@ -870,7 +853,7 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	return true;
 }
 
-bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
+bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
 	bool result = false;
 
 	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
@@ -879,6 +862,9 @@ bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b)
 	{
 		state->color_vertices[state->color_vertex_count].x = x;
 		state->color_vertices[state->color_vertex_count].y = y;
+		state->color_vertices[state->color_vertex_count].z = 0;
+		state->color_vertices[state->color_vertex_count].rhw = 0;
+
 		state->color_vertices[state->color_vertex_count].color = D3DCOLOR_XRGB(r, g, b);
 		state->color_vertex_count++;
 		result = true;
@@ -890,22 +876,87 @@ bool c8_win_push_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b)
 	return result;
 }
 
-bool c8_win_push_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
-	bool push1 = c8_win_push_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
-	bool push2 = c8_win_push_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
-	bool push3 = c8_win_push_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
+bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, float u, float v) {
+	bool result = false;
+
+	assert(state->color_vertex_count < c8_arr_count(state->text_vertices));
+
+	if (state->text_vertex_count < c8_arr_count(state->text_vertices))
+	{
+		state->text_vertices[state->text_vertex_count].x = x;
+		state->text_vertices[state->text_vertex_count].y = y;
+		state->text_vertices[state->text_vertex_count].z = 0;
+		state->text_vertices[state->text_vertex_count].rhw = 0;
+		state->text_vertices[state->text_vertex_count].u = u;
+		state->text_vertices[state->text_vertex_count].v = v;
+
+		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_XRGB(r, g, b);
+		state->text_vertex_count++;
+		result = true;
+	}
+	else {
+		OutputDebugStringA("Vertex buffer size exceeded");
+	}
+
+	return result;
+}
+
+bool c8_win_push_color_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
+	bool push1 = c8_win_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
+	bool push2 = c8_win_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
+	bool push3 = c8_win_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
 
 	return push1 && push2 && push3;
 }
 
-bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb) {
+bool c8_win_push_text_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
+	bool push1 =c8_win_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, u1, v1);
+	bool push2 =c8_win_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, u2, v2);
+	bool push3 =c8_win_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, u3, v3);
+
+	return push1 && push2 && push3;
+}
+
+bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float width, float height, C8_Rgb rgb) {
 	C8_V2 p1 = { x, y };
 	C8_V2 p2 = { x + width, y };
 	C8_V2 p3 = { x + width, y + height };
 	C8_V2 p4 = { x, y + height };
 
-	bool push1 = c8_win_push_triangle(&global_state, p1, p2, p3, rgb);
-	bool push2 = c8_win_push_triangle(&global_state, p1, p3, p4, rgb);
+	i32 glyph_index = c - C8_FIRST_CHAR;
+	C8_Atlas_Glyph glyph = state->app_state.atlas.glyphs[glyph_index];
+
+	bool push1 = c8_win_push_text_triangle(
+		&global_state,
+		p1, p2, p3, 
+		rgb, 
+		glyph.u_left, glyph.v_top, 
+		glyph.u_right, glyph.v_top,
+		glyph.u_right, glyph.v_bottom
+	);
+	bool push2 = c8_win_push_text_triangle(
+		&global_state,
+		p1, p3, p4, 
+		rgb,
+		glyph.u_left, glyph.v_top,
+		glyph.u_right, glyph.v_bottom,
+		glyph.u_left, glyph.v_bottom);
+
+	return push1 && push2;
+}
+
+bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgb rgb) {
+	c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
+}
+
+bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgb rgb) {
+	C8_V2 p1 = { x, y };
+	C8_V2 p2 = { x + width, y };
+	C8_V2 p3 = { x + width, y + height };
+	C8_V2 p4 = { x, y + height };
+
+	bool push1 = c8_win_push_color_triangle(&global_state, p1, p2, p3, rgb);
+	bool push2 = c8_win_push_color_triangle(&global_state, p1, p3, p4, rgb);
 
 	return push1 && push2;
 }
@@ -950,7 +1001,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	i32 samples_per_sec = 8000;
 	i32 bytes_per_sample = 2;
 
-	if (c8_arena_init(&global_state.app_state.arena, 1024 * 1024, 4)) {
+	if (c8_arena_init(&global_state.app_state.arena, 5 * 1024 * 1024, 4)) {
 
 		if (window != 0) {
 

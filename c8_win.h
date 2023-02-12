@@ -35,13 +35,16 @@ typedef struct {
 	LPDIRECT3D9 d3d;
 	LPDIRECT3DDEVICE9 d3d_dev;
 	LPDIRECT3DVERTEXBUFFER9 color_vb;
-	LPDIRECT3DVERTEXBUFFER9 texture_vb;
+	LPDIRECT3DVERTEXBUFFER9 text_vb;
 	LPDIRECT3DTEXTURE9 texture;
 	LPDIRECTSOUND ds;
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
 	C8_Win_Color_Vertex color_vertices[C8_WIN_MAX_VERTICES];
+	C8_Win_Texture_Vertex text_vertices[C8_WIN_MAX_VERTICES];
 	i32 color_vertex_count;
+	i32 text_vertex_count;
+
 	bool has_sound;
 	bool is_beeping;
 } C8_Win_State;

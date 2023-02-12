@@ -30,7 +30,7 @@ bool c8_push_frame(C8_App_State* state) {
 
 	i32 frame_y = c8_frame_y(state);
 
-	bool push1 = c8_plat_push_rect(
+	bool push1 = c8_plat_push_color_rect(
 		frame_x,
 		frame_y,
 		C8_MONITOR_WIDTH,
@@ -38,14 +38,14 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_color
 	);
 
-	bool push2 = c8_plat_push_rect(
+	bool push2 = c8_plat_push_color_rect(
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
 		C8_FRAME_WIDTH,
 		C8_MONITOR_HEIGHT,
 		frame_color);
 
-	bool push3 = c8_plat_push_rect(
+	bool push3 = c8_plat_push_color_rect(
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
 		C8_MONITOR_WIDTH,
@@ -53,7 +53,7 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_color
 	);
 
-	bool push4 = c8_plat_push_rect(
+	bool push4 = c8_plat_push_color_rect(
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
 		C8_FRAME_WIDTH,
@@ -77,7 +77,7 @@ bool c8_push_pixels(C8_App_State* state) {
 				i32 frame_x = c8_frame_x(state);
 				i32 frame_y = c8_frame_y(state);
 
-				bool push = c8_plat_push_rect(
+				bool push = c8_plat_push_color_rect(
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					C8_PIXEL_SIDE,
@@ -247,6 +247,10 @@ bool c8_app_update(C8_App_State* state) {
 
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
+
+	C8_Rgb color = { 255.0f, 0.0f, 0.0f };
+
+	c8_plat_push_text('A', 0.0f, 0.0f, 100.0f, 200.0f, color);
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{

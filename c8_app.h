@@ -73,8 +73,10 @@ typedef struct {
 }C8_Atlas_Glyph;
 
 typedef struct {
-	float aspect_ratio;
 	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
+	int32_t total_width_in_pixels;
+	int32_t total_height_in_pixels;
+	float v_line_height;
 }C8_Atlas_Header;
 
 //typedef enum  {
@@ -179,6 +181,7 @@ typedef struct {
 	C8_Keypad keypad;
 	C8_Control_Keys control_keys;
 	bool should_beep;
+	C8_Atlas_Header atlas;
 } C8_App_State;
 
 typedef struct {
@@ -203,7 +206,7 @@ typedef struct {
 	void* data;
 } C8_File;
 
-bool c8_plat_push_rect(float x, float y, float width, float height, C8_Rgb rgb);
+bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgb rgb);
 
 void* c8_plat_allocate(psz size);
 
