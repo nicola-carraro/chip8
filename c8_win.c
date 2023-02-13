@@ -26,7 +26,7 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 				if (SUCCEEDED(unlocked)) {
 
 					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
-						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLEFAN, 0, 2))) {
+						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLEFAN, 0, state->text_vertex_count / 2))) {
 							result = TRUE;
 						}
 						else {
@@ -56,6 +56,8 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 	else {
 		OutputDebugStringA("Could not set FVF for texture\n");
 	}
+
+	state->text_vertex_count = 0;
 
 	return result;
 }
@@ -343,7 +345,7 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(0, 0, 0),
+		D3DCOLOR_XRGB(255, 255, 255),
 		0.0f,
 		0
 	);
@@ -353,7 +355,7 @@ bool c8_win_render(C8_Win_State* state) {
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
 			c8_draw_color(state);
 
-			//c8_win_draw_text(state);
+			c8_win_draw_text(state);
 
 		}
 		else
@@ -879,14 +881,14 @@ bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g,
 bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, float u, float v) {
 	bool result = false;
 
-	assert(state->color_vertex_count < c8_arr_count(state->text_vertices));
+	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
 
 	if (state->text_vertex_count < c8_arr_count(state->text_vertices))
 	{
 		state->text_vertices[state->text_vertex_count].x = x;
 		state->text_vertices[state->text_vertex_count].y = y;
 		state->text_vertices[state->text_vertex_count].z = 0;
-		state->text_vertices[state->text_vertex_count].rhw = 0;
+		state->text_vertices[state->text_vertex_count].rhw = 1.0f;
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
 
@@ -926,21 +928,58 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	i32 glyph_index = c - C8_FIRST_CHAR;
 	C8_Atlas_Glyph glyph = state->app_state.atlas.glyphs[glyph_index];
 
-	bool push1 = c8_win_push_text_triangle(
-		&global_state,
-		p1, p2, p3, 
-		rgb, 
-		glyph.u_left, glyph.v_top, 
-		glyph.u_right, glyph.v_top,
-		glyph.u_right, glyph.v_bottom
-	);
-	bool push2 = c8_win_push_text_triangle(
-		&global_state,
-		p1, p3, p4, 
-		rgb,
-		glyph.u_left, glyph.v_top,
-		glyph.u_right, glyph.v_bottom,
-		glyph.u_left, glyph.v_bottom);
+	/*	vertices[0].color = color;
+	vertices[0].x = 10.0f - 0.5f;
+	vertices[0].y = 10.0f - 0.5f;
+	vertices[0].z = 0.0f;
+	vertices[0].rhw = 1.0f;
+	vertices[0].u = 0.0f;
+	vertices[0].v = 0.0f;
+
+	vertices[1].color = color;
+	vertices[1].x = 2000.0f - 0.5f;
+	vertices[1].y = 10.0f - 0.5f;
+	vertices[1].z = 0.0f;
+	vertices[1].rhw = 1.0f;
+	vertices[1].u = 1.0f;
+	vertices[1].v = 0.0f;
+
+	vertices[2].color = color;
+	vertices[2].x = 2000.0f - 0.5f;
+	vertices[2].y = 60.0f - 0.5f;
+	vertices[2].z = 0.0f;
+	vertices[2].rhw = 1.0f;
+	vertices[2].u = 1.0f;
+	vertices[2].v = 1.0f;
+
+	vertices[3].color = color;
+	vertices[3].x = 10.0f - 0.5f;
+	vertices[3].y = 60.0f - 0.5f;
+	vertices[3].z = 0.0f;
+	vertices[3].rhw = 1.0f;
+	vertices[3].u = 0.0f;
+	vertices[3].v = 1.0f;*/
+
+	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_top);
+	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_top);
+	bool push3 =  c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
+	bool push4 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_bottom);
+
+	//bool push1 = c8_win_push_text_triangle(
+	//	&global_state,
+	//	p1, p2, p3, 
+	//	rgb, 
+	//	glyph.u_left, glyph.v_top, 
+	//	glyph.u_right, glyph.v_top,
+	//	glyph.u_right, glyph.v_bottom
+	//);
+	//bool push2 = c8_win_push_text_triangle(
+	//	&global_state,
+	//	p1, p3, p4, 
+	//	rgb,
+	//	glyph.u_left, glyph.v_top,
+	//	glyph.u_right, glyph.v_bottom,
+	//	glyph.u_left, glyph.v_bottom);
 
 	return push1 && push2;
 }

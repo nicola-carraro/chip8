@@ -248,7 +248,7 @@ bool c8_app_update(C8_App_State* state) {
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
-	C8_Rgb color = { 255.0f, 0.0f, 0.0f };
+	C8_Rgb color = { 255.0f, 255.0f, 255.0f };
 
 	c8_plat_push_text('A', 0.0f, 0.0f, 100.0f, 200.0f, color);
 
