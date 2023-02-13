@@ -252,6 +252,8 @@ bool c8_app_update(C8_App_State* state) {
 
 	c8_plat_push_text('A', 0.0f, 0.0f, 100.0f, 200.0f, color);
 
+	c8_plat_push_text('B', 100.0f, 200.0f, 100.0f, 200.0f, color);
+
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{
 		assert(state->pc < sizeof(state->ram));

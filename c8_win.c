@@ -26,7 +26,7 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 				if (SUCCEEDED(unlocked)) {
 
 					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
-						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLEFAN, 0, state->text_vertex_count / 2))) {
+						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->text_vertex_count))) {
 							result = TRUE;
 						}
 						else {
@@ -141,7 +141,7 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 				HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
 					state->d3d_dev,
-					sizeof(C8_Win_Texture_Vertex) * 4,
+					sizeof(state->text_vertices),
 					0,
 					C8_WIN_TEX_FVF,
 					D3DPOOL_MANAGED,
@@ -928,42 +928,13 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	i32 glyph_index = c - C8_FIRST_CHAR;
 	C8_Atlas_Glyph glyph = state->app_state.atlas.glyphs[glyph_index];
 
-	/*	vertices[0].color = color;
-	vertices[0].x = 10.0f - 0.5f;
-	vertices[0].y = 10.0f - 0.5f;
-	vertices[0].z = 0.0f;
-	vertices[0].rhw = 1.0f;
-	vertices[0].u = 0.0f;
-	vertices[0].v = 0.0f;
-
-	vertices[1].color = color;
-	vertices[1].x = 2000.0f - 0.5f;
-	vertices[1].y = 10.0f - 0.5f;
-	vertices[1].z = 0.0f;
-	vertices[1].rhw = 1.0f;
-	vertices[1].u = 1.0f;
-	vertices[1].v = 0.0f;
-
-	vertices[2].color = color;
-	vertices[2].x = 2000.0f - 0.5f;
-	vertices[2].y = 60.0f - 0.5f;
-	vertices[2].z = 0.0f;
-	vertices[2].rhw = 1.0f;
-	vertices[2].u = 1.0f;
-	vertices[2].v = 1.0f;
-
-	vertices[3].color = color;
-	vertices[3].x = 10.0f - 0.5f;
-	vertices[3].y = 60.0f - 0.5f;
-	vertices[3].z = 0.0f;
-	vertices[3].rhw = 1.0f;
-	vertices[3].u = 0.0f;
-	vertices[3].v = 1.0f;*/
-
 	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_top);
 	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_top);
-	bool push3 =  c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
-	bool push4 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_bottom);
+	bool push3 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
+
+	bool push4 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_top);
+	bool push5 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
+	bool push6 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_bottom);
 
 	//bool push1 = c8_win_push_text_triangle(
 	//	&global_state,
@@ -981,7 +952,7 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	//	glyph.u_right, glyph.v_bottom,
 	//	glyph.u_left, glyph.v_bottom);
 
-	return push1 && push2;
+	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
 bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgb rgb) {
