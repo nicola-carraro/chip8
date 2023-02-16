@@ -199,14 +199,15 @@ typedef struct {
 	u8 r;
 	u8 g;
 	u8 b;
-} C8_Rgb;
+	u8 a;
+} C8_Rgba;
 
 typedef struct {
 	psz size;
 	void* data;
 } C8_File;
 
-bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgb rgb);
+bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb);
 
 void* c8_plat_allocate(psz size);
 

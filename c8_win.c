@@ -269,6 +269,10 @@ bool c8_draw_color(C8_Win_State *state) {
 
 	VOID* vp;
 
+	if (FAILED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, 0))) {
+		assert(false && "Unset texture failed");
+	}
+
 	HRESULT locked = IDirect3DVertexBuffer9_Lock(
 		state->color_vb,
 		0,
@@ -345,7 +349,7 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(255, 255, 255),
+		D3DCOLOR_XRGB(0, 0,0),
 		0.0f,
 		0
 	);
@@ -353,9 +357,10 @@ bool c8_win_render(C8_Win_State* state) {
 	if (SUCCEEDED(cleared))
 	{
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
-			c8_draw_color(state);
 
 			c8_win_draw_text(state);
+
+			c8_draw_color(state);
 
 		}
 		else
@@ -855,7 +860,7 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	return true;
 }
 
-bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b) {
+bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a) {
 	bool result = false;
 
 	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
@@ -867,7 +872,7 @@ bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g,
 		state->color_vertices[state->color_vertex_count].z = 0;
 		state->color_vertices[state->color_vertex_count].rhw = 0;
 
-		state->color_vertices[state->color_vertex_count].color = D3DCOLOR_XRGB(r, g, b);
+		state->color_vertices[state->color_vertex_count].color = D3DCOLOR_RGBA(r, g, b, a);
 		state->color_vertex_count++;
 		result = true;
 	}
@@ -878,7 +883,7 @@ bool c8_win_push_color_vertex(C8_Win_State* state, float x, float y, u8 r, u8 g,
 	return result;
 }
 
-bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, float u, float v) {
+bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, u8 a, float u, float v) {
 	bool result = false;
 
 	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
@@ -892,7 +897,7 @@ bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g,
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
 
-		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_XRGB(r, g, b);
+		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_RGBA(r, g, b, a);
 		state->text_vertex_count++;
 		result = true;
 	}
@@ -903,23 +908,23 @@ bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g,
 	return result;
 }
 
-bool c8_win_push_color_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb) {
-	bool push1 = c8_win_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b);
-	bool push2 = c8_win_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b);
-	bool push3 = c8_win_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b);
+bool c8_win_push_color_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb) {
+	bool push1 = c8_win_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push2 = c8_win_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push3 = c8_win_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 
 	return push1 && push2 && push3;
 }
 
-bool c8_win_push_text_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
-	bool push1 =c8_win_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, u1, v1);
-	bool push2 =c8_win_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, u2, v2);
-	bool push3 =c8_win_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, u3, v3);
+bool c8_win_push_text_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
+	bool push1 =c8_win_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	bool push2 =c8_win_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	bool push3 =c8_win_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 
 	return push1 && push2 && push3;
 }
 
-bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float width, float height, C8_Rgb rgb) {
+bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float width, float height, C8_Rgba rgb) {
 	C8_V2 p1 = { x, y };
 	C8_V2 p2 = { x + width, y };
 	C8_V2 p3 = { x + width, y + height };
@@ -928,13 +933,13 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	i32 glyph_index = c - C8_FIRST_CHAR;
 	C8_Atlas_Glyph glyph = state->app_state.atlas.glyphs[glyph_index];
 
-	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_top);
-	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_top);
-	bool push3 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
+	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
+	bool push3 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
 
-	bool push4 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_top);
-	bool push5 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, glyph.u_right, glyph.v_bottom);
-	bool push6 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, glyph.u_left, glyph.v_bottom);
+	bool push4 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	bool push5 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	bool push6 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 
 	//bool push1 = c8_win_push_text_triangle(
 	//	&global_state,
@@ -955,11 +960,11 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
-bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgb rgb) {
+bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgba rgb) {
 	c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
 }
 
-bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgb rgb) {
+bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb) {
 	C8_V2 p1 = { x, y };
 	C8_V2 p2 = { x + width, y };
 	C8_V2 p3 = { x + width, y + height };
