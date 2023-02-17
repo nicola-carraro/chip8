@@ -250,9 +250,9 @@ bool c8_app_update(C8_App_State* state) {
 
 	C8_Rgba color = { 255, 0, 0, 255 };
 
-	c8_plat_push_text('A', 0.0f, 0.0f, 100.0f, 200.0f, color);
+	char text[] = "Load";
 
-	c8_plat_push_text('B', 100.0f, 200.0f, 100.0f, 200.0f, color);
+	c8_plat_push_text(text, sizeof(text) - 1, 10.0f, 10.0f, 100.0f, color);
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{

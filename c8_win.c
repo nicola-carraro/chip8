@@ -114,17 +114,10 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 						float alpha = ((float)src_pixel) / 255.0f;
 
-					/*	if (alpha) {
-							OutputDebugStringA("x");
-						}
-						else {
-							OutputDebugStringA(" ");
-						}*/
+						((float*)row_start)[column * 4] = 1.0;
 
-						((float*)row_start)[column * 4] = alpha;
-
-						((float*)row_start)[column * 4 + 1] = alpha;
-						((float*)row_start)[column * 4 + 2] = alpha;
+						((float*)row_start)[column * 4 + 1] = 1.0;
+						((float*)row_start)[column * 4 + 2] = 1.0;
 						((float*)row_start)[column * 4 + 3] = alpha;
 
 					}
@@ -948,14 +941,11 @@ bool c8_win_push_text_triangle(C8_Win_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3
 	return push1 && push2 && push3;
 }
 
-bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float width, float height, C8_Rgba rgb) {
+bool c8_win_push_glyph(C8_Win_State* state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb) {
 	C8_V2 p1 = { x, y };
 	C8_V2 p2 = { x + width, y };
 	C8_V2 p3 = { x + width, y + height };
 	C8_V2 p4 = { x, y + height };
-
-	i32 glyph_index = c - C8_FIRST_CHAR;
-	C8_Atlas_Glyph glyph = state->app_state.atlas.glyphs[glyph_index];
 
 	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
 	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
@@ -984,8 +974,36 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
-bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgba rgb) {
-	return c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
+bool c8_plat_push_text(char* text, size_t length, float x, float y, float line_height, C8_Rgba rgb) {
+
+	C8_Atlas_Header atlas = global_state.app_state.atlas;
+
+	float vertical_scaling_factor = line_height / atlas.v_line_height;
+
+	float aspect_ratio = ((float)atlas.total_width_in_pixels) / ((float)atlas.total_height_in_pixels);
+
+	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
+
+	float glyph_x = x;
+
+	for (size_t i = 0; i < length; i++) {
+		char c = text[i];
+
+		i32 glyph_index = c - C8_FIRST_CHAR;
+		C8_Atlas_Glyph glyph = global_state.app_state.atlas.glyphs[glyph_index];
+
+		float glyph_y = y + (glyph.v_offset * vertical_scaling_factor);
+
+		size_t width = (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
+
+		size_t height = (glyph.v_bottom - glyph.v_top) * vertical_scaling_factor;
+
+		c8_win_push_glyph(&global_state, glyph, glyph_x, glyph_y, width, height, rgb);
+
+		glyph_x  += glyph.u_advancement * horizontal_scaling_factor;
+
+	}
+	//return c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
 }
 
 bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb) {
