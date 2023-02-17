@@ -24,7 +24,7 @@ i32 c8_frame_y(C8_App_State* state)
 }
 
 bool c8_push_frame(C8_App_State* state) {
-	C8_Rgba frame_color = { 255, 255, 255 };
+	C8_Rgba frame_color = { 255, 0, 0, 255 };
 
 	i32 frame_x = c8_frame_x(state);
 
@@ -66,7 +66,7 @@ bool c8_push_frame(C8_App_State* state) {
 
 bool c8_push_pixels(C8_App_State* state) {
 
-	C8_Rgba pixel_color = { 255,255, 255 };
+	C8_Rgba pixel_color = { 255,0, 0, 255 };
 
 	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
 	{
@@ -248,7 +248,7 @@ bool c8_app_update(C8_App_State* state) {
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
-	C8_Rgba color = { 255.0f, 0.0f, 0.0f };
+	C8_Rgba color = { 255, 0, 0, 255 };
 
 	c8_plat_push_text('A', 0.0f, 0.0f, 100.0f, 200.0f, color);
 

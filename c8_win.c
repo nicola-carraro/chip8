@@ -13,7 +13,6 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 			C8_Win_Texture_Vertex* vertices;
 
 			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, NULL);
-			D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 255, 255);
 			if (SUCCEEDED(locked)) {
 
 				for (i32 i = 0; i < state->text_vertex_count; i++) {
@@ -24,6 +23,18 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 
 				HRESULT unlocked = IDirect3DVertexBuffer9_Unlock(state->text_vb);
 				if (SUCCEEDED(unlocked)) {
+					HRESULT set_render_state;
+					D3DRENDERSTATETYPE type = D3DRS_LIGHTING;
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
+					assert(SUCCEEDED(set_render_state));
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
+					assert(SUCCEEDED(set_render_state));
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+					assert(SUCCEEDED(set_render_state));
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+					assert(SUCCEEDED(set_render_state));
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+					assert(SUCCEEDED(set_render_state));
 
 					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
 						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->text_vertex_count))) {
@@ -101,8 +112,6 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 					for (uint32_t column = 0; column < header.total_width_in_pixels; column++) {
 						uint8_t src_pixel = input_bitmap[(row * header.total_width_in_pixels) + column];
 
-						uint8_t* dest_pixel = ((uint8_t*)out_rect.pBits) + (row * out_rect.Pitch) + (column * 4);
-
 						float alpha = ((float)src_pixel) / 255.0f;
 
 					/*	if (alpha) {
@@ -173,22 +182,25 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 {
-	D3DPRESENT_PARAMETERS result;
+	D3DPRESENT_PARAMETERS result = {0};
 
-	result.BackBufferWidth = 0;
-	result.BackBufferHeight = 0;
-	result.BackBufferFormat = D3DFMT_UNKNOWN;
-	result.BackBufferCount = 0;
-	result.MultiSampleType = D3DMULTISAMPLE_NONE;
-	result.MultiSampleQuality = 0;
+	result.Windowed = TRUE;
 	result.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	result.hDeviceWindow = window;
-	result.Windowed = true;
-	result.EnableAutoDepthStencil = 0;
-	result.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
-	result.Flags = 0;
-	result.FullScreen_RefreshRateInHz = 0;
-	result.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+	//result.BackBufferWidth = 0;
+	//result.BackBufferHeight = 0;
+	//result.BackBufferFormat = D3DFMT_UNKNOWN;
+	//result.BackBufferCount = 0;
+	//result.MultiSampleType = D3DMULTISAMPLE_NONE;
+	//result.MultiSampleQuality = 0;
+	//result.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	//result.hDeviceWindow = window;
+	//result.Windowed = true;
+	//result.EnableAutoDepthStencil = 0;
+	//result.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+	//result.Flags = 0;
+	//result.FullScreen_RefreshRateInHz = 0;
+	//result.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
 	return result;
 }
@@ -349,8 +361,8 @@ bool c8_win_render(C8_Win_State* state) {
 		0,
 		0,
 		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(0, 0,0),
-		0.0f,
+		D3DCOLOR_XRGB(255, 255,255),
+		1.0f,
 		0
 	);
 
@@ -518,6 +530,18 @@ bool c8_win_initd3d(C8_Win_State* state, HWND window)
 				result = true;
 				char file_name[] = "data/atlas.c8";
 				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
+
+				D3DRENDERSTATETYPE type = D3DRS_LIGHTING;
+				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
+				assert(SUCCEEDED(set_render_state));
+				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
+				assert(SUCCEEDED(set_render_state));
+				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+				assert(SUCCEEDED(set_render_state));
+				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+				assert(SUCCEEDED(set_render_state));
+				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+				assert(SUCCEEDED(set_render_state));
 			}
 			else {
 				OutputDebugStringA("Failed to create vertex buffer");
@@ -897,7 +921,7 @@ bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g,
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
 
-		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_RGBA(r, g, b, a);
+		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_ARGB(255,0, 0, 0);
 		state->text_vertex_count++;
 		result = true;
 	}
@@ -961,7 +985,7 @@ bool c8_win_push_glyph(C8_Win_State* state, char c, float x, float y, float widt
 }
 
 bool c8_plat_push_text(char c, float x, float y, float width, float height, C8_Rgba rgb) {
-	c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
+	return c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
 }
 
 bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb) {
