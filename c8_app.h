@@ -63,6 +63,12 @@ typedef uint8_t u8;
 
 #define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
 
+#define C8_LOAD_BUTTON_WIDTH (200.0f)
+
+#define C8_LOAD_BUTTON_HEIGHT (50.0f)
+
+#define C8_LOAD_BUTTON_Y (10.0f)
+
 typedef struct {
 	float u_left;
 	float u_right;
@@ -181,7 +187,7 @@ typedef struct {
 	C8_Keypad keypad;
 	C8_Control_Keys control_keys;
 	bool should_beep;
-	C8_Atlas_Header atlas;
+	C8_Atlas_Header atlas_header;
 } C8_App_State;
 
 typedef struct {
@@ -223,35 +229,6 @@ bool c8_app_update();
 
 void c8_plat_debug_out(char* str);
 
-//#define dynarray_add(dynarray, item, type, arena)							\
-//do {																		\
-//	if ((dynarray)->count <= (dynarray)->capacity) {						\
-//																			\
-//		if ((dynarray)->capacity == 0) {									\
-//			(dynarray)->capacity = 50;										\
-//		}																	\
-//		else {																\
-//			psz old_capacity = (dynarray)->capacity;						\
-//			(dynarray)->capacity *= 2; /									\
-//				type * tmp = c8_arena_alloc(arena, (dynarray)->capacity);	\
-//			if (!tmp) {														\
-//				return false;												\
-//			}																\
-//			for (psz i = 0; i < old_capacity; i++)							\
-//			{																\
-//				((u8*)tmp)[i] = ((u8*)(dynarray)->items))[i];				\
-//			}																\
-//			(dynarray)->items = tmp; 										\
-//		}																	\
-//		(dynarray)->items[(dynarray)->count] = item;						\
-//		(dynarray)->count++;												\
-//	}																		\
-//} while (0)	
-//
-//typedef struct {
-//	int* items;
-//	psz count;
-//	psz capacity;
-//} int_dynarray;
+const C8_Rgba emulator_color = { 0, 0, 0, 255 };
 
 #endif // !C8_APP

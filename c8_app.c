@@ -24,8 +24,6 @@ i32 c8_frame_y(C8_App_State* state)
 }
 
 bool c8_push_frame(C8_App_State* state) {
-	C8_Rgba frame_color = { 255, 0, 0, 255 };
-
 	i32 frame_x = c8_frame_x(state);
 
 	i32 frame_y = c8_frame_y(state);
@@ -35,7 +33,7 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_y,
 		C8_MONITOR_WIDTH,
 		C8_FRAME_WIDTH,
-		frame_color
+		emulator_color
 	);
 
 	bool push2 = c8_plat_push_color_rect(
@@ -43,14 +41,16 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_y,
 		C8_FRAME_WIDTH,
 		C8_MONITOR_HEIGHT,
-		frame_color);
+		emulator_color
+	);
 
 	bool push3 = c8_plat_push_color_rect(
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
 		C8_MONITOR_WIDTH,
 		C8_FRAME_WIDTH,
-		frame_color
+		emulator_color
+
 	);
 
 	bool push4 = c8_plat_push_color_rect(
@@ -58,15 +58,14 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_y + C8_FRAME_WIDTH,
 		C8_FRAME_WIDTH,
 		C8_MONITOR_HEIGHT,
-		frame_color
+		emulator_color
+
 	);
 
 	return push1 && push2 && push3 && push4;
 }
 
 bool c8_push_pixels(C8_App_State* state) {
-
-	C8_Rgba pixel_color = { 255,0, 0, 255 };
 
 	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
 	{
@@ -82,7 +81,7 @@ bool c8_push_pixels(C8_App_State* state) {
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					C8_PIXEL_SIDE,
 					C8_PIXEL_SIDE,
-					pixel_color
+					emulator_color
 				);
 
 				if (!push) {
@@ -208,6 +207,83 @@ bool c8_call(C8_App_State* state, u16 nnn) {
 	return true;
 }
 
+//float c8_text_max_v_height(C8_Atlas_Header atlas_header, char* text, size_t text_length) {
+//
+//	float max_v_height = 0.0f;
+//	for (size_t i = 0; i < text_length; i++) {
+//		char c = text[i];
+//
+//		i32 glyph_index = c - C8_FIRST_CHAR;
+//		C8_Atlas_Glyph glyph = atlas_header.glyphs[glyph_index];
+//
+//		float v_height = glyph.v_bottom - glyph.v_top;
+//
+//		if (v_height > max_v_height) {
+//			max_v_height = v_height;
+//		}
+//	}
+//
+//	return max_v_height;
+//}
+
+float c8_text_pixelwidth(C8_App_State *state, char* text, size_t length, float line_height) {
+
+	C8_Atlas_Header atlas = state->atlas_header;
+
+	float vertical_scaling_factor = line_height / atlas.v_line_height;
+
+	float aspect_ratio = ((float)atlas.total_width_in_pixels) / ((float)atlas.total_height_in_pixels);
+
+	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
+
+	float width = 0;
+
+	for (size_t i = 0; i < length; i++) {
+		char c = text[i];
+
+		i32 glyph_index = c - C8_FIRST_CHAR;
+		C8_Atlas_Glyph glyph = atlas.glyphs[glyph_index];
+
+		if (i < length - 1) {
+			width += glyph.u_advancement * horizontal_scaling_factor;
+
+		}
+		else {
+			width += (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
+
+		}
+	}
+	return width;
+}
+
+void c8_push_load_button(C8_App_State *state) {
+
+	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
+
+	float button_y = C8_LOAD_BUTTON_Y;
+	float button_width = C8_LOAD_BUTTON_WIDTH;
+	float button_height = C8_LOAD_BUTTON_HEIGHT;
+
+	float vertical_padding = 2.0f;
+
+	char text[] = "Load";
+
+	size_t text_length = sizeof(text) - 1;
+
+	float text_height = button_height - (2.0f * vertical_padding);
+	float text_width = c8_text_pixelwidth(state, text, text_length, text_height);
+
+	C8_Rgba button_color = { 0, 0, 0, 255 };
+
+	c8_plat_push_color_rect(button_x, button_y, button_width, button_height, button_color);
+
+	C8_Rgba text_color = { 255, 255, 255, 255 };
+
+	float text_x = button_x + ((button_width - text_width) / 2.0f);
+	c8_plat_push_text(text, text_length, text_x, button_y + vertical_padding, text_height, text_color);
+
+}
+
 bool c8_app_update(C8_App_State* state) {
 
 	char buf[256];
@@ -248,11 +324,8 @@ bool c8_app_update(C8_App_State* state) {
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
+	c8_push_load_button(state);
 	C8_Rgba color = { 0, 0, 255, 255 };
-
-	char text[] = "Load";
-
-	c8_plat_push_text(text, sizeof(text) - 1, 10.0f, 10.0f, 100.0f, color);
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{

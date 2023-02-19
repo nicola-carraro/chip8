@@ -81,16 +81,16 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
 
 	if (file.data) {
-		C8_Atlas_Header header = *((C8_Atlas_Header*)file.data);
+		C8_Atlas_Header atlas_header = *((C8_Atlas_Header*)file.data);
 
-		state->app_state.atlas = header;
+		state->app_state.atlas_header = atlas_header;
 
-		u8* input_bitmap = (u8*)file.data + sizeof(header);
+		u8* input_bitmap = (u8*)file.data + sizeof(atlas_header);
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
-				header.total_width_in_pixels,
-				header.total_height_in_pixels,
+				atlas_header.total_width_in_pixels,
+				atlas_header.total_height_in_pixels,
 				0,
 				0,
 				D3DFMT_A32B32G32R32F,
@@ -106,11 +106,11 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 			if (SUCCEEDED(locked)) {
 
 				uint8_t* row_start = (uint8_t*)(out_rect.pBits);
-				for (uint32_t row = 0; row < header.total_height_in_pixels; row++) {
+				for (uint32_t row = 0; row < atlas_header.total_height_in_pixels; row++) {
 
 					uint32_t f_index = 0;
-					for (uint32_t column = 0; column < header.total_width_in_pixels; column++) {
-						uint8_t src_pixel = input_bitmap[(row * header.total_width_in_pixels) + column];
+					for (uint32_t column = 0; column < atlas_header.total_width_in_pixels; column++) {
+						uint8_t src_pixel = input_bitmap[(row * atlas_header.total_width_in_pixels) + column];
 
 						float alpha = ((float)src_pixel) / 255.0f;
 
@@ -179,20 +179,20 @@ D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 	result.Windowed = TRUE;
 	result.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
-	//result.BackBufferWidth = 0;
-	//result.BackBufferHeight = 0;
-	//result.BackBufferFormat = D3DFMT_UNKNOWN;
-	//result.BackBufferCount = 0;
-	//result.MultiSampleType = D3DMULTISAMPLE_NONE;
-	//result.MultiSampleQuality = 0;
-	//result.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	//result.hDeviceWindow = window;
-	//result.Windowed = true;
-	//result.EnableAutoDepthStencil = 0;
-	//result.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
-	//result.Flags = 0;
-	//result.FullScreen_RefreshRateInHz = 0;
-	//result.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+	result.BackBufferWidth = 0;
+	result.BackBufferHeight = 0;
+	result.BackBufferFormat = D3DFMT_UNKNOWN;
+	result.BackBufferCount = 0;
+	result.MultiSampleType = D3DMULTISAMPLE_NONE;
+	result.MultiSampleQuality = 0;
+	result.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	result.hDeviceWindow = window;
+	result.Windowed = true;
+	result.EnableAutoDepthStencil = 0;
+	result.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+	result.Flags = 0;
+	result.FullScreen_RefreshRateInHz = 0;
+    result.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
 	return result;
 }
@@ -362,10 +362,9 @@ bool c8_win_render(C8_Win_State* state) {
 	{
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev))) {
 
-			c8_win_draw_text(state);
-
 			c8_draw_color(state);
 
+			c8_win_draw_text(state);
 		}
 		else
 		{
@@ -973,36 +972,54 @@ bool c8_win_push_glyph(C8_Win_State* state, C8_Atlas_Glyph glyph, float x, float
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
-bool c8_plat_push_text(char* text, size_t length, float x, float y, float line_height, C8_Rgba rgb) {
+bool c8_plat_push_text(char* text, size_t text_length, float x, float y, float line_height, C8_Rgba rgb) {
 
-	C8_Atlas_Header atlas = global_state.app_state.atlas;
+	C8_Atlas_Header atlas_header = global_state.app_state.atlas_header;
 
-	float vertical_scaling_factor = line_height / atlas.v_line_height;
+	float max_v_height = 0.0f;
+	for (size_t i = 0; i < text_length; i++) {
+		char c = text[i];
 
-	float aspect_ratio = ((float)atlas.total_width_in_pixels) / ((float)atlas.total_height_in_pixels);
+		i32 glyph_index = c - C8_FIRST_CHAR;
+		C8_Atlas_Glyph glyph = atlas_header.glyphs[glyph_index];
+
+		float v_height = glyph.v_bottom - glyph.v_top;
+
+		if (v_height > max_v_height) {
+			max_v_height = v_height;
+		}
+	}
+	float vertical_scaling_factor = line_height / max_v_height;
+
+	float aspect_ratio = ((float)atlas_header.total_width_in_pixels) / ((float)atlas_header.total_height_in_pixels);
 
 	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
 
 	float glyph_x = x;
 
-	for (size_t i = 0; i < length; i++) {
+	for (size_t i = 0; i < text_length; i++) {
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Atlas_Glyph glyph = global_state.app_state.atlas.glyphs[glyph_index];
+		C8_Atlas_Glyph glyph = global_state.app_state.atlas_header.glyphs[glyph_index];
 
-		float glyph_y = y + (glyph.v_offset * vertical_scaling_factor);
+		float glyph_v_height = glyph.v_bottom - glyph.v_top;
+
+		float glyph_y = y + ((max_v_height - glyph_v_height) * vertical_scaling_factor);
 
 		size_t width = (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
 
 		size_t height = (glyph.v_bottom - glyph.v_top) * vertical_scaling_factor;
 
-		c8_win_push_glyph(&global_state, glyph, glyph_x, glyph_y, width, height, rgb);
+		if (!c8_win_push_glyph(&global_state, glyph, glyph_x, glyph_y, width, height, rgb)) {
+			return false;
+		}
 
 		glyph_x  += glyph.u_advancement * horizontal_scaling_factor;
 
 	}
-	//return c8_win_push_glyph(&global_state, c, x, y, width, height, rgb);
+
+	return true;
 }
 
 bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb) {
