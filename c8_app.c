@@ -248,7 +248,7 @@ bool c8_app_update(C8_App_State* state) {
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
-	C8_Rgba color = { 255, 0, 0, 255 };
+	C8_Rgba color = { 0, 0, 255, 255 };
 
 	char text[] = "Load";
 

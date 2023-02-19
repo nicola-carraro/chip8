@@ -114,10 +114,9 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 						float alpha = ((float)src_pixel) / 255.0f;
 
-						((float*)row_start)[column * 4] = 1.0;
-
-						((float*)row_start)[column * 4 + 1] = 1.0;
-						((float*)row_start)[column * 4 + 2] = 1.0;
+						((float*)row_start)[column * 4] = 1.0f;
+						((float*)row_start)[column * 4 + 1] = 1.0f;
+						((float*)row_start)[column * 4 + 2] = 1.0f;
 						((float*)row_start)[column * 4 + 3] = alpha;
 
 					}
@@ -914,7 +913,7 @@ bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g,
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
 
-		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_ARGB(255,0, 0, 0);
+		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_ARGB(a,r, g, b);
 		state->text_vertex_count++;
 		result = true;
 	}
