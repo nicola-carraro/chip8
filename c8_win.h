@@ -47,6 +47,7 @@ typedef struct {
 
 	bool has_sound;
 	bool is_beeping;
+
 } C8_Win_State;
 
 typedef struct {

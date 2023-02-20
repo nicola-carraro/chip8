@@ -175,6 +175,17 @@ typedef struct {
 }C8_Control_Keys;
 
 typedef struct {
+	union {
+		struct {
+			float x;
+			float y;
+		};
+
+		float coords[2];
+	};
+} C8_V2;
+
+typedef struct {
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
@@ -195,18 +206,8 @@ typedef struct {
 	C8_Control_Keys control_keys;
 	bool should_beep;
 	C8_Atlas_Header atlas_header;
+	C8_V2 mouse_position;
 } C8_App_State;
-
-typedef struct {
-	union {
-		struct {
-			float x;
-			float y;
-		};
-
-		float coords[2];
-	};
-} C8_V2;
 
 typedef struct {
 	u8 r;

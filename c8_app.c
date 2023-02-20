@@ -267,7 +267,6 @@ C8_Text_Size c8_text_scale_for_max_size(char* text, size_t text_length, float ma
 
 		if (i < text_length - 1) {
 			width_pixels += glyph.u_advancement * horizontal_scaling_factor;
-
 		}
 		else {
 			width_pixels += (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
@@ -289,13 +288,13 @@ C8_Text_Size c8_text_scale_for_max_size(char* text, size_t text_length, float ma
 	return scaling;
 }
 
-void c8_push_load_button(C8_App_State *state) {
-
-	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
-
-	float button_y = C8_LOAD_BUTTON_Y;
-	float button_width = C8_LOAD_BUTTON_WIDTH;
-	float button_height = C8_LOAD_BUTTON_HEIGHT;
+void c8_push_load_button(
+	C8_App_State *state, 
+	float button_x, 
+	float button_y, 
+	float button_width, 
+	float button_height
+) {
 
 	float vertical_padding = 2.0f;
 
@@ -321,7 +320,6 @@ void c8_push_load_button(C8_App_State *state) {
 	float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
 
 	c8_plat_push_text(text, text_length, text_x, text_y, text_size, text_color);
-
 }
 
 bool c8_app_update(C8_App_State* state) {
@@ -364,8 +362,17 @@ bool c8_app_update(C8_App_State* state) {
 		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
-	c8_push_load_button(state);
+	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
+
+	float button_y = C8_LOAD_BUTTON_Y;
+	float button_width = C8_LOAD_BUTTON_WIDTH;
+	float button_height = C8_LOAD_BUTTON_HEIGHT;
+
+	c8_push_load_button(state, button_x, button_y, button_width, button_height);
+
 	C8_Rgba color = { 0, 0, 255, 255 };
+
+	c8_plat_debug_printf("MOUSE POSITION : %f, %f\n", state->mouse_position.x, state->mouse_position.y);
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{

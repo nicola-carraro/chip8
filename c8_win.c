@@ -1082,6 +1082,27 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						break;
 					}
 
+					WINDOWPLACEMENT  window_placement;
+					window_placement.length = sizeof(WINDOWPLACEMENT);
+					if (GetWindowPlacement(
+						window,
+						&window_placement
+					)) {
+						POINT point;
+						if (GetCursorPos(&point)) {
+							global_state.app_state.mouse_position.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
+							global_state.app_state.mouse_position.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
+						}
+						else {
+							OutputDebugStringA("Could not get mouse position\n");
+							assert(false);
+						}
+					}
+					else {
+						OutputDebugStringA("Could not get client position\n");
+						assert(false);
+					}
+
 					if (!c8_app_update(&global_state.app_state))
 					{
 						OutputDebugStringA("Could not update app\n");
