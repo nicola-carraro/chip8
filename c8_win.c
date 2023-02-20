@@ -90,7 +90,7 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
 				atlas_header.total_width_in_pixels,
-				atlas_header.total_height_in_pixels,
+				atlas_header.total_height_pixels,
 				0,
 				0,
 				D3DFMT_A32B32G32R32F,
@@ -106,7 +106,7 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 			if (SUCCEEDED(locked)) {
 
 				uint8_t* row_start = (uint8_t*)(out_rect.pBits);
-				for (uint32_t row = 0; row < atlas_header.total_height_in_pixels; row++) {
+				for (uint32_t row = 0; row < atlas_header.total_height_pixels; row++) {
 
 					uint32_t f_index = 0;
 					for (uint32_t column = 0; column < atlas_header.total_width_in_pixels; column++) {
@@ -972,28 +972,9 @@ bool c8_win_push_glyph(C8_Win_State* state, C8_Atlas_Glyph glyph, float x, float
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
-bool c8_plat_push_text(char* text, size_t text_length, float x, float y, float line_height, C8_Rgba rgb) {
+bool c8_plat_push_text(char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb) {
 
 	C8_Atlas_Header atlas_header = global_state.app_state.atlas_header;
-
-	float max_v_height = 0.0f;
-	for (size_t i = 0; i < text_length; i++) {
-		char c = text[i];
-
-		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Atlas_Glyph glyph = atlas_header.glyphs[glyph_index];
-
-		float v_height = glyph.v_bottom - glyph.v_top;
-
-		if (v_height > max_v_height) {
-			max_v_height = v_height;
-		}
-	}
-	float vertical_scaling_factor = line_height / max_v_height;
-
-	float aspect_ratio = ((float)atlas_header.total_width_in_pixels) / ((float)atlas_header.total_height_in_pixels);
-
-	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
 
 	float glyph_x = x;
 
@@ -1005,17 +986,19 @@ bool c8_plat_push_text(char* text, size_t text_length, float x, float y, float l
 
 		float glyph_v_height = glyph.v_bottom - glyph.v_top;
 
-		float glyph_y = y + ((max_v_height - glyph_v_height) * vertical_scaling_factor);
+		float glyph_height_pixels = glyph_v_height * text_size.vertical_scaling;
 
-		size_t width = (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
+		float glyph_y = y + text_size.height_pixels - glyph_height_pixels;
 
-		size_t height = (glyph.v_bottom - glyph.v_top) * vertical_scaling_factor;
+		size_t width = (glyph.u_right - glyph.u_left) * text_size.horizontal_scaling;
+
+		size_t height = (glyph.v_bottom - glyph.v_top) * text_size.vertical_scaling;
 
 		if (!c8_win_push_glyph(&global_state, glyph, glyph_x, glyph_y, width, height, rgb)) {
 			return false;
 		}
 
-		glyph_x  += glyph.u_advancement * horizontal_scaling_factor;
+		glyph_x  += glyph.u_advancement * text_size.horizontal_scaling;
 
 	}
 

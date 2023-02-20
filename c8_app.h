@@ -81,9 +81,16 @@ typedef struct {
 typedef struct {
 	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
 	int32_t total_width_in_pixels;
-	int32_t total_height_in_pixels;
+	int32_t total_height_pixels;
 	float v_line_height;
 }C8_Atlas_Header;
+
+typedef struct {
+	float horizontal_scaling;
+	float vertical_scaling;
+	float width_pixels;
+	float height_pixels;
+}C8_Text_Size;
 
 //typedef enum  {
 //	Command_Type_Triangles,
