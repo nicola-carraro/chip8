@@ -213,6 +213,7 @@ typedef struct {
 	C8_Atlas_Header atlas_header;
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
+	boolean load_button_down;
 } C8_App_State;
 
 typedef struct {

@@ -368,6 +368,25 @@ bool c8_app_update(C8_App_State* state) {
 	float button_width = C8_LOAD_BUTTON_WIDTH;
 	float button_height = C8_LOAD_BUTTON_HEIGHT;
 
+	boolean is_mouse_over_button = state->mouse_position.x >= button_x
+		&& state->mouse_position.x <= button_x + button_width
+		&& state->mouse_position.y >= button_y
+		&& state->mouse_position.y <= button_y + button_width;
+
+	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted) {
+
+		if (is_mouse_over_button) {
+			c8_plat_debug_printf("button triggered\n");
+		}
+		state->load_button_down = false;
+	}
+
+	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button) {
+		
+			state->load_button_down = true;
+		
+	}
+
 	c8_push_load_button(state, button_x, button_y, button_width, button_height);
 
 	C8_Rgba color = { 0, 0, 255, 255 };
