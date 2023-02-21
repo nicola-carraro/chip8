@@ -729,6 +729,24 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 
 	}break;
+	case WM_LBUTTONDOWN:{
+	global_state.app_state.mouse_buttons.left_button.ended_down = true;
+	global_state.app_state.mouse_buttons.left_button.was_pressed = true;
+
+	}break;
+	case WM_LBUTTONUP:{
+		global_state.app_state.mouse_buttons.left_button.ended_down = false; 
+		global_state.app_state.mouse_buttons.left_button.was_lifted = true;
+
+	}break;
+	case WM_RBUTTONDOWN:{
+		global_state.app_state.mouse_buttons.right_button.ended_down = true; 
+		global_state.app_state.mouse_buttons.right_button.was_pressed = true;
+	}break;
+	case WM_RBUTTONUP:{
+		global_state.app_state.mouse_buttons.right_button.ended_down = false;
+		global_state.app_state.mouse_buttons.right_button.was_lifted = true;
+	}break;
 	case WM_KEYDOWN:
 	case WM_KEYUP: {
 		WORD key_flags = HIWORD(lparam);
@@ -1112,7 +1130,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					if (!c8_win_render(&global_state))
 					{
 						OutputDebugStringA("Could not render\n");
-						assert(false);
+						//assert(false);
 					}
 
 					if (!global_state.is_beeping && global_state.app_state.should_beep) {

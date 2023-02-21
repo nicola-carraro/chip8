@@ -736,6 +736,9 @@ bool c8_app_update(C8_App_State* state) {
 		c8_reset_key(k);
 	}
 
+	c8_reset_key(&(state->mouse_buttons.left_button));
+	c8_reset_key(&(state->mouse_buttons.right_button));
+
 	state->frame_count++;
 
 	if (state->sound_timer > 0) {

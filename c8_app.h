@@ -175,6 +175,11 @@ typedef struct {
 }C8_Control_Keys;
 
 typedef struct {
+	C8_Key left_button;
+	C8_Key right_button;
+}C8_Mouse_Buttons;
+
+typedef struct {
 	union {
 		struct {
 			float x;
@@ -207,6 +212,7 @@ typedef struct {
 	bool should_beep;
 	C8_Atlas_Header atlas_header;
 	C8_V2 mouse_position;
+	C8_Mouse_Buttons mouse_buttons;
 } C8_App_State;
 
 typedef struct {
