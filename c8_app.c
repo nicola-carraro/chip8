@@ -28,7 +28,7 @@ bool c8_push_frame(C8_App_State* state) {
 
 	i32 frame_y = c8_frame_y(state);
 
-	bool push1 = c8_plat_push_color_rect(
+	bool push1 = c8_push_color_rect(
 		state,
 		frame_x,
 		frame_y,
@@ -37,7 +37,7 @@ bool c8_push_frame(C8_App_State* state) {
 		emulator_color
 	);
 
-	bool push2 = c8_plat_push_color_rect(
+	bool push2 = c8_push_color_rect(
 		state,
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
@@ -46,7 +46,7 @@ bool c8_push_frame(C8_App_State* state) {
 		emulator_color
 	);
 
-	bool push3 = c8_plat_push_color_rect(
+	bool push3 = c8_push_color_rect(
 		state,
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
@@ -56,7 +56,7 @@ bool c8_push_frame(C8_App_State* state) {
 
 	);
 
-	bool push4 = c8_plat_push_color_rect(
+	bool push4 = c8_push_color_rect(
 		state,
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
@@ -67,6 +67,40 @@ bool c8_push_frame(C8_App_State* state) {
 	);
 
 	return push1 && push2 && push3 && push4;
+}
+
+bool c8_push_color_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a) {
+	bool result = false;
+
+	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
+
+	if (state->color_vertex_count < c8_arr_count(state->color_vertices))
+	{
+		state->color_vertices[state->color_vertex_count].x = x;
+		state->color_vertices[state->color_vertex_count].y = y;
+
+		C8_Rgba color = { r, g, b, a };
+		state->color_vertices[state->color_vertex_count].color = color;
+		state->color_vertex_count++;
+		result = true;
+	}
+	else {
+		OutputDebugStringA("Vertex buffer size exceeded");
+	}
+
+	return result;
+}
+
+bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb) {
+	C8_V2 p1 = { x, y };
+	C8_V2 p2 = { x + width, y };
+	C8_V2 p3 = { x + width, y + height };
+	C8_V2 p4 = { x, y + height };
+
+	bool push1 = c8_win_push_color_triangle(state, p1, p2, p3, rgb);
+	bool push2 = c8_win_push_color_triangle(state, p1, p3, p4, rgb);
+
+	return push1 && push2;
 }
 
 bool c8_push_pixels(C8_App_State* state) {
@@ -80,7 +114,7 @@ bool c8_push_pixels(C8_App_State* state) {
 				i32 frame_x = c8_frame_x(state);
 				i32 frame_y = c8_frame_y(state);
 
-				bool push = c8_plat_push_color_rect(
+				bool push = c8_push_color_rect(
 					state,
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
@@ -317,7 +351,7 @@ void c8_push_load_button(
 
 	C8_Rgba button_color = { 0, 0, 0, 255 };
 
-	c8_plat_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
+	c8_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
 
 	C8_Rgba text_color = { 255, 255, 255, 255 };
 

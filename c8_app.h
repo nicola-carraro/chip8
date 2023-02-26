@@ -249,8 +249,6 @@ typedef struct {
 	void* data;
 } C8_File;
 
-bool c8_plat_push_color_rect(float x, float y, float width, float height, C8_Rgba rgb);
-
 void* c8_plat_allocate(psz size);
 
 bool c8_app_update();
@@ -266,5 +264,9 @@ bool c8_app_update();
 void c8_plat_debug_out(char* str);
 
 const C8_Rgba emulator_color = { 0, 0, 0, 255 };
+
+bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
+
+bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb);
 
 #endif // !C8_APP

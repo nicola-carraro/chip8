@@ -40,6 +40,7 @@ typedef struct {
 	C8_App_State app_state;
 	C8_Win_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	i32 text_vertex_count;
+
 	bool has_sound;
 	bool is_beeping;
 

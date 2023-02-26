@@ -901,28 +901,6 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	return true;
 }
 
-bool c8_win_push_color_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a) {
-	bool result = false;
-
-	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
-
-	if (state->color_vertex_count < c8_arr_count(state->color_vertices))
-	{
-		state->color_vertices[state->color_vertex_count].x = x;
-		state->color_vertices[state->color_vertex_count].y = y;
-
-		C8_Rgba color = { r, g, b, a };
-		state->color_vertices[state->color_vertex_count].color = color;
-		state->color_vertex_count++;
-		result = true;
-	}
-	else {
-		OutputDebugStringA("Vertex buffer size exceeded");
-	}
-
-	return result;
-}
-
 bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, u8 a, float u, float v) {
 	bool result = false;
 
@@ -949,9 +927,9 @@ bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g,
 }
 
 bool c8_win_push_color_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb) {
-	bool push1 = c8_win_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push2 = c8_win_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push3 = c8_win_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push1 = c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push2 = c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push3 = c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 
 	return push1 && push2 && push3;
 }
@@ -1028,18 +1006,6 @@ bool c8_plat_push_text(char* text, size_t text_length, float x, float y, C8_Text
 	}
 
 	return true;
-}
-
-bool c8_plat_push_color_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb) {
-	C8_V2 p1 = { x, y };
-	C8_V2 p2 = { x + width, y };
-	C8_V2 p3 = { x + width, y + height };
-	C8_V2 p4 = { x, y + height };
-
-	bool push1 = c8_win_push_color_triangle(state, p1, p2, p3, rgb);
-	bool push2 = c8_win_push_color_triangle(state, p1, p3, p4, rgb);
-
-	return push1 && push2;
 }
 
 bool c8_win_start_beep(C8_Win_State* state) {
