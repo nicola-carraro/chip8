@@ -29,6 +29,7 @@ bool c8_push_frame(C8_App_State* state) {
 	i32 frame_y = c8_frame_y(state);
 
 	bool push1 = c8_plat_push_color_rect(
+		state,
 		frame_x,
 		frame_y,
 		C8_MONITOR_WIDTH,
@@ -37,6 +38,7 @@ bool c8_push_frame(C8_App_State* state) {
 	);
 
 	bool push2 = c8_plat_push_color_rect(
+		state,
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
 		C8_FRAME_WIDTH,
@@ -45,6 +47,7 @@ bool c8_push_frame(C8_App_State* state) {
 	);
 
 	bool push3 = c8_plat_push_color_rect(
+		state,
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
 		C8_MONITOR_WIDTH,
@@ -54,6 +57,7 @@ bool c8_push_frame(C8_App_State* state) {
 	);
 
 	bool push4 = c8_plat_push_color_rect(
+		state,
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
 		C8_FRAME_WIDTH,
@@ -77,6 +81,7 @@ bool c8_push_pixels(C8_App_State* state) {
 				i32 frame_y = c8_frame_y(state);
 
 				bool push = c8_plat_push_color_rect(
+					state,
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					C8_PIXEL_SIDE,
@@ -312,7 +317,7 @@ void c8_push_load_button(
 
 	C8_Rgba button_color = { 0, 0, 0, 255 };
 
-	c8_plat_push_color_rect(button_x, button_y, button_width, button_height, button_color);
+	c8_plat_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
 
 	C8_Rgba text_color = { 255, 255, 255, 255 };
 
@@ -323,7 +328,7 @@ void c8_push_load_button(
 }
 
 bool c8_app_update(C8_App_State* state) {
-
+	state->color_vertex_count = 0;
 	char buf[256];
 
 	if (!state->program_loaded) {

@@ -240,7 +240,8 @@ typedef struct {
 	boolean load_button_down;
 	boolean file_dialog_is_open;
 	boolean file_dialog_should_open;
-
+	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
+	size_t color_vertex_count;
 } C8_App_State;
 
 typedef struct {

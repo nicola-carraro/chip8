@@ -38,11 +38,8 @@ typedef struct {
 	LPDIRECTSOUND ds;
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
-	C8_Win_Color_Vertex color_vertices[C8_MAX_VERTICES];
 	C8_Win_Texture_Vertex text_vertices[C8_MAX_VERTICES];
-	i32 color_vertex_count;
 	i32 text_vertex_count;
-
 	bool has_sound;
 	bool is_beeping;
 
