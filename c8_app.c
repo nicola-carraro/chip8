@@ -91,14 +91,111 @@ bool c8_push_color_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 
 	return result;
 }
 
+bool c8_push_text_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
+	bool push1 = c8_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	bool push2 = c8_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	bool push3 = c8_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
+
+	return push1 && push2 && push3;
+}
+
+bool c8_push_glyph(C8_App_State * state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb) {
+	C8_V2 p1 = { x, y };
+	C8_V2 p2 = { x + width, y };
+	C8_V2 p3 = { x + width, y + height };
+	C8_V2 p4 = { x, y + height };
+
+	bool push1 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	bool push2 = c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
+	bool push3 = c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+
+	bool push4 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	bool push5 = c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	bool push6 = c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
+
+	//bool push1 = c8_win_push_text_triangle(
+	//	&global_state,
+	//	p1, p2, p3, 
+	//	rgb, 
+	//	glyph.u_left, glyph.v_top, 
+	//	glyph.u_right, glyph.v_top,
+	//	glyph.u_right, glyph.v_bottom
+	//);
+	//bool push2 = c8_win_push_text_triangle(
+	//	&global_state,
+	//	p1, p3, p4, 
+	//	rgb,
+	//	glyph.u_left, glyph.v_top,
+	//	glyph.u_right, glyph.v_bottom,
+	//	glyph.u_left, glyph.v_bottom);
+
+	return push1 && push2 && push3 && push4 && push5 && push6;
+}
+
+bool c8_push_text(C8_App_State* state, char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb) {
+
+	C8_Atlas_Header atlas_header = state->atlas_header;
+
+	float glyph_x = x;
+
+	for (size_t i = 0; i < text_length; i++) {
+		char c = text[i];
+
+		i32 glyph_index = c - C8_FIRST_CHAR;
+		C8_Atlas_Glyph glyph = state->atlas_header.glyphs[glyph_index];
+
+		float glyph_v_height = glyph.v_bottom - glyph.v_top;
+
+		float glyph_height_pixels = glyph_v_height * text_size.vertical_scaling;
+
+		float glyph_y = y + text_size.height_pixels - glyph_height_pixels;
+
+		size_t width = (glyph.u_right - glyph.u_left) * text_size.horizontal_scaling;
+
+		size_t height = (glyph.v_bottom - glyph.v_top) * text_size.vertical_scaling;
+
+		if (!c8_push_glyph(state, glyph, glyph_x, glyph_y, width, height, rgb)) {
+			return false;
+		}
+
+		glyph_x += glyph.u_advancement * text_size.horizontal_scaling;
+
+	}
+
+	return true;
+}
+
+bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v) {
+	bool result = false;
+
+	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
+
+	if (state->text_vertex_count < c8_arr_count(state->text_vertices))
+	{
+		state->text_vertices[state->text_vertex_count].x = x;
+		state->text_vertices[state->text_vertex_count].y = y;
+		state->text_vertices[state->text_vertex_count].u = u;
+		state->text_vertices[state->text_vertex_count].v = v;
+		C8_Rgba color = { r, g, b, a };
+		state->text_vertices[state->text_vertex_count].color = color;
+		state->text_vertex_count++;
+		result = true;
+	}
+	else {
+		OutputDebugStringA("Vertex buffer size exceeded");
+	}
+
+	return result;
+}
+
 bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb) {
 	C8_V2 p1 = { x, y };
 	C8_V2 p2 = { x + width, y };
 	C8_V2 p3 = { x + width, y + height };
 	C8_V2 p4 = { x, y + height };
 
-	bool push1 = c8_win_push_color_triangle(state, p1, p2, p3, rgb);
-	bool push2 = c8_win_push_color_triangle(state, p1, p3, p4, rgb);
+	bool push1 = c8_push_color_triangle(state, p1, p2, p3, rgb);
+	bool push2 = c8_push_color_triangle(state, p1, p3, p4, rgb);
 
 	return push1 && push2;
 }
@@ -358,11 +455,12 @@ void c8_push_load_button(
 	float text_x = button_x + horizontal_padding + ((text_max_width_pixels - text_size.width_pixels) / 2.0f);
 	float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
 
-	c8_plat_push_text(text, text_length, text_x, text_y, text_size, text_color);
+	c8_push_text(state, text, text_length, text_x, text_y, text_size, text_color);
 }
 
 bool c8_app_update(C8_App_State* state) {
 	state->color_vertex_count = 0;
+	state->text_vertex_count = 0;
 	char buf[256];
 
 	if (!state->program_loaded) {

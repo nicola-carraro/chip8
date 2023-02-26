@@ -88,8 +88,8 @@ typedef struct
 } C8_Texture_Vertex;
 
 typedef struct {
-	FLOAT x;
-	FLOAT y;
+	float x;
+	float y;
 	C8_Rgba color;
 } C8_Color_Vertex;
 
@@ -100,21 +100,21 @@ typedef struct {
 	float v_bottom;
 	float v_offset;
 	float u_advancement;
-}C8_Atlas_Glyph;
+} C8_Atlas_Glyph;
 
 typedef struct {
 	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
 	int32_t total_width_in_pixels;
 	int32_t total_height_pixels;
 	float v_line_height;
-}C8_Atlas_Header;
+} C8_Atlas_Header;
 
 typedef struct {
 	float horizontal_scaling;
 	float vertical_scaling;
 	float width_pixels;
 	float height_pixels;
-}C8_Text_Size;
+} C8_Text_Size;
 
 //typedef enum  {
 //	Command_Type_Triangles,
@@ -237,11 +237,13 @@ typedef struct {
 	C8_Atlas_Header atlas_header;
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
-	boolean load_button_down;
-	boolean file_dialog_is_open;
-	boolean file_dialog_should_open;
+	bool load_button_down;
+	bool file_dialog_is_open;
+	bool file_dialog_should_open;
 	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
 	size_t color_vertex_count;
+	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
+	size_t text_vertex_count;
 } C8_App_State;
 
 typedef struct {
@@ -268,5 +270,11 @@ const C8_Rgba emulator_color = { 0, 0, 0, 255 };
 bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
 bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb);
+
+bool c8_plat_push_text(char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
+
+bool c8_push_glyph(C8_App_State* state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+
+bool c8_push_text_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 #endif // !C8_APP

@@ -38,8 +38,6 @@ typedef struct {
 	LPDIRECTSOUND ds;
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
-	C8_Win_Texture_Vertex text_vertices[C8_MAX_VERTICES];
-	i32 text_vertex_count;
 
 	bool has_sound;
 	bool is_beeping;
@@ -52,7 +50,7 @@ typedef struct {
 	bool has_timer;
 }C8_Win_Timer;
 
-C8_Win_State global_state;
+C8_Win_State *global_state;
 
 int c8_plat_debug_printf(char* format, ...);
 

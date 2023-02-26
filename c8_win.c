@@ -15,9 +15,16 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, NULL);
 			if (SUCCEEDED(locked)) {
 
-				for (i32 i = 0; i < state->text_vertex_count; i++) {
-
-					C8_Win_Texture_Vertex vertex = state->text_vertices[i];
+				for (i32 i = 0; i < state->app_state.text_vertex_count; i++) {
+					C8_Texture_Vertex source_vertex = state->app_state.text_vertices[i];
+					C8_Win_Texture_Vertex vertex = {0};
+					vertex.x = source_vertex.x;
+					vertex.y = source_vertex.y;
+					vertex.rhw = 1.0f;
+					vertex.u = source_vertex.u;
+					vertex.v = source_vertex.v;
+					C8_Rgba source_color = source_vertex.color;
+					vertex.color = D3DCOLOR_ARGB(source_color.a, source_color.r, source_color.g, source_color.b);
 					vertices[i] = vertex;
 				}
 
@@ -37,7 +44,7 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 					assert(SUCCEEDED(set_render_state));
 
 					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
-						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->text_vertex_count))) {
+						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->app_state.text_vertex_count))) {
 							result = TRUE;
 						}
 						else {
@@ -68,7 +75,7 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 		OutputDebugStringA("Could not set FVF for texture\n");
 	}
 
-	state->text_vertex_count = 0;
+	state->app_state.text_vertex_count = 0;
 
 	return result;
 }
@@ -142,7 +149,7 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 				HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
 					state->d3d_dev,
-					sizeof(state->text_vertices),
+					sizeof(state->app_state.text_vertices),
 					0,
 					C8_WIN_TEX_FVF,
 					D3DPOOL_MANAGED,
@@ -716,50 +723,50 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
-		global_state.app_state.running = false;
+		global_state->app_state.running = false;
 
 	}break;
 	case WM_QUIT:
 	{
-		global_state.app_state.running = false;
+		global_state->app_state.running = false;
 	} break;
 	case WM_SIZE:
 	{
 
-		global_state.app_state.cli_width = LOWORD(lparam);
-		global_state.app_state.cli_height = HIWORD(lparam);
+		global_state->app_state.cli_width = LOWORD(lparam);
+		global_state->app_state.cli_height = HIWORD(lparam);
 
-		if (global_state.d3d_dev != 0)
+		if (global_state->d3d_dev != 0)
 		{
 			D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
-			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
+			IDirect3DDevice9_Reset(global_state->d3d_dev, &d3dpp);
 		}
 
 	}break;
 	case WM_LBUTTONDOWN:{
-	global_state.app_state.mouse_buttons.left_button.ended_down = true;
-	global_state.app_state.mouse_buttons.left_button.was_pressed = true;
+	global_state->app_state.mouse_buttons.left_button.ended_down = true;
+	global_state->app_state.mouse_buttons.left_button.was_pressed = true;
 
 	}break;
 	case WM_LBUTTONUP:{
-		global_state.app_state.mouse_buttons.left_button.ended_down = false; 
-		global_state.app_state.mouse_buttons.left_button.was_lifted = true;
+		global_state->app_state.mouse_buttons.left_button.ended_down = false;
+		global_state->app_state.mouse_buttons.left_button.was_lifted = true;
 
 	}break;
 	case WM_RBUTTONDOWN:{
-		global_state.app_state.mouse_buttons.right_button.ended_down = true; 
-		global_state.app_state.mouse_buttons.right_button.was_pressed = true;
+		global_state->app_state.mouse_buttons.right_button.ended_down = true;
+		global_state->app_state.mouse_buttons.right_button.was_pressed = true;
 	}break;
 	case WM_RBUTTONUP:{
-		global_state.app_state.mouse_buttons.right_button.ended_down = false;
-		global_state.app_state.mouse_buttons.right_button.was_lifted = true;
+		global_state->app_state.mouse_buttons.right_button.ended_down = false;
+		global_state->app_state.mouse_buttons.right_button.was_lifted = true;
 	}break;
 	case WM_KEYDOWN:
 	case WM_KEYUP: {
 		WORD key_flags = HIWORD(lparam);
 		WORD scan_code = LOBYTE(key_flags);
 		WORD vkey_code = LOWORD(wparam);
-		C8_Control_Keys* controls = &(global_state.app_state.control_keys);
+		C8_Control_Keys* controls = &(global_state->app_state.control_keys);
 		switch (vkey_code) {
 		case VK_RETURN: {
 			C8_Key* key = &(controls->enter);
@@ -779,7 +786,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		}break;
 		}
 
-		C8_Keypad* keypad = &(global_state.app_state.keypad);
+		C8_Keypad* keypad = &(global_state->app_state.keypad);
 		switch (scan_code) {
 		case 2: {
 			C8_Key* key = &(keypad->kp_1);
@@ -901,111 +908,12 @@ bool c8_win_process_msgs(C8_Win_State* state, HWND window) {
 	return true;
 }
 
-bool c8_win_push_text_vertex(C8_Win_State* state, float x, float y,  u8 r, u8 g, u8 b, u8 a, float u, float v) {
-	bool result = false;
-
-	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
-
-	if (state->text_vertex_count < c8_arr_count(state->text_vertices))
-	{
-		state->text_vertices[state->text_vertex_count].x = x;
-		state->text_vertices[state->text_vertex_count].y = y;
-		state->text_vertices[state->text_vertex_count].z = 0;
-		state->text_vertices[state->text_vertex_count].rhw = 1.0f;
-		state->text_vertices[state->text_vertex_count].u = u;
-		state->text_vertices[state->text_vertex_count].v = v;
-
-		state->text_vertices[state->text_vertex_count].color = D3DCOLOR_ARGB(a,r, g, b);
-		state->text_vertex_count++;
-		result = true;
-	}
-	else {
-		OutputDebugStringA("Vertex buffer size exceeded");
-	}
-
-	return result;
-}
-
-bool c8_win_push_color_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb) {
+bool c8_push_color_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb) {
 	bool push1 = c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
 	bool push2 = c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
 	bool push3 = c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 
 	return push1 && push2 && push3;
-}
-
-bool c8_win_push_text_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
-	bool push1 =c8_win_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	bool push2 =c8_win_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-	bool push3 =c8_win_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
-
-	return push1 && push2 && push3;
-}
-
-bool c8_win_push_glyph(C8_Win_State* state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb) {
-	C8_V2 p1 = { x, y };
-	C8_V2 p2 = { x + width, y };
-	C8_V2 p3 = { x + width, y + height };
-	C8_V2 p4 = { x, y + height };
-
-	bool push1 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	bool push2 = c8_win_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
-	bool push3 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
-
-	bool push4 = c8_win_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	bool push5 = c8_win_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
-	bool push6 = c8_win_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
-
-	//bool push1 = c8_win_push_text_triangle(
-	//	&global_state,
-	//	p1, p2, p3, 
-	//	rgb, 
-	//	glyph.u_left, glyph.v_top, 
-	//	glyph.u_right, glyph.v_top,
-	//	glyph.u_right, glyph.v_bottom
-	//);
-	//bool push2 = c8_win_push_text_triangle(
-	//	&global_state,
-	//	p1, p3, p4, 
-	//	rgb,
-	//	glyph.u_left, glyph.v_top,
-	//	glyph.u_right, glyph.v_bottom,
-	//	glyph.u_left, glyph.v_bottom);
-
-	return push1 && push2 && push3 && push4 && push5 && push6;
-}
-
-bool c8_plat_push_text(char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb) {
-
-	C8_Atlas_Header atlas_header = global_state.app_state.atlas_header;
-
-	float glyph_x = x;
-
-	for (size_t i = 0; i < text_length; i++) {
-		char c = text[i];
-
-		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Atlas_Glyph glyph = global_state.app_state.atlas_header.glyphs[glyph_index];
-
-		float glyph_v_height = glyph.v_bottom - glyph.v_top;
-
-		float glyph_height_pixels = glyph_v_height * text_size.vertical_scaling;
-
-		float glyph_y = y + text_size.height_pixels - glyph_height_pixels;
-
-		size_t width = (glyph.u_right - glyph.u_left) * text_size.horizontal_scaling;
-
-		size_t height = (glyph.v_bottom - glyph.v_top) * text_size.vertical_scaling;
-
-		if (!c8_win_push_glyph(&global_state, glyph, glyph_x, glyph_y, width, height, rgb)) {
-			return false;
-		}
-
-		glyph_x  += glyph.u_advancement * text_size.horizontal_scaling;
-
-	}
-
-	return true;
 }
 
 bool c8_win_start_beep(C8_Win_State* state) {
@@ -1039,7 +947,9 @@ bool c8_win_stop_beep(C8_Win_State* state) {
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
-	c8_clear_struct(global_state);
+	global_state = malloc(sizeof(*global_state));
+
+	memset(global_state, 0, sizeof(*global_state));
 
 	HWND file_dialog = 0;
 
@@ -1050,27 +960,27 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	i32 samples_per_sec = 8000;
 	i32 bytes_per_sample = 2;
 
-	if (c8_arena_init(&global_state.app_state.arena, 5 * 1024 * 1024, 4)) {
+	if (c8_arena_init(&(global_state->app_state.arena), 5 * 1024 * 1024, 4)) {
 
 		if (window != 0) {
 
-			if (c8_win_initd3d(&global_state, window)) {
+			if (c8_win_initd3d(global_state, window)) {
 				ShowWindow(window, cmd_show);
-				global_state.app_state.running = true;
+				global_state->app_state.running = true;
 
-				global_state.has_sound = false;
-				if (c8_win_init_dsound(&global_state, window, samples_per_sec)) {
-					global_state.has_sound = true;
+				global_state->has_sound = false;
+				if (c8_win_init_dsound(global_state, window, samples_per_sec)) {
+					global_state->has_sound = true;
 				}
 				else {
 					OutputDebugStringA("Could not initialize Direct Sound\n");
 					assert(false);
 				}
 
-				while (global_state.app_state.running)
+				while (global_state->app_state.running)
 				{
 
-					if (!c8_win_process_msgs(&global_state, window))
+					if (!c8_win_process_msgs(global_state, window))
 					{
 						break;
 					}
@@ -1083,8 +993,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					)) {
 						POINT point;
 						if (GetCursorPos(&point)) {
-							global_state.app_state.mouse_position.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
-							global_state.app_state.mouse_position.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
+							global_state->app_state.mouse_position.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
+							global_state->app_state.mouse_position.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
 						}
 						else {
 							OutputDebugStringA("Could not get mouse position\n");
@@ -1096,30 +1006,30 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						assert(false);
 					}
 
-					if (!c8_app_update(&global_state.app_state))
+					if (!c8_app_update(&(global_state->app_state)))
 					{
 						OutputDebugStringA("Could not update app\n");
 						assert(false);
 					}
 
-					if (global_state.app_state.file_dialog_should_open && file_dialog == 0) {
+					if (global_state->app_state.file_dialog_should_open && file_dialog == 0) {
 						HWND file_dialog = c8_win_create_window(instance, 500, 100);
 						ShowWindow(file_dialog, cmd_show);
 					}
 				
-					if (!c8_win_render(&global_state))
+					if (!c8_win_render(global_state))
 					{
 						OutputDebugStringA("Could not render\n");
 						//assert(false);
 					}
 
-					if (!global_state.is_beeping && global_state.app_state.should_beep) {
-						bool beeped = c8_win_start_beep(&global_state);
+					if (!global_state->is_beeping && global_state->app_state.should_beep) {
+						bool beeped = c8_win_start_beep(global_state);
 						assert(beeped);
 					}
 
-					if (global_state.is_beeping && !global_state.app_state.should_beep) {
-						bool stopped = c8_win_stop_beep(&global_state);
+					if (global_state->is_beeping && !global_state->app_state.should_beep) {
+						bool stopped = c8_win_stop_beep(global_state);
 						assert(stopped);
 					}
 
