@@ -845,11 +845,12 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
-HWND c8_win_create_window(HINSTANCE instance)
+HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 {
 	const char* class_name = "chip8";
 
 	WNDCLASSA wc;
+
 	c8_clear_struct(wc);
 
 	wc.lpfnWndProc = WindowProc;
@@ -863,7 +864,7 @@ HWND c8_win_create_window(HINSTANCE instance)
 			class_name,
 			"Chip 8",
 			WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+			CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 			0,
 			0,
 			instance,
@@ -1068,7 +1069,9 @@ bool c8_win_stop_beep(C8_Win_State* state) {
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show) {
 	c8_clear_struct(global_state);
 
-	HWND window = c8_win_create_window(instance);
+	HWND file_dialog = 0;
+
+	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
 	C8_Win_Timer timer = c8_win_init_timer();
 
@@ -1127,6 +1130,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 						assert(false);
 					}
 
+					if (global_state.app_state.file_dialog_should_open && file_dialog == 0) {
+						HWND file_dialog = c8_win_create_window(instance, 500, 100);
+						ShowWindow(file_dialog, cmd_show);
+					}
+				
 					if (!c8_win_render(&global_state))
 					{
 						OutputDebugStringA("Could not render\n");

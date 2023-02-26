@@ -376,15 +376,13 @@ bool c8_app_update(C8_App_State* state) {
 	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted) {
 
 		if (is_mouse_over_button) {
-			c8_plat_debug_printf("button triggered\n");
+			state->file_dialog_should_open = true;
 		}
 		state->load_button_down = false;
 	}
 
 	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button) {
-		
-			state->load_button_down = true;
-		
+			state->load_button_down = true;		
 	}
 
 	c8_push_load_button(state, button_x, button_y, button_width, button_height);

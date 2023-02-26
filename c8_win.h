@@ -8,8 +8,6 @@
 
 #define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
-#define C8_WIN_MAX_VERTICES (C8_PIXEL_ROWS * C8_PIXEL_COLS * 2 * 3) + (8 * 3)
-
 #define C8_WIN_TEX_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 typedef struct
@@ -40,8 +38,8 @@ typedef struct {
 	LPDIRECTSOUND ds;
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
-	C8_Win_Color_Vertex color_vertices[C8_WIN_MAX_VERTICES];
-	C8_Win_Texture_Vertex text_vertices[C8_WIN_MAX_VERTICES];
+	C8_Win_Color_Vertex color_vertices[C8_MAX_VERTICES];
+	C8_Win_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	i32 color_vertex_count;
 	i32 text_vertex_count;
 

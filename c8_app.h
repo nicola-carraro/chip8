@@ -8,6 +8,8 @@
 
 #define C8_DEBUG_PRINT 1
 
+#define C8_MAX_VERTICES (C8_PIXEL_ROWS * C8_PIXEL_COLS * 2 * 3) + (8 * 3)
+
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
@@ -68,6 +70,28 @@ typedef uint8_t u8;
 #define C8_LOAD_BUTTON_HEIGHT (50.0f)
 
 #define C8_LOAD_BUTTON_Y (10.0f)
+
+typedef struct {
+	u8 r;
+	u8 g;
+	u8 b;
+	u8 a;
+} C8_Rgba;
+
+typedef struct
+{
+	float x;
+	float y;
+	C8_Rgba color;
+	float u;
+	float v;
+} C8_Texture_Vertex;
+
+typedef struct {
+	FLOAT x;
+	FLOAT y;
+	C8_Rgba color;
+} C8_Color_Vertex;
 
 typedef struct {
 	float u_left;
@@ -214,14 +238,10 @@ typedef struct {
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
 	boolean load_button_down;
-} C8_App_State;
+	boolean file_dialog_is_open;
+	boolean file_dialog_should_open;
 
-typedef struct {
-	u8 r;
-	u8 g;
-	u8 b;
-	u8 a;
-} C8_Rgba;
+} C8_App_State;
 
 typedef struct {
 	psz size;
