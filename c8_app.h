@@ -164,7 +164,7 @@ typedef struct {
 
 typedef struct {
 	union {
-		struct {
+		struct keypad{
 			C8_Key kp_0;
 			C8_Key kp_1;
 			C8_Key kp_2;
@@ -188,7 +188,7 @@ typedef struct {
 
 typedef struct {
 	union {
-		struct {
+		struct control_keys {
 			C8_Key enter;
 			C8_Key esc;
 			C8_Key p;

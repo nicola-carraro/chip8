@@ -1,0 +1,1 @@
+cl c8_win.c /W4 -nologo -Od  kernel32.lib user32.lib D3d9.lib Dsound.lib

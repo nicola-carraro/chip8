@@ -12,7 +12,7 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 
 			C8_Win_Texture_Vertex* vertices;
 
-			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, NULL);
+			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, 0);
 			if (SUCCEEDED(locked)) {
 
 				for (i32 i = 0; i < state->app_state.text_vertex_count; i++) {
@@ -40,10 +40,10 @@ BOOL c8_win_draw_text(C8_Win_State* state) {
 					assert(SUCCEEDED(set_render_state));
 					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 					assert(SUCCEEDED(set_render_state));
-					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+					set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev,  D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 					assert(SUCCEEDED(set_render_state));
 
-					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, state->texture))) {
+					if (SUCCEEDED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, (IDirect3DBaseTexture9 *)state->texture))) {
 						if (SUCCEEDED(IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->app_state.text_vertex_count))) {
 							result = TRUE;
 						}
@@ -140,7 +140,7 @@ BOOL c8_win_load_font(C8_Win_State* state, char* file_name, i32 name_length)
 
 			int count = 0;
 
-			uint8_t* input_bitmap = ((UINT)file.data + 2);
+			uint8_t* input_bitmap = ((uint8_t*)file.data + 2);
 
 			uint8_t* row_start = (uint8_t*)(out_rect.pBits);
 
