@@ -1044,6 +1044,11 @@ bool c8_win_stop_beep(C8_Win_State *state)
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
+
+	UNREFERENCED_PARAMETER(cmd_line);
+
+	UNREFERENCED_PARAMETER(prev_instance);
+
 	global_state = malloc(sizeof(*global_state));
 
 	memset(global_state, 0, sizeof(*global_state));
@@ -1168,6 +1173,8 @@ void *c8_plat_allocate(psz size)
 
 C8_File c8_plat_read_file(char *name, i32 name_length, C8_Arena *arena)
 {
+	UNREFERENCED_PARAMETER(name_length);
+
 	C8_File result;
 	c8_clear_struct(result);
 
