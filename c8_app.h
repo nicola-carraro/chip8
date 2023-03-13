@@ -23,9 +23,9 @@ typedef uint8_t u8;
 
 #define C8_RAM_BYTE_SIZE 4096
 
-#define C8_FRAME_WIDTH 4
+#define C8_FRAME_WIDTH 4.0f
 
-#define C8_PIXEL_SIDE 8
+#define C8_PIXEL_SIDE 8.0f
 
 #define C8_PIXEL_ROWS 32
 
@@ -39,15 +39,15 @@ typedef uint8_t u8;
 
 #define C8_MONITOR_HEIGHT (C8_SCREEN_HEIGHT + (2 * C8_FRAME_WIDTH))
 
-#define c8_clear_struct(obj)(memset(&obj, 0, sizeof(obj)))
+#define c8_clear_struct(obj) (memset(&obj, 0, sizeof(obj)))
 
-#define c8_arr_count(a)(sizeof(a) / sizeof(a[0]))
+#define c8_arr_count(a) (sizeof(a) / sizeof(a[0]))
 
 #define C8_INSTRUCTIONS_PER_SEC 880
 
 #define C8_FRAMES_PER_SEC 60
 
-#define C8_INSTRUCTIONS_PER_FRAME (C8_INSTRUCTIONS_PER_SEC /C8_FRAMES_PER_SEC )
+#define C8_INSTRUCTIONS_PER_FRAME (C8_INSTRUCTIONS_PER_SEC / C8_FRAMES_PER_SEC)
 
 #define C8_FONT_SIZE 5
 
@@ -71,7 +71,8 @@ typedef uint8_t u8;
 
 #define C8_LOAD_BUTTON_Y (10.0f)
 
-typedef struct {
+typedef struct
+{
 	u8 r;
 	u8 g;
 	u8 b;
@@ -87,13 +88,15 @@ typedef struct
 	float v;
 } C8_Texture_Vertex;
 
-typedef struct {
+typedef struct
+{
 	float x;
 	float y;
 	C8_Rgba color;
 } C8_Color_Vertex;
 
-typedef struct {
+typedef struct
+{
 	float u_left;
 	float u_right;
 	float v_top;
@@ -102,119 +105,95 @@ typedef struct {
 	float u_advancement;
 } C8_Atlas_Glyph;
 
-typedef struct {
+typedef struct
+{
 	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
-	int32_t total_width_in_pixels;
-	int32_t total_height_pixels;
+	uint32_t total_width_in_pixels;
+	uint32_t total_height_pixels;
 	float v_line_height;
 } C8_Atlas_Header;
 
-typedef struct {
+typedef struct
+{
 	float horizontal_scaling;
 	float vertical_scaling;
 	float width_pixels;
 	float height_pixels;
 } C8_Text_Size;
 
-//typedef enum  {
-//	Command_Type_Triangles,
-//	Command_Type_Fonts
-//}C8_Draw_Command_Type;
-//
-//typedef struct {
-//	FLOAT x;
-//	FLOAT y;
-//	u8 red;
-//	u8 green;
-//	u8 blue;
-//	u8 alpha;
-//} C8_Color_Vertex;
-//
-//typedef struct{
-//	psz capacity;
-//	psz size;
-//	C8_Color_Vertex* vertices;
-//	C8_Arena* arena;
-//}
-//C8_Color_Vertex_Vector;
-
-//typedef struct {
-//} Draw_Command_Triangles;
-
-//typedef struct {
-//	C8_Draw_Command_Type type;
-//	C8_Color_Vertex_Vector* triangles;
-//}Draw_Command;
-
-typedef struct {
-	void* data;
+typedef struct
+{
+	void *data;
 	psz max_bytes;
 	i32 alignement;
 	psz offset;
 } C8_Arena;
 
-typedef struct {
+typedef struct
+{
 	bool started_down;
 	bool ended_down;
 	bool was_down;
 	bool was_pressed;
 	bool was_lifted;
 	i32 half_transitions;
-}C8_Key;
+} C8_Key;
 
-typedef struct {
-	union {
-		struct keypad{
-			C8_Key kp_0;
-			C8_Key kp_1;
-			C8_Key kp_2;
-			C8_Key kp_3;
-			C8_Key kp_4;
-			C8_Key kp_5;
-			C8_Key kp_6;
-			C8_Key kp_7;
-			C8_Key kp_8;
-			C8_Key kp_9;
-			C8_Key kp_a;
-			C8_Key kp_b;
-			C8_Key kp_c;
-			C8_Key kp_d;
-			C8_Key kp_e;
-			C8_Key kp_f;
-		};
-		C8_Key keys[16];
-	};
-}C8_Keypad;
+typedef union
+{
+	struct
+	{
+		C8_Key kp_0;
+		C8_Key kp_1;
+		C8_Key kp_2;
+		C8_Key kp_3;
+		C8_Key kp_4;
+		C8_Key kp_5;
+		C8_Key kp_6;
+		C8_Key kp_7;
+		C8_Key kp_8;
+		C8_Key kp_9;
+		C8_Key kp_a;
+		C8_Key kp_b;
+		C8_Key kp_c;
+		C8_Key kp_d;
+		C8_Key kp_e;
+		C8_Key kp_f;
+	} keypad;
+	C8_Key keys[16];
+} C8_Keypad;
 
-typedef struct {
-	union {
-		struct control_keys {
-			C8_Key enter;
-			C8_Key esc;
-			C8_Key p;
-			C8_Key space;
-		};
-		C8_Key keys[4];
-	};
-}C8_Control_Keys;
+typedef union
+{
+	struct
+	{
+		C8_Key enter;
+		C8_Key esc;
+		C8_Key p;
+		C8_Key space;
+	} control_keys;
+	C8_Key keys[4];
+} C8_Control_Keys;
 
-typedef struct {
+typedef struct
+{
 	C8_Key left_button;
 	C8_Key right_button;
-}C8_Mouse_Buttons;
+} C8_Mouse_Buttons;
 
-typedef struct {
-	union {
-		struct {
-			float x;
-			float y;
-		};
+typedef union
+{
+	struct
+	{
+		float x;
+		float y;
+	} xy;
 
-		float coords[2];
-	};
+	float coords[2];
 } C8_V2;
 
-typedef struct {
+typedef struct
+{
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
@@ -243,38 +222,39 @@ typedef struct {
 	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
 	size_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
-	size_t text_vertex_count;
+	uint32_t text_vertex_count;
 } C8_App_State;
 
-typedef struct {
+typedef struct
+{
 	psz size;
-	void* data;
+	void *data;
 } C8_File;
 
-void* c8_plat_allocate(psz size);
+void *c8_plat_allocate(psz size);
 
 bool c8_app_update();
 
-void* c8_arena_alloc(C8_Arena* arena, psz size);
+void *c8_arena_alloc(C8_Arena *arena, psz size);
 
-bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement);
+bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement);
 
-void c8_arena_free_all(C8_Arena* arena);
+void c8_arena_free_all(C8_Arena *arena);
 
 bool c8_app_update();
 
-void c8_plat_debug_out(char* str);
+void c8_plat_debug_out(char *str);
 
-const C8_Rgba emulator_color = { 0, 0, 0, 255 };
+const C8_Rgba emulator_color = {0, 0, 0, 255};
 
 bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
-bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb);
+bool c8_push_color_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
-bool c8_plat_push_text(char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
+bool c8_plat_push_text(char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
 
-bool c8_push_glyph(C8_App_State* state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
-bool c8_push_text_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 #endif // !C8_APP

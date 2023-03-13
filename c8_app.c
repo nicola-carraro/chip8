@@ -9,21 +9,22 @@ u16 c8_read_instruction(u16 bytes)
 	return result;
 }
 
-i32 c8_frame_x(C8_App_State* state)
+i32 c8_frame_x(C8_App_State *state)
 {
 	i32 result = (state->cli_width / 2) - (C8_MONITOR_WIDTH / 2);
 
 	return result;
 }
 
-i32 c8_frame_y(C8_App_State* state)
+i32 c8_frame_y(C8_App_State *state)
 {
 	i32 result = (state->cli_height / 2) - (C8_MONITOR_HEIGHT / 2);
 
 	return result;
 }
 
-bool c8_push_frame(C8_App_State* state) {
+bool c8_push_frame(C8_App_State *state)
+{
 	i32 frame_x = c8_frame_x(state);
 
 	i32 frame_y = c8_frame_y(state);
@@ -34,8 +35,7 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_y,
 		C8_MONITOR_WIDTH,
 		C8_FRAME_WIDTH,
-		emulator_color
-	);
+		emulator_color);
 
 	bool push2 = c8_push_color_rect(
 		state,
@@ -43,8 +43,7 @@ bool c8_push_frame(C8_App_State* state) {
 		frame_y,
 		C8_FRAME_WIDTH,
 		C8_MONITOR_HEIGHT,
-		emulator_color
-	);
+		emulator_color);
 
 	bool push3 = c8_push_color_rect(
 		state,
@@ -69,7 +68,8 @@ bool c8_push_frame(C8_App_State* state) {
 	return push1 && push2 && push3 && push4;
 }
 
-bool c8_push_color_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a) {
+bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a)
+{
 	bool result = false;
 
 	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
@@ -79,31 +79,34 @@ bool c8_push_color_vertex(C8_App_State* state, float x, float y, u8 r, u8 g, u8 
 		state->color_vertices[state->color_vertex_count].x = x;
 		state->color_vertices[state->color_vertex_count].y = y;
 
-		C8_Rgba color = { r, g, b, a };
+		C8_Rgba color = {r, g, b, a};
 		state->color_vertices[state->color_vertex_count].color = color;
 		state->color_vertex_count++;
 		result = true;
 	}
-	else {
+	else
+	{
 		OutputDebugStringA("Vertex buffer size exceeded");
 	}
 
 	return result;
 }
 
-bool c8_push_text_triangle(C8_App_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3) {
-	bool push1 = c8_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	bool push2 = c8_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-	bool push3 = c8_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
+bool c8_push_text_triangle(C8_App_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
+{
+	bool push1 = c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	bool push2 = c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	bool push3 = c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 
 	return push1 && push2 && push3;
 }
 
-bool c8_push_glyph(C8_App_State * state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb) {
-	C8_V2 p1 = { x, y };
-	C8_V2 p2 = { x + width, y };
-	C8_V2 p3 = { x + width, y + height };
-	C8_V2 p4 = { x, y + height };
+bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
+{
+	C8_V2 p1 = {x, y};
+	C8_V2 p2 = {x + width, y};
+	C8_V2 p3 = {x + width, y + height};
+	C8_V2 p4 = {x, y + height};
 
 	bool push1 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
 	bool push2 = c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
@@ -113,17 +116,17 @@ bool c8_push_glyph(C8_App_State * state, C8_Atlas_Glyph glyph, float x, float y,
 	bool push5 = c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
 	bool push6 = c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 
-	//bool push1 = c8_win_push_text_triangle(
+	// bool push1 = c8_win_push_text_triangle(
 	//	&global_state,
-	//	p1, p2, p3, 
-	//	rgb, 
-	//	glyph.u_left, glyph.v_top, 
+	//	p1, p2, p3,
+	//	rgb,
+	//	glyph.u_left, glyph.v_top,
 	//	glyph.u_right, glyph.v_top,
 	//	glyph.u_right, glyph.v_bottom
 	//);
-	//bool push2 = c8_win_push_text_triangle(
+	// bool push2 = c8_win_push_text_triangle(
 	//	&global_state,
-	//	p1, p3, p4, 
+	//	p1, p3, p4,
 	//	rgb,
 	//	glyph.u_left, glyph.v_top,
 	//	glyph.u_right, glyph.v_bottom,
@@ -132,13 +135,15 @@ bool c8_push_glyph(C8_App_State * state, C8_Atlas_Glyph glyph, float x, float y,
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
 
-bool c8_push_text(C8_App_State* state, char* text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb) {
+bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb)
+{
 
 	C8_Atlas_Header atlas_header = state->atlas_header;
 
 	float glyph_x = x;
 
-	for (size_t i = 0; i < text_length; i++) {
+	for (size_t i = 0; i < text_length; i++)
+	{
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
@@ -154,18 +159,19 @@ bool c8_push_text(C8_App_State* state, char* text, size_t text_length, float x, 
 
 		size_t height = (glyph.v_bottom - glyph.v_top) * text_size.vertical_scaling;
 
-		if (!c8_push_glyph(state, glyph, glyph_x, glyph_y, width, height, rgb)) {
+		if (!c8_push_glyph(state, glyph, glyph_x, glyph_y, width, height, rgb))
+		{
 			return false;
 		}
 
 		glyph_x += glyph.u_advancement * text_size.horizontal_scaling;
-
 	}
 
 	return true;
 }
 
-bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v) {
+bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
+{
 	bool result = false;
 
 	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
@@ -176,23 +182,25 @@ bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b
 		state->text_vertices[state->text_vertex_count].y = y;
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
-		C8_Rgba color = { r, g, b, a };
+		C8_Rgba color = {r, g, b, a};
 		state->text_vertices[state->text_vertex_count].color = color;
 		state->text_vertex_count++;
 		result = true;
 	}
-	else {
+	else
+	{
 		OutputDebugStringA("Vertex buffer size exceeded");
 	}
 
 	return result;
 }
 
-bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, float height, C8_Rgba rgb) {
-	C8_V2 p1 = { x, y };
-	C8_V2 p2 = { x + width, y };
-	C8_V2 p3 = { x + width, y + height };
-	C8_V2 p4 = { x, y + height };
+bool c8_push_color_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb)
+{
+	C8_V2 p1 = {x, y};
+	C8_V2 p2 = {x + width, y};
+	C8_V2 p3 = {x + width, y + height};
+	C8_V2 p4 = {x, y + height};
 
 	bool push1 = c8_push_color_triangle(state, p1, p2, p3, rgb);
 	bool push2 = c8_push_color_triangle(state, p1, p3, p4, rgb);
@@ -200,7 +208,8 @@ bool c8_push_color_rect(C8_App_State* state, float x, float y, float width, floa
 	return push1 && push2;
 }
 
-bool c8_push_pixels(C8_App_State* state) {
+bool c8_push_pixels(C8_App_State *state)
+{
 
 	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
 	{
@@ -217,10 +226,10 @@ bool c8_push_pixels(C8_App_State* state) {
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					C8_PIXEL_SIDE,
 					C8_PIXEL_SIDE,
-					emulator_color
-				);
+					emulator_color);
 
-				if (!push) {
+				if (!push)
+				{
 					return false;
 				}
 			}
@@ -230,48 +239,53 @@ bool c8_push_pixels(C8_App_State* state) {
 	return true;
 }
 
-void c8_debug_keyboard(C8_Key* key, char* n) {
+void c8_debug_keyboard(C8_Key *key, char *n)
+{
 	bool printed = false;
 	char buf[256];
-	if (key->started_down) {
-		c8_plat_debug_printf( "%s started down\n", n);
+	if (key->started_down)
+	{
+		c8_plat_debug_printf("%s started down\n", n);
 		printed = true;
 	}
 
-	if (key->was_down) {
-		c8_plat_debug_printf( "%s was down\n", n);
-		printed = true;
-
-	}
-
-	if (key->ended_down) {
-		c8_plat_debug_printf( "%s ended down\n", n);
-		printed = true;
-
-	}
-	if (key->was_pressed) {
-		c8_plat_debug_printf( "%s was pressed\n", n);
-		printed = true;
-
-	}
-	if (key->was_lifted) {
-		c8_plat_debug_printf( "%s was lifted\n", n);
-		printed = true;
-
-	}
-
-	if (key->half_transitions != 0) {
-		c8_plat_debug_printf( "%s half transitions : %d\n", n, key->half_transitions);
-
+	if (key->was_down)
+	{
+		c8_plat_debug_printf("%s was down\n", n);
 		printed = true;
 	}
 
-	if (printed) {
+	if (key->ended_down)
+	{
+		c8_plat_debug_printf("%s ended down\n", n);
+		printed = true;
+	}
+	if (key->was_pressed)
+	{
+		c8_plat_debug_printf("%s was pressed\n", n);
+		printed = true;
+	}
+	if (key->was_lifted)
+	{
+		c8_plat_debug_printf("%s was lifted\n", n);
+		printed = true;
+	}
+
+	if (key->half_transitions != 0)
+	{
+		c8_plat_debug_printf("%s half transitions : %d\n", n, key->half_transitions);
+
+		printed = true;
+	}
+
+	if (printed)
+	{
 		c8_plat_debug_out("\n");
 	}
 }
 
-void c8_reset_key(C8_Key* k) {
+void c8_reset_key(C8_Key *k)
+{
 	k->started_down = k->ended_down;
 	k->was_down = k->ended_down;
 	k->was_lifted = false;
@@ -279,14 +293,19 @@ void c8_reset_key(C8_Key* k) {
 	k->half_transitions = 0;
 }
 
-void c8_debug_display(C8_App_State* state) {
-	for (i32 r = 0; r < c8_arr_count(state->pixels); r++) {
-		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++) {
+void c8_debug_display(C8_App_State *state)
+{
+	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
+	{
+		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++)
+		{
 
-			if (state->pixels[r][c]) {
+			if (state->pixels[r][c])
+			{
 				c8_plat_debug_out("x");
 			}
-			else {
+			else
+			{
 				c8_plat_debug_out(".");
 			}
 		}
@@ -294,43 +313,50 @@ void c8_debug_display(C8_App_State* state) {
 	}
 }
 
-void c8_debug_row(u8 row) {
+void c8_debug_row(u8 row)
+{
 
-	for (i32 i = 0; i < 8; i++) {
+	for (i32 i = 0; i < 8; i++)
+	{
 		u8 pixel = (row >> (7 - i)) & 0x01;
 
-		if (pixel == 1) {
+		if (pixel == 1)
+		{
 			c8_plat_debug_out("x");
 		}
-		else {
+		else
+		{
 			c8_plat_debug_out(".");
 		}
 	}
 
 	c8_plat_debug_out("\n");
-
 }
 
-void c8_add_number_to_register(C8_App_State *state, u8 x, u8 nn) {
+void c8_add_number_to_register(C8_App_State *state, u8 x, u8 nn)
+{
 
 	u8 vx = state->var_registers[x];
 	u16 result = (u16)vx + (u16)nn;
 
 	c8_plat_debug_printf("Add %2x to v%x (%2x) = %2x\n", nn, x, vx, result);
-	if (result > 0xff) {
+	if (result > 0xff)
+	{
 		state->var_registers[C8_FLAG_REG] = 1;
 	}
-	else {
+	else
+	{
 		state->var_registers[C8_FLAG_REG] = 0;
 	}
 
 	state->var_registers[x] = (result & 0xff);
 }
 
-bool c8_call(C8_App_State* state, u16 nnn) {
+bool c8_call(C8_App_State *state, u16 nnn)
+{
 	char buf[256];
 
-	c8_plat_debug_printf( "Call %03x\n", nnn);
+	c8_plat_debug_printf("Call %03x\n", nnn);
 	state->stack[state->stack_pointer] = state->pc;
 	state->stack_pointer++;
 	if (state->stack_pointer >= c8_arr_count(state->stack))
@@ -343,7 +369,7 @@ bool c8_call(C8_App_State* state, u16 nnn) {
 	return true;
 }
 
-//float c8_text_max_v_height(C8_Atlas_Header atlas_header, char* text, size_t text_length) {
+// float c8_text_max_v_height(C8_Atlas_Header atlas_header, char* text, size_t text_length) {
 //
 //	float max_v_height = 0.0f;
 //	for (size_t i = 0; i < text_length; i++) {
@@ -360,12 +386,14 @@ bool c8_call(C8_App_State* state, u16 nnn) {
 //	}
 //
 //	return max_v_height;
-//}
+// }
 
-float c8_max_v_height(char* text, size_t text_length, C8_Atlas_Header *atlas_header) {
+float c8_max_v_height(char *text, size_t text_length, C8_Atlas_Header *atlas_header)
+{
 
 	float result = 0.0f;
-	for (size_t i = 0; i < text_length; i++) {
+	for (size_t i = 0; i < text_length; i++)
+	{
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
@@ -373,7 +401,8 @@ float c8_max_v_height(char* text, size_t text_length, C8_Atlas_Header *atlas_hea
 
 		float v_height = glyph.v_bottom - glyph.v_top;
 
-		if (v_height > result) {
+		if (v_height > result)
+		{
 			result = v_height;
 		}
 	}
@@ -381,7 +410,8 @@ float c8_max_v_height(char* text, size_t text_length, C8_Atlas_Header *atlas_hea
 	return result;
 }
 
-C8_Text_Size c8_text_scale_for_max_size(char* text, size_t text_length, float max_width_pixels, float max_height_pixels, C8_Atlas_Header * atlas_header) {
+C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float max_width_pixels, float max_height_pixels, C8_Atlas_Header *atlas_header)
+{
 
 	float max_v_height = c8_max_v_height(text, text_length, atlas_header);
 
@@ -395,42 +425,44 @@ C8_Text_Size c8_text_scale_for_max_size(char* text, size_t text_length, float ma
 
 	float width_pixels = 0;
 
-	for (size_t i = 0; i < text_length; i++) {
+	for (size_t i = 0; i < text_length; i++)
+	{
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
 		C8_Atlas_Glyph glyph = atlas_header->glyphs[glyph_index];
 
-		if (i < text_length - 1) {
+		if (i < text_length - 1)
+		{
 			width_pixels += glyph.u_advancement * horizontal_scaling_factor;
 		}
-		else {
+		else
+		{
 			width_pixels += (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
-
 		}
 	}
 
-	if (width_pixels > max_width_pixels) {
-		float rescaling = (max_width_pixels /width_pixels);
+	if (width_pixels > max_width_pixels)
+	{
+		float rescaling = (max_width_pixels / width_pixels);
 		horizontal_scaling_factor *= rescaling;
 		vertical_scaling_factor *= rescaling;
 		width_pixels = max_width_pixels;
 		height_pixels *= rescaling;
-		
 	}
 
-	C8_Text_Size scaling = {horizontal_scaling_factor, vertical_scaling_factor, width_pixels, height_pixels  };
+	C8_Text_Size scaling = {horizontal_scaling_factor, vertical_scaling_factor, width_pixels, height_pixels};
 
 	return scaling;
 }
 
 void c8_push_load_button(
-	C8_App_State *state, 
-	float button_x, 
-	float button_y, 
-	float button_width, 
-	float button_height
-) {
+	C8_App_State *state,
+	float button_x,
+	float button_y,
+	float button_width,
+	float button_height)
+{
 
 	float vertical_padding = 2.0f;
 
@@ -446,11 +478,11 @@ void c8_push_load_button(
 
 	C8_Text_Size text_size = c8_text_scale_for_max_size(text, text_length, text_max_width_pixels, text_max_height_pixels, &state->atlas_header);
 
-	C8_Rgba button_color = { 0, 0, 0, 255 };
+	C8_Rgba button_color = {0, 0, 0, 255};
 
 	c8_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
 
-	C8_Rgba text_color = { 255, 255, 255, 255 };
+	C8_Rgba text_color = {255, 255, 255, 255};
 
 	float text_x = button_x + horizontal_padding + ((text_max_width_pixels - text_size.width_pixels) / 2.0f);
 	float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
@@ -458,17 +490,21 @@ void c8_push_load_button(
 	c8_push_text(state, text, text_length, text_x, text_y, text_size, text_color);
 }
 
-bool c8_app_update(C8_App_State* state) {
+bool c8_app_update(C8_App_State *state)
+{
 	state->color_vertex_count = 0;
 	state->text_vertex_count = 0;
 	char buf[256];
 
-	if (!state->program_loaded) {
+	if (!state->program_loaded)
+	{
 		char f_name[] = "data\\invaders.ch8";
 		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
 
-		if (file.data != 0) {
-			if (file.size <= sizeof(state->ram)) {
+		if (file.data != 0)
+		{
+			if (file.size <= sizeof(state->ram))
+			{
 				state->pc = C8_PROG_ADDR;
 				memcpy(state->ram + state->pc, file.data, file.size);
 
@@ -505,34 +541,34 @@ bool c8_app_update(C8_App_State* state) {
 	float button_width = C8_LOAD_BUTTON_WIDTH;
 	float button_height = C8_LOAD_BUTTON_HEIGHT;
 
-	boolean is_mouse_over_button = state->mouse_position.x >= button_x
-		&& state->mouse_position.x <= button_x + button_width
-		&& state->mouse_position.y >= button_y
-		&& state->mouse_position.y <= button_y + button_width;
+	boolean is_mouse_over_button = state->mouse_position.xy.x >= button_x && state->mouse_position.xy.x <= button_x + button_width && state->mouse_position.xy.y >= button_y && state->mouse_position.xy.y <= button_y + button_width;
 
-	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted) {
+	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted)
+	{
 
-		if (is_mouse_over_button) {
+		if (is_mouse_over_button)
+		{
 			state->file_dialog_should_open = true;
 		}
 		state->load_button_down = false;
 	}
 
-	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button) {
-			state->load_button_down = true;		
+	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button)
+	{
+		state->load_button_down = true;
 	}
 
 	c8_push_load_button(state, button_x, button_y, button_width, button_height);
 
-	C8_Rgba color = { 0, 0, 255, 255 };
+	C8_Rgba color = {0, 0, 255, 255};
 
-	c8_plat_debug_printf("MOUSE POSITION : %f, %f\n", state->mouse_position.x, state->mouse_position.y);
+	c8_plat_debug_printf("MOUSE POSITION : %f, %f\n", state->mouse_position.xy.x, state->mouse_position.xy.y);
 
 	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 	{
 		assert(state->pc < sizeof(state->ram));
 		char buf[255];
-		u16 instruction = c8_read_instruction(*((u16*)(state->ram + state->pc)));
+		u16 instruction = c8_read_instruction(*((u16 *)(state->ram + state->pc)));
 
 		u8 op = instruction >> 12;
 
@@ -547,27 +583,31 @@ bool c8_app_update(C8_App_State* state) {
 
 		state->pc += 2;
 
-		c8_plat_debug_printf( "Pc %02x\n", state->pc);
+		c8_plat_debug_printf("Pc %02x\n", state->pc);
 
-# if 1
+#if 1
 		sprintf(buf, "Instruction : %04X \n", instruction);
 		c8_plat_debug_out(buf);
-# endif
-		
-		if (instruction == 0x00e0) {
+#endif
+
+		if (instruction == 0x00e0)
+		{
 			c8_plat_debug_out("Clear\n");
 			c8_clear_struct(state->pixels);
 		}
-		else if (op == 0x1) {
-			c8_plat_debug_printf( "Jump to %03X\n", nnn);
+		else if (op == 0x1)
+		{
+			c8_plat_debug_printf("Jump to %03X\n", nnn);
 
 			state->pc = nnn;
 		}
-		else if (op == 0x2) {
+		else if (op == 0x2)
+		{
 
 			c8_call(state, nnn);
 		}
-		else if (instruction == 0x00ee) {
+		else if (instruction == 0x00ee)
+		{
 			c8_plat_debug_out("Return\n");
 
 			state->stack_pointer--;
@@ -578,33 +618,38 @@ bool c8_app_update(C8_App_State* state) {
 			}
 			state->pc = state->stack[state->stack_pointer];
 		}
-		else if (op == 0x6) {
-			c8_plat_debug_printf( "Set register %X to %02X\n", x,nn);
+		else if (op == 0x6)
+		{
+			c8_plat_debug_printf("Set register %X to %02X\n", x, nn);
 			state->var_registers[x] = nn;
 		}
-		else if (op == 0x7) {
+		else if (op == 0x7)
+		{
 
 			c8_add_number_to_register(state, x, nn);
 		}
-		else if (op == 0xa) {
-			c8_plat_debug_printf( "Set index register to %03x\n", nnn);
+		else if (op == 0xa)
+		{
+			c8_plat_debug_printf("Set index register to %03x\n", nnn);
 			state->index_register = nnn;
 		}
-		else if (op == 0xc) {
+		else if (op == 0xc)
+		{
 			c8_plat_debug_out("Random\n");
 
 			int random = rand();
 			u8 result = (u8)((u16)random & nn);
 			state->var_registers[x] = result;
 		}
-		else if (op == 0xd) {
-		
+		else if (op == 0xd)
+		{
+
 			u16 flag_register = 0;
 
 			u8 row_count = n;
 			u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
 			u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
-			u8* sprite_start = state->ram + state->index_register;
+			u8 *sprite_start = state->ram + state->index_register;
 
 			c8_plat_debug_printf(
 				buf,
@@ -614,27 +659,31 @@ bool c8_app_update(C8_App_State* state) {
 				x,
 				sprite_x,
 				y,
-				sprite_y
-				);
+				sprite_y);
 
-			for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++) {
+			for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
+			{
 				u8 sprite_row = *(sprite_start + r);
-				//sprintf(buf, "Row : %x \n", instruction);
-				//c8_plat_debug_out(buf);
-				//c8_debug_row(sprite_row);
-				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++) {
+				// sprintf(buf, "Row : %x \n", instruction);
+				// c8_plat_debug_out(buf);
+				// c8_debug_row(sprite_row);
+				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
+				{
 					u8 on = (sprite_row >> (7 - c)) & 0x01;
 					if (on == 0x01)
 					{
-						if (state->pixels[sprite_y + r][sprite_x + c]) {
+						if (state->pixels[sprite_y + r][sprite_x + c])
+						{
 							state->pixels[sprite_y + r][sprite_x + c] = false;
 						}
-						else {
+						else
+						{
 							state->pixels[sprite_y + r][sprite_x + c] = true;
 						}
 						flag_register = 1;
 					}
-					else {
+					else
+					{
 						assert(on == 0x00);
 					}
 				}
@@ -645,29 +694,32 @@ bool c8_app_update(C8_App_State* state) {
 #if 0
 			c8_debug_display(state);
 			c8_plat_debug_out("\n");
-# endif
-
+#endif
 		}
-		else if (op == 0x3) {
+		else if (op == 0x3)
+		{
 #if 0
 			c8_plat_debug_printf( "Skip if v%x (%x) equals %02x\n", x, vx, nn);
-# endif
-			if (vx == nn) {
+#endif
+			if (vx == nn)
+			{
 				state->pc += 2;
 			}
 		}
-		else if (op == 0x4) {
-			if (vx != nn) {
+		else if (op == 0x4)
+		{
+			if (vx != nn)
+			{
 				state->pc += 2;
 			}
 #if 0
 
 			c8_plat_debug_printf( "Skip if v%x (%x) not equals %02x\n", x, vx, nn);
 
-# endif
-
+#endif
 		}
-		else if ((instruction & 0xf00f) == 0x5000) {
+		else if ((instruction & 0xf00f) == 0x5000)
+		{
 			c8_plat_debug_out("Skip if x equals y\n");
 
 			if (state->var_registers[x] == state->var_registers[y])
@@ -675,7 +727,8 @@ bool c8_app_update(C8_App_State* state) {
 				state->pc += 2;
 			}
 		}
-		else if ((instruction & 0xf00f) == 0x9000) {
+		else if ((instruction & 0xf00f) == 0x9000)
+		{
 			c8_plat_debug_out("Skip if x not equals y\n");
 
 			if (state->var_registers[x] != state->var_registers[y])
@@ -683,142 +736,164 @@ bool c8_app_update(C8_App_State* state) {
 				state->pc += 2;
 			}
 		}
-		else if ((instruction & 0xf00f) == 0x8000) {
+		else if ((instruction & 0xf00f) == 0x8000)
+		{
 			c8_plat_debug_out("Set x register to value of y register\n");
 			state->var_registers[x] = state->var_registers[y];
 		}
-		else if ((instruction & 0xf00f) == 0x8001) {
+		else if ((instruction & 0xf00f) == 0x8001)
+		{
 			c8_plat_debug_out("Binary or\n");
 			state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
 		}
-		else if ((instruction & 0xf00f) == 0x8002) {
-		u8 result = vx & vy;
-		c8_plat_debug_printf( "v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
+		else if ((instruction & 0xf00f) == 0x8002)
+		{
+			u8 result = vx & vy;
+			c8_plat_debug_printf("v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
 			state->var_registers[x] = result;
 		}
-		else if ((instruction & 0xf00f) == 0x8003) {
+		else if ((instruction & 0xf00f) == 0x8003)
+		{
 			c8_plat_debug_out("Binary xor\n");
 			state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
 		}
-		else if ((instruction & 0xf00f) == 0x8004) {
+		else if ((instruction & 0xf00f) == 0x8004)
+		{
 			c8_plat_debug_out("x + y\n");
 			u16 result = state->var_registers[x] + state->var_registers[y];
-			if (result > 0xff) {
+			if (result > 0xff)
+			{
 				state->var_registers[C8_FLAG_REG] = 1;
 			}
-			else {
+			else
+			{
 				state->var_registers[C8_FLAG_REG] = 0;
 			}
 			state->var_registers[x] = (u8)result;
-
 		}
-		else if ((instruction & 0xf00f) == 0x8006) {
+		else if ((instruction & 0xf00f) == 0x8006)
+		{
 			c8_plat_debug_out("Shift right\n");
 
 			u8 bit = state->var_registers[x] & 0x1;
 			state->var_registers[x] = state->var_registers[x] >> 1;
 			state->var_registers[C8_FLAG_REG] = bit;
 		}
-		else if ((instruction & 0xf00f) == 0x8005) {
+		else if ((instruction & 0xf00f) == 0x8005)
+		{
 			c8_plat_debug_out("x - y\n");
 
-			if (state->var_registers[x] > state->var_registers[y]) {
+			if (state->var_registers[x] > state->var_registers[y])
+			{
 				state->var_registers[C8_FLAG_REG] = 1;
 			}
 
-			if (state->var_registers[x] < state->var_registers[y]) {
+			if (state->var_registers[x] < state->var_registers[y])
+			{
 				state->var_registers[C8_FLAG_REG] = 0;
 			}
 			state->var_registers[x] =
 				state->var_registers[x] -
 				state->var_registers[y];
 		}
-		else if ((instruction & 0xf00f) == 0x8007) {
+		else if ((instruction & 0xf00f) == 0x8007)
+		{
 			c8_plat_debug_out("y - x\n");
 
-			if (state->var_registers[y] > state->var_registers[x]) {
+			if (state->var_registers[y] > state->var_registers[x])
+			{
 				state->var_registers[C8_FLAG_REG] = 1;
 			}
 
-			if (state->var_registers[y] < state->var_registers[x]) {
+			if (state->var_registers[y] < state->var_registers[x])
+			{
 				state->var_registers[C8_FLAG_REG] = 0;
 			}
 			state->var_registers[x] =
 				state->var_registers[y] -
 				state->var_registers[x];
 		}
-		else if ((instruction & 0xf00f) == 0x800e) {
+		else if ((instruction & 0xf00f) == 0x800e)
+		{
 			c8_plat_debug_out("Shift left\n");
 
 			u8 bit = state->var_registers[x] >> 7;
 			state->var_registers[x] = state->var_registers[x] << 1;
 			state->var_registers[C8_FLAG_REG] = bit;
 		}
-		else if ((instruction & 0xf0ff) == 0xE09E) {
+		else if ((instruction & 0xf0ff) == 0xE09E)
+		{
 			c8_plat_debug_printf("Skip if %x key is pressed\n", x);
 			u8 key = state->var_registers[x];
 
-			if (state->keypad.keys[key].ended_down) {
+			if (state->keypad.keys[key].ended_down)
+			{
 				state->pc += 2;
 			}
-
 		}
-		else if ((instruction & 0xf0ff) == 0xE0A1) {
-		    c8_plat_debug_printf("Skip if %x key is not pressed\n", state->var_registers[x]);
+		else if ((instruction & 0xf0ff) == 0xE0A1)
+		{
+			c8_plat_debug_printf("Skip if %x key is not pressed\n", state->var_registers[x]);
 			u8 key = state->var_registers[x];
-			if (!state->keypad.keys[key].ended_down) {
+			if (!state->keypad.keys[key].ended_down)
+			{
 				state->pc += 2;
 			}
-			else {
-			int i = 0;
+			else
+			{
+				int i = 0;
 			}
-
 		}
-		else if ((instruction & 0xf0ff) == 0xF00A) {
-		   c8_plat_debug_printf("Wait for %x key\n", x);
+		else if ((instruction & 0xf0ff) == 0xF00A)
+		{
+			c8_plat_debug_printf("Wait for %x key\n", x);
 
-		   if (!state->keypad.keys[x].ended_down) {
-			   state->pc -= 2;
-		   }
+			if (!state->keypad.keys[x].ended_down)
+			{
+				state->pc -= 2;
+			}
 		}
-		else if ((instruction & 0xf0ff) == 0xF007) {
+		else if ((instruction & 0xf0ff) == 0xF007)
+		{
 			c8_plat_debug_out("Set register to delay timer\n");
 			state->var_registers[x] = state->delay_timer;
-
 		}
-		else if ((instruction & 0xf0ff) == 0xF015) {
+		else if ((instruction & 0xf0ff) == 0xF015)
+		{
 			c8_plat_debug_out("Set delay timer\n");
 			state->delay_timer = state->var_registers[x];
-
 		}
-		else if ((instruction & 0xf0ff) == 0xF018) {
+		else if ((instruction & 0xf0ff) == 0xF018)
+		{
 			c8_plat_debug_out("Set sound timer\n");
 			state->sound_timer = state->var_registers[x];
-
 		}
-		else if ((instruction & 0xf0ff) == 0xF01E) {
+		else if ((instruction & 0xf0ff) == 0xF01E)
+		{
 			u16 result = state->index_register + vx;
 
-			if (result > 0x0fff) {
+			if (result > 0x0fff)
+			{
 				state->var_registers[C8_FLAG_REG] = 1;
 				result &= 0x0fff;
 			}
 
-			c8_plat_debug_printf( "Add v%x (%x) to index (%x) giving %x\n",
-				x,
-				vx,
-				state->index_register,
-				result);
+			c8_plat_debug_printf("Add v%x (%x) to index (%x) giving %x\n",
+								 x,
+								 vx,
+								 state->index_register,
+								 result);
 
 			state->index_register = result;
-
 		}
-		else if ((instruction & 0xf0ff) == 0xF029) {
-		c8_plat_debug_printf( "Point index  to font v%x (%x) \n", x, vx);
+		else if ((instruction & 0xf0ff) == 0xF029)
+		{
+			c8_plat_debug_printf("Point index  to font v%x (%x) \n", x, vx);
 			u8 c = (state->var_registers[x]) & 0x0f;
 			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
 		}
-		else if ((instruction & 0xf0ff) == 0xF033) {
+		else if ((instruction & 0xf0ff) == 0xF033)
+		{
 			c8_plat_debug_out("Decimal conversion\n");
 			u16 start = state->index_register;
 			u8 dividend = state->var_registers[x];
@@ -830,12 +905,13 @@ bool c8_app_update(C8_App_State* state) {
 				divisor /= 10;
 			}
 		}
-		else if ((instruction & 0xf0ff) == 0xF055) {
+		else if ((instruction & 0xf0ff) == 0xF055)
+		{
 
-		u16 start = state->index_register;
+			u16 start = state->index_register;
 
-		c8_plat_debug_printf(
-		"Store registers 0 to %x at memory  location %2x\n", x, start);
+			c8_plat_debug_printf(
+				"Store registers 0 to %x at memory  location %2x\n", x, start);
 
 			for (int i = 0; i <= x; i++)
 			{
@@ -844,11 +920,12 @@ bool c8_app_update(C8_App_State* state) {
 					"v%x = %x\n", i, state->var_registers[i]);
 			}
 		}
-		else if ((instruction & 0xf0ff) == 0xF065) {
-		u16 start = state->index_register;
+		else if ((instruction & 0xf0ff) == 0xF065)
+		{
+			u16 start = state->index_register;
 
-		c8_plat_debug_printf(
-			"Load registers 0 to %x from memory location %2x\n", x, start);
+			c8_plat_debug_printf(
+				"Load registers 0 to %x from memory location %2x\n", x, start);
 
 			for (i32 i = 0; i <= x; i++)
 			{
@@ -857,11 +934,11 @@ bool c8_app_update(C8_App_State* state) {
 					"v%x = %x\n", i, state->var_registers[i]);
 			}
 		}
-		else {
+		else
+		{
 			c8_plat_debug_out("Unimplemented instruction\n");
 			assert(false);
 		}
-
 	}
 
 	bool push_frame = c8_push_frame(state);
@@ -870,23 +947,23 @@ bool c8_app_update(C8_App_State* state) {
 
 	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
 	{
-# if 1
+#if 1
 		snprintf(buf, c8_arr_count(buf), "%x", kp);
 		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
-# endif
-		C8_Key* k = &(state->keypad.keys[kp]);
+#endif
+		C8_Key *k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
 	}
 
-# if 0
+#if 0
 	c8_debug_keyboard((&state->control_keys.esc), "Esc");
 	c8_debug_keyboard((&state->control_keys.p), "P");
 	c8_debug_keyboard((&state->control_keys.space), "Space");
 	c8_debug_keyboard((&state->control_keys.enter), "Enter");
-# endif
+#endif
 	for (int ck = 0; ck < c8_arr_count(state->control_keys.keys); ck++)
 	{
-		C8_Key* k = &(state->control_keys.keys[ck]);
+		C8_Key *k = &(state->control_keys.keys[ck]);
 		c8_reset_key(k);
 	}
 
@@ -895,37 +972,42 @@ bool c8_app_update(C8_App_State* state) {
 
 	state->frame_count++;
 
-	if (state->sound_timer > 0) {
+	if (state->sound_timer > 0)
+	{
 		state->sound_timer--;
 		state->should_beep = true;
 	}
-	else {
+	else
+	{
 		state->should_beep = false;
-
 	}
 
-	if (state->delay_timer > 0) {
+	if (state->delay_timer > 0)
+	{
 		state->delay_timer--;
 	}
 
 	return push_frame && push_pixels;
 }
 
-bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
+bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
+{
 	bool result = false;
 
 	assert(size % alignement == 0);
 
-	void* mem = c8_plat_allocate(size);
+	void *mem = c8_plat_allocate(size);
 
-	if (mem != 0) {
+	if (mem != 0)
+	{
 		arena->max_bytes = size;
 		arena->alignement = alignement;
 		arena->offset = 0;
 		arena->data = mem;
 		result = true;
 	}
-	else {
+	else
+	{
 		OutputDebugStringA("Arena initialization failed");
 		assert(false);
 		arena = 0;
@@ -934,10 +1016,11 @@ bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement) {
 	return result;
 }
 
-void* c8_arena_alloc(C8_Arena* arena, psz size) {
+void *c8_arena_alloc(C8_Arena *arena, psz size)
+{
 	assert(arena != 0);
 
-	void* result = 0;
+	void *result = 0;
 
 	psz eff_size = size;
 	if (eff_size % arena->alignement != 0)
@@ -951,14 +1034,15 @@ void* c8_arena_alloc(C8_Arena* arena, psz size) {
 
 	if (big_enough)
 	{
-		result = ((u8*)arena->data) + arena->offset;
+		result = ((u8 *)arena->data) + arena->offset;
 		arena->offset += eff_size;
 	}
 
 	return result;
 }
 
-void c8_arena_free_all(C8_Arena* arena) {
+void c8_arena_free_all(C8_Arena *arena)
+{
 	assert(arena != 0);
 
 	arena->offset = 0;
