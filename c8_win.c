@@ -1,6 +1,7 @@
 
 #ifndef C8_WIN_C
 #define C8_WIN_C
+#define _CRT_SECURE_NO_WARNINGS
 #include "c8_win.h"
 
 BOOL c8_win_draw_text(C8_Win_State *state)
@@ -558,8 +559,6 @@ bool c8_win_initd3d(C8_Win_State *state, HWND window)
 				result = true;
 				char file_name[] = "data/atlas.c8";
 				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
-
-				D3DRENDERSTATETYPE type = D3DRS_LIGHTING;
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
 				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
@@ -589,8 +588,6 @@ void c8_win_process_key(C8_Key *key, WORD key_flags)
 {
 
 	BOOL is_up = (key_flags & KF_UP) == KF_UP;
-	BOOL was_up = (key_flags & KF_REPEAT) != KF_REPEAT;
-
 	if (is_up)
 	{
 		key->ended_down = false;
@@ -1051,15 +1048,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	memset(global_state, 0, sizeof(*global_state));
 
-	HWND file_dialog = 0;
-
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
 	C8_Win_Timer timer = c8_win_init_timer();
 
 	i32 samples_per_sec = 8000;
-	i32 bytes_per_sample = 2;
-
 	if (c8_arena_init(&(global_state->app_state.arena), 5 * 1024 * 1024, 4))
 	{
 
@@ -1118,12 +1111,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 					{
 						OutputDebugStringA("Could not update app\n");
 						assert(false);
-					}
-
-					if (global_state->app_state.file_dialog_should_open && file_dialog == 0)
-					{
-						HWND file_dialog = c8_win_create_window(instance, 500, 100);
-						ShowWindow(file_dialog, cmd_show);
 					}
 
 					if (!c8_win_render(global_state))
@@ -1185,8 +1172,6 @@ C8_File c8_plat_read_file(char *name, i32 name_length, C8_Arena *arena)
 	c8_clear_struct(result);
 
 	char buf[256];
-
-	OFSTRUCT ofstruct;
 	HANDLE f = CreateFileA(
 		name,
 		GENERIC_READ,
@@ -1215,7 +1200,7 @@ C8_File c8_plat_read_file(char *name, i32 name_length, C8_Arena *arena)
 					BOOL read = ReadFile(
 						f,
 						data,
-						f_size.QuadPart,
+						f_size.LowPart,
 						&bytes_read,
 						0);
 

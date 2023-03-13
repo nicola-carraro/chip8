@@ -220,7 +220,7 @@ typedef struct
 	bool file_dialog_is_open;
 	bool file_dialog_should_open;
 	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
-	size_t color_vertex_count;
+	uint32_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
 } C8_App_State;
