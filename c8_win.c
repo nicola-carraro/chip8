@@ -1045,9 +1045,9 @@ bool c8_win_stop_beep(C8_Win_State *state)
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
 
-	UNREFERENCED_PARAMETER(cmd_line);
+	C8_UNREFERENCED(cmd_line);
 
-	UNREFERENCED_PARAMETER(prev_instance);
+	C8_UNREFERENCED(prev_instance);
 
 	global_state = malloc(sizeof(*global_state));
 

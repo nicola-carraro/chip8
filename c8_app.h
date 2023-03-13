@@ -19,6 +19,8 @@ typedef uint16_t u16;
 typedef size_t psz;
 typedef uint8_t u8;
 
+#define C8_UNREFERENCED(a)(a)
+
 #define C8_WIN_DWORD_MAX 4294967295
 
 #define C8_RAM_BYTE_SIZE 4096
