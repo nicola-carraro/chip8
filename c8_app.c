@@ -458,9 +458,9 @@ void c8_push_load_button(
 	float button_height)
 {
 
-	float vertical_padding = 2.0f;
+	float vertical_padding = 5.0f;
 
-	float horizontal_padding = 2.0f;
+	float horizontal_padding = 20.0f;
 
 	char text[] = "Load";
 
@@ -484,65 +484,24 @@ void c8_push_load_button(
 	c8_push_text(state, text, text_length, text_x, text_y, text_size, text_color);
 }
 
-bool c8_app_update(C8_App_State *state)
+bool update_emulator(C8_App_State *state)
 {
-	state->color_vertex_count = 0;
-	state->text_vertex_count = 0;
+
 	char buf[256];
-
-	if (!state->program_loaded)
-	{
-		char f_name[] = "data\\invaders.ch8";
-		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
-
-		if (file.data != 0)
-		{
-			if (file.size <= sizeof(state->ram))
-			{
-				state->pc = C8_PROG_ADDR;
-				memcpy(state->ram + state->pc, file.data, file.size);
-
-				c8_arena_free_all(&state->arena);
-				state->program_loaded = true;
-			}
-		}
-
-		const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
-			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-			0x20, 0x60, 0x20, 0x20, 0x70, // 1
-			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-		};
-
-		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
-	}
-
 	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
 
 	float button_y = C8_LOAD_BUTTON_Y;
 	float button_width = C8_LOAD_BUTTON_WIDTH;
 	float button_height = C8_LOAD_BUTTON_HEIGHT;
 
-	boolean is_mouse_over_button = state->mouse_position.xy.x >= button_x && state->mouse_position.xy.x <= button_x + button_width && state->mouse_position.xy.y >= button_y && state->mouse_position.xy.y <= button_y + button_width;
+	bool is_mouse_over_button = state->mouse_position.xy.x >= button_x && state->mouse_position.xy.x <= button_x + button_width && state->mouse_position.xy.y >= button_y && state->mouse_position.xy.y <= button_y + button_width;
 
 	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted)
 	{
 
 		if (is_mouse_over_button)
 		{
-			state->file_dialog_should_open = true;
+			state->is_file_dialog_open = true;
 		}
 		state->load_button_down = false;
 	}
@@ -972,6 +931,69 @@ bool c8_app_update(C8_App_State *state)
 	}
 
 	return push_frame && push_pixels;
+}
+
+bool update_file_dialog(C8_App_State *state)
+{
+	if (state->control_keys.control_keys.esc.was_pressed)
+	{
+		state->is_file_dialog_open = false;
+	}
+
+	return true;
+}
+
+bool c8_app_update(C8_App_State *state)
+{
+	state->color_vertex_count = 0;
+	state->text_vertex_count = 0;
+	if (!state->program_loaded)
+	{
+		char f_name[] = "data\\invaders.ch8";
+		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
+
+		if (file.data != 0)
+		{
+			if (file.size <= sizeof(state->ram))
+			{
+				state->pc = C8_PROG_ADDR;
+				memcpy(state->ram + state->pc, file.data, file.size);
+
+				c8_arena_free_all(&state->arena);
+				state->program_loaded = true;
+			}
+		}
+
+		const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+			0x20, 0x60, 0x20, 0x20, 0x70, // 1
+			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+		};
+
+		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
+	}
+
+	if (state->is_file_dialog_open)
+	{
+		return update_file_dialog(state);
+	}
+	else
+	{
+		return update_emulator(state);
+	}
 }
 
 bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)

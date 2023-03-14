@@ -19,7 +19,7 @@ typedef uint16_t u16;
 typedef size_t psz;
 typedef uint8_t u8;
 
-#define C8_UNREFERENCED(a)(a)
+#define C8_UNREFERENCED(a) (a)
 
 #define C8_WIN_DWORD_MAX 4294967295
 
@@ -219,12 +219,11 @@ typedef struct
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
 	bool load_button_down;
-	bool file_dialog_is_open;
-	bool file_dialog_should_open;
 	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
 	uint32_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
+	bool is_file_dialog_open;
 } C8_App_State;
 
 typedef struct
