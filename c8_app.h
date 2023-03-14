@@ -208,7 +208,7 @@ typedef struct
 	u16 stack[16];
 	u8 stack_pointer;
 	u64 frame_count;
-	C8_Arena arena;
+	C8_Arena transient_arena;
 	u16 pc;
 	bool initialised;
 	bool program_loaded;

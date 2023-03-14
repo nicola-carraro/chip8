@@ -95,7 +95,7 @@ BOOL c8_win_load_font(C8_Win_State *state, char *file_name, i32 name_length)
 
 	BOOL result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.transient_arena);
 
 	if (file.data)
 	{
@@ -442,7 +442,7 @@ bool c8_win_init_texture(C8_Win_State *state, char *file_name, i32 name_length)
 
 	bool result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.transient_arena);
 
 	if (file.data != 0)
 	{
@@ -997,6 +997,39 @@ bool c8_win_process_msgs(C8_Win_State *state, HWND window)
 	return true;
 }
 
+bool c8_win_list_folder_content(
+	C8_Arena arena,
+	char *folder_name,
+	size_t folder_name_length,
+	char **folder_content,
+	size_t *file_count)
+{
+	WIN32_FIND_DATA find_data;
+
+#define buffer_size (256)
+
+	assert(folder_name_length < buffer_size - 3);
+	char buffer[buffer_size];
+
+	strcpy(buffer, folder_name);
+	strcat(buffer, "\\*");
+
+	*file_count = 0;
+
+	HANDLE file_handle = FindFirstFileA(buffer, &find_data);
+	*file_count++;
+
+	if (file_handle != INVALID_HANDLE_VALUE)
+	{
+		while (FindNextFileA(file_handle, &find_data))
+		{
+		}
+		*file_count++;
+	}
+
+	return true;
+}
+
 bool c8_push_color_triangle(C8_App_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
 {
 	bool push1 = c8_push_color_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a);
@@ -1060,9 +1093,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	C8_Win_Timer timer = c8_win_init_timer();
 
 	i32 samples_per_sec = 8000;
-	if (c8_arena_init(&(global_state->app_state.arena), 5 * 1024 * 1024, 4))
+	if (c8_arena_init(&(global_state->app_state.transient_arena), 5 * 1024 * 1024, 4))
 	{
-
 		if (window != 0)
 		{
 

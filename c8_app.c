@@ -950,7 +950,7 @@ bool c8_app_update(C8_App_State *state)
 	if (!state->program_loaded)
 	{
 		char f_name[] = "data\\invaders.ch8";
-		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->arena);
+		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->transient_arena);
 
 		if (file.data != 0)
 		{
@@ -959,7 +959,7 @@ bool c8_app_update(C8_App_State *state)
 				state->pc = C8_PROG_ADDR;
 				memcpy(state->ram + state->pc, file.data, file.size);
 
-				c8_arena_free_all(&state->arena);
+				c8_arena_free_all(&state->transient_arena);
 				state->program_loaded = true;
 			}
 		}
