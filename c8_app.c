@@ -940,6 +940,20 @@ bool update_file_dialog(C8_App_State *state)
 		state->is_file_dialog_open = false;
 	}
 
+	if (state->file_list.file_names == 0)
+	{
+		c8_file_list_init(&(state->file_list), &state->file_names_arena);
+	}
+
+	char folder_name[] = "C:\\Users\\carra\\source\\repos\\chip8\\data";
+	c8_plat_list_folder_content(state, folder_name, c8_arr_count(folder_name));
+
+	for (int file_i = 0; file_i < state->file_list.count; file_i++)
+	{
+		OutputDebugStringA(state->file_list.file_names[file_i].text);
+		OutputDebugStringA("\n");
+	}
+
 	return true;
 }
 
@@ -1052,6 +1066,47 @@ void c8_arena_free_all(C8_Arena *arena)
 	assert(arena != 0);
 
 	arena->offset = 0;
+}
+void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena)
+{
+	file_list->arena = arena;
+	file_list->file_names = c8_arena_alloc(arena, C8_FILE_LIST_INITIAL_CAPACITY);
+	if (file_list->file_names != NULL)
+	{
+		file_list->capacity = C8_FILE_LIST_INITIAL_CAPACITY;
+		file_list->count = 0;
+	}
+}
+
+bool c8_push_file_name(C8_File_List *file_list, char *file_name, size_t name_length)
+{
+
+	if (file_list->count >= file_list->capacity)
+	{
+		size_t new_capacity = file_list->capacity * 2;
+		C8_String *new_buffer = c8_arena_alloc(file_list->arena, new_capacity);
+		if (!new_buffer)
+		{
+			return false;
+		}
+		memcpy(new_buffer, file_list->file_names, file_list->capacity);
+		file_list->capacity = new_capacity;
+		file_list->file_names = new_buffer;
+	}
+
+	char *name_buffer = c8_arena_alloc(file_list->arena, name_length);
+
+	if (!name_buffer)
+	{
+		return false;
+	}
+
+	memcpy(name_buffer, file_name, name_length);
+	file_list->file_names[file_list->count].length = name_length;
+	file_list->file_names[file_list->count].text = name_buffer;
+	file_list->count++;
+
+	return true;
 }
 
 #endif // !C8_APP_C

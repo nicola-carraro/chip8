@@ -196,6 +196,26 @@ typedef union
 
 typedef struct
 {
+	psz size;
+	void *data;
+} C8_File;
+
+typedef struct
+{
+	char *text;
+	size_t length;
+} C8_String;
+
+typedef struct
+{
+	C8_Arena *arena;
+	C8_String *file_names;
+	size_t count;
+	size_t capacity;
+} C8_File_List;
+
+typedef struct
+{
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
@@ -209,6 +229,7 @@ typedef struct
 	u8 stack_pointer;
 	u64 frame_count;
 	C8_Arena transient_arena;
+	C8_Arena file_names_arena;
 	u16 pc;
 	bool initialised;
 	bool program_loaded;
@@ -224,13 +245,10 @@ typedef struct
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
 	bool is_file_dialog_open;
+	C8_File_List file_list;
 } C8_App_State;
 
-typedef struct
-{
-	psz size;
-	void *data;
-} C8_File;
+#define C8_FILE_LIST_INITIAL_CAPACITY 10
 
 void *c8_plat_allocate(psz size);
 
@@ -257,5 +275,11 @@ bool c8_plat_push_text(char *text, size_t text_length, float x, float y, C8_Text
 bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
 bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+
+void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena);
+
+bool c8_plat_list_folder_content(C8_App_State *state, char *folder_name, size_t folder_name_length);
+
+bool c8_push_file_name(C8_File_List *file_list, char *file_name, size_t name_length);
 
 #endif // !C8_APP

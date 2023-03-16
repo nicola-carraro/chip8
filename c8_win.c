@@ -997,12 +997,10 @@ bool c8_win_process_msgs(C8_Win_State *state, HWND window)
 	return true;
 }
 
-bool c8_win_list_folder_content(
-	C8_Arena arena,
+bool c8_plat_list_folder_content(
+	C8_App_State *state,
 	char *folder_name,
-	size_t folder_name_length,
-	char **folder_content,
-	size_t *file_count)
+	size_t folder_name_length)
 {
 	WIN32_FIND_DATA find_data;
 
@@ -1014,17 +1012,23 @@ bool c8_win_list_folder_content(
 	strcpy(buffer, folder_name);
 	strcat(buffer, "\\*");
 
-	*file_count = 0;
-
 	HANDLE file_handle = FindFirstFileA(buffer, &find_data);
-	*file_count++;
 
+	char *file_name = find_data.cFileName;
+	size_t file_name_length = strlen(file_name);
+	if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
+	{
+		return false;
+	};
 	if (file_handle != INVALID_HANDLE_VALUE)
 	{
 		while (FindNextFileA(file_handle, &find_data))
 		{
+			if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
+			{
+				return false;
+			};
 		}
-		*file_count++;
 	}
 
 	return true;
@@ -1093,104 +1097,107 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	C8_Win_Timer timer = c8_win_init_timer();
 
 	i32 samples_per_sec = 8000;
-	if (c8_arena_init(&(global_state->app_state.transient_arena), 5 * 1024 * 1024, 4))
+	if (c8_arena_init(&(global_state->app_state.file_names_arena), 5 * 1024 * 1024, 4))
 	{
-		if (window != 0)
+		if (c8_arena_init(&(global_state->app_state.transient_arena), 5 * 1024 * 1024, 4))
 		{
-
-			if (c8_win_initd3d(global_state, window))
+			if (window != 0)
 			{
-				ShowWindow(window, cmd_show);
-				global_state->app_state.running = true;
 
-				global_state->has_sound = false;
-				if (c8_win_init_dsound(global_state, window, samples_per_sec))
+				if (c8_win_initd3d(global_state, window))
 				{
-					global_state->has_sound = true;
-				}
-				else
-				{
-					OutputDebugStringA("Could not initialize Direct Sound\n");
-					assert(false);
-				}
+					ShowWindow(window, cmd_show);
+					global_state->app_state.running = true;
 
-				while (global_state->app_state.running)
-				{
-
-					if (!c8_win_process_msgs(global_state, window))
+					global_state->has_sound = false;
+					if (c8_win_init_dsound(global_state, window, samples_per_sec))
 					{
-						break;
-					}
-
-					WINDOWPLACEMENT window_placement;
-					window_placement.length = sizeof(WINDOWPLACEMENT);
-					if (GetWindowPlacement(
-							window,
-							&window_placement))
-					{
-						POINT point;
-						if (GetCursorPos(&point))
-						{
-							global_state->app_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
-							global_state->app_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
-						}
-						else
-						{
-							OutputDebugStringA("Could not get mouse position\n");
-							assert(false);
-						}
+						global_state->has_sound = true;
 					}
 					else
 					{
-						OutputDebugStringA("Could not get client position\n");
+						OutputDebugStringA("Could not initialize Direct Sound\n");
 						assert(false);
 					}
 
-					if (!c8_app_update(&(global_state->app_state)))
+					while (global_state->app_state.running)
 					{
-						OutputDebugStringA("Could not update app\n");
-						assert(false);
+
+						if (!c8_win_process_msgs(global_state, window))
+						{
+							break;
+						}
+
+						WINDOWPLACEMENT window_placement;
+						window_placement.length = sizeof(WINDOWPLACEMENT);
+						if (GetWindowPlacement(
+								window,
+								&window_placement))
+						{
+							POINT point;
+							if (GetCursorPos(&point))
+							{
+								global_state->app_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
+								global_state->app_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
+							}
+							else
+							{
+								OutputDebugStringA("Could not get mouse position\n");
+								assert(false);
+							}
+						}
+						else
+						{
+							OutputDebugStringA("Could not get client position\n");
+							assert(false);
+						}
+
+						if (!c8_app_update(&(global_state->app_state)))
+						{
+							OutputDebugStringA("Could not update app\n");
+							assert(false);
+						}
+
+						if (!c8_win_render(global_state))
+						{
+							OutputDebugStringA("Could not render\n");
+							// assert(false);
+						}
+
+						if (!global_state->is_beeping && global_state->app_state.should_beep)
+						{
+							bool beeped = c8_win_start_beep(global_state);
+							assert(beeped);
+						}
+
+						if (global_state->is_beeping && !global_state->app_state.should_beep)
+						{
+							bool stopped = c8_win_stop_beep(global_state);
+							assert(stopped);
+						}
+
+						float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+
+						char str[255];
+						sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+						// OutputDebugStringA(str);
 					}
+				}
 
-					if (!c8_win_render(global_state))
-					{
-						OutputDebugStringA("Could not render\n");
-						// assert(false);
-					}
-
-					if (!global_state->is_beeping && global_state->app_state.should_beep)
-					{
-						bool beeped = c8_win_start_beep(global_state);
-						assert(beeped);
-					}
-
-					if (global_state->is_beeping && !global_state->app_state.should_beep)
-					{
-						bool stopped = c8_win_stop_beep(global_state);
-						assert(stopped);
-					}
-
-					float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
-					char str[255];
-					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-					// OutputDebugStringA(str);
+				else
+				{
+					OutputDebugStringA("Could not initialize Direct3D\n");
 				}
 			}
-
 			else
 			{
-				OutputDebugStringA("Could not initialize Direct3D\n");
+				OutputDebugStringA("Could not open window\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Could not open window\n");
+			OutputDebugStringA("Failed to initialize arena\n");
 		}
-	}
-	else
-	{
-		OutputDebugStringA("Failed to initialize arena\n");
 	}
 }
 
