@@ -1069,7 +1069,7 @@ void c8_arena_free_all(C8_Arena *arena)
 void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena)
 {
 	file_list->arena = arena;
-	file_list->file_names = c8_arena_alloc(arena, C8_FILE_LIST_INITIAL_CAPACITY * sizeof(C8_String));
+	file_list->file_names = c8_arena_alloc(arena, C8_FILE_LIST_INITIAL_CAPACITY * sizeof(*(file_list->file_names)));
 	if (file_list->file_names != NULL)
 	{
 		file_list->capacity = C8_FILE_LIST_INITIAL_CAPACITY;
@@ -1083,12 +1083,12 @@ bool c8_push_file_name(C8_File_List *file_list, char *file_name, size_t name_len
 	if (file_list->count >= file_list->capacity)
 	{
 		size_t new_capacity = file_list->capacity * 2;
-		C8_String *new_buffer = c8_arena_alloc(file_list->arena, new_capacity * sizeof(C8_String));
+		C8_String *new_buffer = c8_arena_alloc(file_list->arena, new_capacity * sizeof(*new_buffer));
 		if (!new_buffer)
 		{
 			return false;
 		}
-		memcpy(new_buffer, file_list->file_names, file_list->capacity * sizeof(C8_String));
+		memcpy(new_buffer, file_list->file_names, file_list->capacity * sizeof(*new_buffer));
 		file_list->capacity = new_capacity;
 		file_list->file_names = new_buffer;
 	}
