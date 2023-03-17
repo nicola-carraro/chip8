@@ -1024,6 +1024,8 @@ bool c8_plat_list_folder_content(
 	{
 		while (FindNextFileA(file_handle, &find_data))
 		{
+			file_name = find_data.cFileName;
+			file_name_length = strlen(file_name);
 			if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
 			{
 				return false;
