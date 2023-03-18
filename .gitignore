@@ -364,4 +364,6 @@ FodyWeavers.xsd
 
 .vscode
 
+.\session.rdbg
+
 *.exe

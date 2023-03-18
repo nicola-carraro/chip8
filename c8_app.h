@@ -67,7 +67,7 @@ typedef uint8_t u8;
 
 #define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
 
-#define C8_LOAD_BUTTON_WIDTH (200.0f)
+#define C8_LOAD_BUTTON_WIDTH (100.0f)
 
 #define C8_LOAD_BUTTON_HEIGHT (50.0f)
 
@@ -212,7 +212,7 @@ typedef struct
 	C8_String *file_names;
 	size_t count;
 	size_t capacity;
-} C8_File_List;
+} C8_String_List;
 
 typedef struct
 {
@@ -245,7 +245,8 @@ typedef struct
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
 	bool is_file_dialog_open;
-	C8_File_List file_list;
+	C8_String_List file_list;
+	char *file_name;
 } C8_App_State;
 
 #define C8_FILE_LIST_INITIAL_CAPACITY 10
@@ -276,10 +277,12 @@ bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, 
 
 bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
-void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena);
+void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena);
 
 bool c8_plat_list_folder_content(C8_App_State *state, char *folder_name, size_t folder_name_length);
 
-bool c8_push_file_name(C8_File_List *file_list, char *file_name, size_t name_length);
+bool c8_push_file_name(C8_String_List *file_list, char *file_name, size_t name_length);
+
+C8_File c8_plat_read_file(char *name, size_t name_length, C8_Arena *arena);
 
 #endif // !C8_APP

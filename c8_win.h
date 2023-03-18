@@ -54,6 +54,5 @@ C8_Win_State *global_state;
 
 int c8_plat_debug_printf(char* format, ...);
 
-C8_File c8_plat_read_file(char* name, i32 name_length, C8_Arena* arena);
 
 #endif // !C8_WIN

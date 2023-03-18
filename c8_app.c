@@ -515,372 +515,375 @@ bool update_emulator(C8_App_State *state)
 
 	c8_plat_debug_printf("MOUSE POSITION : %f, %f\n", state->mouse_position.xy.x, state->mouse_position.xy.y);
 
-	for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
+	if (state->program_loaded)
 	{
-		assert(state->pc < sizeof(state->ram));
-		u16 instruction = c8_read_instruction(*((u16 *)(state->ram + state->pc)));
+		for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
+		{
+			assert(state->pc < sizeof(state->ram));
+			u16 instruction = c8_read_instruction(*((u16 *)(state->ram + state->pc)));
 
-		u8 op = instruction >> 12;
+			u8 op = instruction >> 12;
 
-		u8 x = (instruction & 0x0f00) >> 8;
-		u8 y = (instruction & 0x00f0) >> 4;
-		u8 n = (instruction & 0x000f);
-		u8 nn = (instruction & 0x00ff);
-		u16 nnn = (instruction & 0x0fff);
+			u8 x = (instruction & 0x0f00) >> 8;
+			u8 y = (instruction & 0x00f0) >> 4;
+			u8 n = (instruction & 0x000f);
+			u8 nn = (instruction & 0x00ff);
+			u16 nnn = (instruction & 0x0fff);
 
-		u8 vx = state->var_registers[x];
-		u8 vy = state->var_registers[y];
+			u8 vx = state->var_registers[x];
+			u8 vy = state->var_registers[y];
 
-		state->pc += 2;
+			state->pc += 2;
 
-		c8_plat_debug_printf("Pc %02x\n", state->pc);
+			c8_plat_debug_printf("Pc %02x\n", state->pc);
 
 #if 1
-		sprintf(buf, "Instruction : %04X \n", instruction);
-		c8_plat_debug_out(buf);
+			sprintf(buf, "Instruction : %04X \n", instruction);
+			c8_plat_debug_out(buf);
 #endif
 
-		if (instruction == 0x00e0)
-		{
-			c8_plat_debug_out("Clear\n");
-			c8_clear_struct(state->pixels);
-		}
-		else if (op == 0x1)
-		{
-			c8_plat_debug_printf("Jump to %03X\n", nnn);
-
-			state->pc = nnn;
-		}
-		else if (op == 0x2)
-		{
-
-			c8_call(state, nnn);
-		}
-		else if (instruction == 0x00ee)
-		{
-			c8_plat_debug_out("Return\n");
-
-			state->stack_pointer--;
-			if (state->stack_pointer < 0)
+			if (instruction == 0x00e0)
 			{
-				assert(false);
-				// TODO: handle stackundeflow (?)
+				c8_plat_debug_out("Clear\n");
+				c8_clear_struct(state->pixels);
 			}
-			state->pc = state->stack[state->stack_pointer];
-		}
-		else if (op == 0x6)
-		{
-			c8_plat_debug_printf("Set register %X to %02X\n", x, nn);
-			state->var_registers[x] = nn;
-		}
-		else if (op == 0x7)
-		{
-
-			c8_add_number_to_register(state, x, nn);
-		}
-		else if (op == 0xa)
-		{
-			c8_plat_debug_printf("Set index register to %03x\n", nnn);
-			state->index_register = nnn;
-		}
-		else if (op == 0xc)
-		{
-			c8_plat_debug_out("Random\n");
-
-			int random = rand();
-			u8 result = (u8)((u16)random & nn);
-			state->var_registers[x] = result;
-		}
-		else if (op == 0xd)
-		{
-			u8 flag_register = 0;
-			u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
-			u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
-			u8 *sprite_start = state->ram + state->index_register;
-
-			c8_plat_debug_printf(
-				buf,
-				c8_arr_count(buf),
-				"Display sprite at %04x at x = v%x (%x), y = v%x (%x) \n",
-				state->index_register,
-				x,
-				sprite_x,
-				y,
-				sprite_y);
-
-			for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
+			else if (op == 0x1)
 			{
-				u8 sprite_row = *(sprite_start + r);
-				// sprintf(buf, "Row : %x \n", instruction);
-				// c8_plat_debug_out(buf);
-				// c8_debug_row(sprite_row);
-				for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
+				c8_plat_debug_printf("Jump to %03X\n", nnn);
+
+				state->pc = nnn;
+			}
+			else if (op == 0x2)
+			{
+
+				c8_call(state, nnn);
+			}
+			else if (instruction == 0x00ee)
+			{
+				c8_plat_debug_out("Return\n");
+
+				state->stack_pointer--;
+				if (state->stack_pointer < 0)
 				{
-					u8 on = (sprite_row >> (7 - c)) & 0x01;
-					if (on == 0x01)
+					assert(false);
+					// TODO: handle stackundeflow (?)
+				}
+				state->pc = state->stack[state->stack_pointer];
+			}
+			else if (op == 0x6)
+			{
+				c8_plat_debug_printf("Set register %X to %02X\n", x, nn);
+				state->var_registers[x] = nn;
+			}
+			else if (op == 0x7)
+			{
+
+				c8_add_number_to_register(state, x, nn);
+			}
+			else if (op == 0xa)
+			{
+				c8_plat_debug_printf("Set index register to %03x\n", nnn);
+				state->index_register = nnn;
+			}
+			else if (op == 0xc)
+			{
+				c8_plat_debug_out("Random\n");
+
+				int random = rand();
+				u8 result = (u8)((u16)random & nn);
+				state->var_registers[x] = result;
+			}
+			else if (op == 0xd)
+			{
+				u8 flag_register = 0;
+				u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
+				u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
+				u8 *sprite_start = state->ram + state->index_register;
+
+				c8_plat_debug_printf(
+					buf,
+					c8_arr_count(buf),
+					"Display sprite at %04x at x = v%x (%x), y = v%x (%x) \n",
+					state->index_register,
+					x,
+					sprite_x,
+					y,
+					sprite_y);
+
+				for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
+				{
+					u8 sprite_row = *(sprite_start + r);
+					// sprintf(buf, "Row : %x \n", instruction);
+					// c8_plat_debug_out(buf);
+					// c8_debug_row(sprite_row);
+					for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
 					{
-						if (state->pixels[sprite_y + r][sprite_x + c])
+						u8 on = (sprite_row >> (7 - c)) & 0x01;
+						if (on == 0x01)
 						{
-							state->pixels[sprite_y + r][sprite_x + c] = false;
+							if (state->pixels[sprite_y + r][sprite_x + c])
+							{
+								state->pixels[sprite_y + r][sprite_x + c] = false;
+							}
+							else
+							{
+								state->pixels[sprite_y + r][sprite_x + c] = true;
+							}
+							flag_register = 1;
 						}
 						else
 						{
-							state->pixels[sprite_y + r][sprite_x + c] = true;
+							assert(on == 0x00);
 						}
-						flag_register = 1;
-					}
-					else
-					{
-						assert(on == 0x00);
 					}
 				}
-			}
 
-			state->var_registers[C8_FLAG_REG] = flag_register;
+				state->var_registers[C8_FLAG_REG] = flag_register;
 
 #if 0
 			c8_debug_display(state);
 			c8_plat_debug_out("\n");
 #endif
-		}
-		else if (op == 0x3)
-		{
+			}
+			else if (op == 0x3)
+			{
 #if 0
 			c8_plat_debug_printf( "Skip if v%x (%x) equals %02x\n", x, vx, nn);
 #endif
-			if (vx == nn)
-			{
-				state->pc += 2;
+				if (vx == nn)
+				{
+					state->pc += 2;
+				}
 			}
-		}
-		else if (op == 0x4)
-		{
-			if (vx != nn)
+			else if (op == 0x4)
 			{
-				state->pc += 2;
-			}
+				if (vx != nn)
+				{
+					state->pc += 2;
+				}
 #if 0
 
 			c8_plat_debug_printf( "Skip if v%x (%x) not equals %02x\n", x, vx, nn);
 
 #endif
-		}
-		else if ((instruction & 0xf00f) == 0x5000)
-		{
-			c8_plat_debug_out("Skip if x equals y\n");
-
-			if (state->var_registers[x] == state->var_registers[y])
-			{
-				state->pc += 2;
 			}
-		}
-		else if ((instruction & 0xf00f) == 0x9000)
-		{
-			c8_plat_debug_out("Skip if x not equals y\n");
+			else if ((instruction & 0xf00f) == 0x5000)
+			{
+				c8_plat_debug_out("Skip if x equals y\n");
 
-			if (state->var_registers[x] != state->var_registers[y])
-			{
-				state->pc += 2;
+				if (state->var_registers[x] == state->var_registers[y])
+				{
+					state->pc += 2;
+				}
 			}
-		}
-		else if ((instruction & 0xf00f) == 0x8000)
-		{
-			c8_plat_debug_out("Set x register to value of y register\n");
-			state->var_registers[x] = state->var_registers[y];
-		}
-		else if ((instruction & 0xf00f) == 0x8001)
-		{
-			c8_plat_debug_out("Binary or\n");
-			state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
-		}
-		else if ((instruction & 0xf00f) == 0x8002)
-		{
-			u8 result = vx & vy;
-			c8_plat_debug_printf("v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
-			state->var_registers[x] = result;
-		}
-		else if ((instruction & 0xf00f) == 0x8003)
-		{
-			c8_plat_debug_out("Binary xor\n");
-			state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
-		}
-		else if ((instruction & 0xf00f) == 0x8004)
-		{
-			c8_plat_debug_out("x + y\n");
-			u16 result = state->var_registers[x] + state->var_registers[y];
-			if (result > 0xff)
+			else if ((instruction & 0xf00f) == 0x9000)
 			{
-				state->var_registers[C8_FLAG_REG] = 1;
+				c8_plat_debug_out("Skip if x not equals y\n");
+
+				if (state->var_registers[x] != state->var_registers[y])
+				{
+					state->pc += 2;
+				}
+			}
+			else if ((instruction & 0xf00f) == 0x8000)
+			{
+				c8_plat_debug_out("Set x register to value of y register\n");
+				state->var_registers[x] = state->var_registers[y];
+			}
+			else if ((instruction & 0xf00f) == 0x8001)
+			{
+				c8_plat_debug_out("Binary or\n");
+				state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
+			}
+			else if ((instruction & 0xf00f) == 0x8002)
+			{
+				u8 result = vx & vy;
+				c8_plat_debug_printf("v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
+				state->var_registers[x] = result;
+			}
+			else if ((instruction & 0xf00f) == 0x8003)
+			{
+				c8_plat_debug_out("Binary xor\n");
+				state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
+			}
+			else if ((instruction & 0xf00f) == 0x8004)
+			{
+				c8_plat_debug_out("x + y\n");
+				u16 result = state->var_registers[x] + state->var_registers[y];
+				if (result > 0xff)
+				{
+					state->var_registers[C8_FLAG_REG] = 1;
+				}
+				else
+				{
+					state->var_registers[C8_FLAG_REG] = 0;
+				}
+				state->var_registers[x] = (u8)result;
+			}
+			else if ((instruction & 0xf00f) == 0x8006)
+			{
+				c8_plat_debug_out("Shift right\n");
+
+				u8 bit = state->var_registers[x] & 0x1;
+				state->var_registers[x] = state->var_registers[x] >> 1;
+				state->var_registers[C8_FLAG_REG] = bit;
+			}
+			else if ((instruction & 0xf00f) == 0x8005)
+			{
+				c8_plat_debug_out("x - y\n");
+
+				if (state->var_registers[x] > state->var_registers[y])
+				{
+					state->var_registers[C8_FLAG_REG] = 1;
+				}
+
+				if (state->var_registers[x] < state->var_registers[y])
+				{
+					state->var_registers[C8_FLAG_REG] = 0;
+				}
+				state->var_registers[x] =
+					state->var_registers[x] -
+					state->var_registers[y];
+			}
+			else if ((instruction & 0xf00f) == 0x8007)
+			{
+				c8_plat_debug_out("y - x\n");
+
+				if (state->var_registers[y] > state->var_registers[x])
+				{
+					state->var_registers[C8_FLAG_REG] = 1;
+				}
+
+				if (state->var_registers[y] < state->var_registers[x])
+				{
+					state->var_registers[C8_FLAG_REG] = 0;
+				}
+				state->var_registers[x] =
+					state->var_registers[y] -
+					state->var_registers[x];
+			}
+			else if ((instruction & 0xf00f) == 0x800e)
+			{
+				c8_plat_debug_out("Shift left\n");
+
+				u8 bit = state->var_registers[x] >> 7;
+				state->var_registers[x] = state->var_registers[x] << 1;
+				state->var_registers[C8_FLAG_REG] = bit;
+			}
+			else if ((instruction & 0xf0ff) == 0xE09E)
+			{
+				c8_plat_debug_printf("Skip if %x key is pressed\n", x);
+				u8 key = state->var_registers[x];
+
+				if (state->keypad.keys[key].ended_down)
+				{
+					state->pc += 2;
+				}
+			}
+			else if ((instruction & 0xf0ff) == 0xE0A1)
+			{
+				c8_plat_debug_printf("Skip if %x key is not pressed\n", state->var_registers[x]);
+				u8 key = state->var_registers[x];
+				if (!state->keypad.keys[key].ended_down)
+				{
+					state->pc += 2;
+				}
+			}
+			else if ((instruction & 0xf0ff) == 0xF00A)
+			{
+				c8_plat_debug_printf("Wait for %x key\n", x);
+
+				if (!state->keypad.keys[x].ended_down)
+				{
+					state->pc -= 2;
+				}
+			}
+			else if ((instruction & 0xf0ff) == 0xF007)
+			{
+				c8_plat_debug_out("Set register to delay timer\n");
+				state->var_registers[x] = state->delay_timer;
+			}
+			else if ((instruction & 0xf0ff) == 0xF015)
+			{
+				c8_plat_debug_out("Set delay timer\n");
+				state->delay_timer = state->var_registers[x];
+			}
+			else if ((instruction & 0xf0ff) == 0xF018)
+			{
+				c8_plat_debug_out("Set sound timer\n");
+				state->sound_timer = state->var_registers[x];
+			}
+			else if ((instruction & 0xf0ff) == 0xF01E)
+			{
+				u16 result = state->index_register + vx;
+
+				if (result > 0x0fff)
+				{
+					state->var_registers[C8_FLAG_REG] = 1;
+					result &= 0x0fff;
+				}
+
+				c8_plat_debug_printf("Add v%x (%x) to index (%x) giving %x\n",
+									 x,
+									 vx,
+									 state->index_register,
+									 result);
+
+				state->index_register = result;
+			}
+			else if ((instruction & 0xf0ff) == 0xF029)
+			{
+				c8_plat_debug_printf("Point index  to font v%x (%x) \n", x, vx);
+				u8 c = (state->var_registers[x]) & 0x0f;
+				state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
+			}
+			else if ((instruction & 0xf0ff) == 0xF033)
+			{
+				c8_plat_debug_out("Decimal conversion\n");
+				u16 start = state->index_register;
+				u8 dividend = state->var_registers[x];
+				u8 divisor = 100;
+				for (size_t digit_i = 0; digit_i < 3; digit_i++)
+				{
+					state->ram[start + digit_i] = dividend / divisor;
+					dividend %= divisor;
+					divisor /= 10;
+				}
+			}
+			else if ((instruction & 0xf0ff) == 0xF055)
+			{
+
+				u16 start = state->index_register;
+
+				c8_plat_debug_printf(
+					"Store registers 0 to %x at memory  location %2x\n", x, start);
+
+				for (int reg_i = 0; reg_i <= x; reg_i++)
+				{
+					state->ram[start + reg_i] = state->var_registers[reg_i];
+					c8_plat_debug_printf(
+						"v%x = %x\n", reg_i, state->var_registers[reg_i]);
+				}
+			}
+			else if ((instruction & 0xf0ff) == 0xF065)
+			{
+				u16 start = state->index_register;
+
+				c8_plat_debug_printf(
+					"Load registers 0 to %x from memory location %2x\n", x, start);
+
+				for (i32 reg_i = 0; reg_i <= x; reg_i++)
+				{
+					state->var_registers[reg_i] = state->ram[start + reg_i];
+					c8_plat_debug_printf(
+						"v%x = %x\n", reg_i, state->var_registers[reg_i]);
+				}
 			}
 			else
 			{
-				state->var_registers[C8_FLAG_REG] = 0;
+				c8_plat_debug_out("Unimplemented instruction\n");
+				assert(false);
 			}
-			state->var_registers[x] = (u8)result;
-		}
-		else if ((instruction & 0xf00f) == 0x8006)
-		{
-			c8_plat_debug_out("Shift right\n");
-
-			u8 bit = state->var_registers[x] & 0x1;
-			state->var_registers[x] = state->var_registers[x] >> 1;
-			state->var_registers[C8_FLAG_REG] = bit;
-		}
-		else if ((instruction & 0xf00f) == 0x8005)
-		{
-			c8_plat_debug_out("x - y\n");
-
-			if (state->var_registers[x] > state->var_registers[y])
-			{
-				state->var_registers[C8_FLAG_REG] = 1;
-			}
-
-			if (state->var_registers[x] < state->var_registers[y])
-			{
-				state->var_registers[C8_FLAG_REG] = 0;
-			}
-			state->var_registers[x] =
-				state->var_registers[x] -
-				state->var_registers[y];
-		}
-		else if ((instruction & 0xf00f) == 0x8007)
-		{
-			c8_plat_debug_out("y - x\n");
-
-			if (state->var_registers[y] > state->var_registers[x])
-			{
-				state->var_registers[C8_FLAG_REG] = 1;
-			}
-
-			if (state->var_registers[y] < state->var_registers[x])
-			{
-				state->var_registers[C8_FLAG_REG] = 0;
-			}
-			state->var_registers[x] =
-				state->var_registers[y] -
-				state->var_registers[x];
-		}
-		else if ((instruction & 0xf00f) == 0x800e)
-		{
-			c8_plat_debug_out("Shift left\n");
-
-			u8 bit = state->var_registers[x] >> 7;
-			state->var_registers[x] = state->var_registers[x] << 1;
-			state->var_registers[C8_FLAG_REG] = bit;
-		}
-		else if ((instruction & 0xf0ff) == 0xE09E)
-		{
-			c8_plat_debug_printf("Skip if %x key is pressed\n", x);
-			u8 key = state->var_registers[x];
-
-			if (state->keypad.keys[key].ended_down)
-			{
-				state->pc += 2;
-			}
-		}
-		else if ((instruction & 0xf0ff) == 0xE0A1)
-		{
-			c8_plat_debug_printf("Skip if %x key is not pressed\n", state->var_registers[x]);
-			u8 key = state->var_registers[x];
-			if (!state->keypad.keys[key].ended_down)
-			{
-				state->pc += 2;
-			}
-		}
-		else if ((instruction & 0xf0ff) == 0xF00A)
-		{
-			c8_plat_debug_printf("Wait for %x key\n", x);
-
-			if (!state->keypad.keys[x].ended_down)
-			{
-				state->pc -= 2;
-			}
-		}
-		else if ((instruction & 0xf0ff) == 0xF007)
-		{
-			c8_plat_debug_out("Set register to delay timer\n");
-			state->var_registers[x] = state->delay_timer;
-		}
-		else if ((instruction & 0xf0ff) == 0xF015)
-		{
-			c8_plat_debug_out("Set delay timer\n");
-			state->delay_timer = state->var_registers[x];
-		}
-		else if ((instruction & 0xf0ff) == 0xF018)
-		{
-			c8_plat_debug_out("Set sound timer\n");
-			state->sound_timer = state->var_registers[x];
-		}
-		else if ((instruction & 0xf0ff) == 0xF01E)
-		{
-			u16 result = state->index_register + vx;
-
-			if (result > 0x0fff)
-			{
-				state->var_registers[C8_FLAG_REG] = 1;
-				result &= 0x0fff;
-			}
-
-			c8_plat_debug_printf("Add v%x (%x) to index (%x) giving %x\n",
-								 x,
-								 vx,
-								 state->index_register,
-								 result);
-
-			state->index_register = result;
-		}
-		else if ((instruction & 0xf0ff) == 0xF029)
-		{
-			c8_plat_debug_printf("Point index  to font v%x (%x) \n", x, vx);
-			u8 c = (state->var_registers[x]) & 0x0f;
-			state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
-		}
-		else if ((instruction & 0xf0ff) == 0xF033)
-		{
-			c8_plat_debug_out("Decimal conversion\n");
-			u16 start = state->index_register;
-			u8 dividend = state->var_registers[x];
-			u8 divisor = 100;
-			for (size_t digit_i = 0; digit_i < 3; digit_i++)
-			{
-				state->ram[start + digit_i] = dividend / divisor;
-				dividend %= divisor;
-				divisor /= 10;
-			}
-		}
-		else if ((instruction & 0xf0ff) == 0xF055)
-		{
-
-			u16 start = state->index_register;
-
-			c8_plat_debug_printf(
-				"Store registers 0 to %x at memory  location %2x\n", x, start);
-
-			for (int reg_i = 0; reg_i <= x; reg_i++)
-			{
-				state->ram[start + reg_i] = state->var_registers[reg_i];
-				c8_plat_debug_printf(
-					"v%x = %x\n", reg_i, state->var_registers[reg_i]);
-			}
-		}
-		else if ((instruction & 0xf0ff) == 0xF065)
-		{
-			u16 start = state->index_register;
-
-			c8_plat_debug_printf(
-				"Load registers 0 to %x from memory location %2x\n", x, start);
-
-			for (i32 reg_i = 0; reg_i <= x; reg_i++)
-			{
-				state->var_registers[reg_i] = state->ram[start + reg_i];
-				c8_plat_debug_printf(
-					"v%x = %x\n", reg_i, state->var_registers[reg_i]);
-			}
-		}
-		else
-		{
-			c8_plat_debug_out("Unimplemented instruction\n");
-			assert(false);
 		}
 	}
 
@@ -962,41 +965,43 @@ bool c8_app_update(C8_App_State *state)
 	state->text_vertex_count = 0;
 	if (!state->program_loaded)
 	{
-		char f_name[] = "data\\invaders.ch8";
-		C8_File file = c8_plat_read_file(f_name, c8_arr_count(f_name) - 1, &state->transient_arena);
-
-		if (file.data != 0)
+		if (state->file_name != NULL)
 		{
-			if (file.size <= sizeof(state->ram))
+			C8_File file = c8_plat_read_file(state->file_name, strlen(state->file_name), &state->transient_arena);
+
+			if (file.data != 0)
 			{
-				state->pc = C8_PROG_ADDR;
-				memcpy(state->ram + state->pc, file.data, file.size);
+				if (file.size <= sizeof(state->ram))
+				{
+					state->pc = C8_PROG_ADDR;
+					memcpy(state->ram + state->pc, file.data, file.size);
 
-				c8_arena_free_all(&state->transient_arena);
-				state->program_loaded = true;
+					c8_arena_free_all(&state->transient_arena);
+					state->program_loaded = true;
+				}
 			}
+
+			const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+				0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+				0x20, 0x60, 0x20, 0x20, 0x70, // 1
+				0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+				0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+				0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+				0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+				0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+				0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+				0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+				0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+				0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+				0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+				0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+				0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+				0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+				0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+			};
+
+			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 		}
-
-		const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
-			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-			0x20, 0x60, 0x20, 0x20, 0x70, // 1
-			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-		};
-
-		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 
 	if (state->is_file_dialog_open)
@@ -1066,7 +1071,7 @@ void c8_arena_free_all(C8_Arena *arena)
 
 	arena->offset = 0;
 }
-void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena)
+void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena)
 {
 	file_list->arena = arena;
 	file_list->file_names = c8_arena_alloc(arena, C8_FILE_LIST_INITIAL_CAPACITY * sizeof(*(file_list->file_names)));
@@ -1077,7 +1082,7 @@ void c8_file_list_init(C8_File_List *file_list, C8_Arena *arena)
 	}
 }
 
-bool c8_push_file_name(C8_File_List *file_list, char *file_name, size_t name_length)
+bool c8_push_file_name(C8_String_List *file_list, char *file_name, size_t name_length)
 {
 
 	if (file_list->count >= file_list->capacity)
