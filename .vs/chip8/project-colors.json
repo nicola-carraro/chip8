@@ -1,0 +1,26 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "9926cefa-12f9-4266-9535-d887b83ec6c0": {
+      "ProjectGuid": "9926cefa-12f9-4266-9535-d887b83ec6c0",
+      "DisplayName": "chip8",
+      "ColorIndex": 0
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Miscellaneous Files",
+      "ColorIndex": -1
+    },
+    "8476fa7f-3b00-4d86-9ae6-18d48293db25": {
+      "ProjectGuid": "8476fa7f-3b00-4d86-9ae6-18d48293db25",
+      "DisplayName": "chip_8_test",
+      "ColorIndex": 1
+    },
+    "c0ecd6ff-a9b9-48cc-acdb-68efce7ed0cb": {
+      "ProjectGuid": "c0ecd6ff-a9b9-48cc-acdb-68efce7ed0cb",
+      "DisplayName": "chip_8_assets",
+      "ColorIndex": 2
+    }
+  },
+  "NextColorIndex": 3
+}

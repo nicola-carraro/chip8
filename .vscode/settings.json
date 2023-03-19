@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "c8_win.h": "c",
+        "windows.h": "c",
+        "c8_app.h": "c",
+        "stdlib.h": "c"
+    }
+}
