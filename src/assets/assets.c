@@ -205,7 +205,7 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 	}
 	else
 	{
-		strcpy(f_name, "../build/data/atlas.atl");
+		strcpy(f_name, "data/atlas.atl");
 	}
 
 	FILE *o = fopen(f_name, "wb");
@@ -269,19 +269,19 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 						fputc(alpha, o);
 					}
 
-					if (alpha)
-					{
-						printf("X");
-					}
-					else
-					{
-						printf(" ");
-					}
+					/*	if (alpha)
+						{
+							printf("X");
+						}
+						else
+						{
+							printf(" ");
+						}*/
 
 					char_x++;
 				}
 
-				printf("\n");
+				// printf("\n");
 			}
 
 			fflush(o);
@@ -294,7 +294,7 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 int main(void)
 {
 
-	char file_name[] = "data\\MonospaceTypewriter.ttf";
+	char file_name[] = "..\\src\\assets\\data\\MonospaceTypewriter.ttf";
 	FILE *i = fopen(file_name, "rb");
 
 	if (i != 0)
@@ -309,12 +309,19 @@ int main(void)
 
 		if (data != 0)
 		{
-			memset(data, 0, sz);
+			size_t read = fread(data, sz, 1, i);
 
-			stbtt_fontinfo font;
-			stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
+			if (read == 1)
+			{
+				stbtt_fontinfo font;
+				stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
 
-			write_atlas(&font, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR, true);
+				write_atlas(&font, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR, false);
+			}
+			else
+			{
+				printf("Could not read %s", file_name);
+			}
 		}
 
 		free(data);
