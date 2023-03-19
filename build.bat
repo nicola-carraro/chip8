@@ -12,4 +12,6 @@ c8_test.exe
 
 del *.ilk *.obj
 
+remedybg c8_win.exe
+
 popd
