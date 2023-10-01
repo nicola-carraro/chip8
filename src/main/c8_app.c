@@ -502,6 +502,7 @@ bool update_emulator(C8_App_State *state)
 		if (is_mouse_over_button)
 		{
 			state->is_file_dialog_open = true;
+			c8_plat_open_file_dialog();
 		}
 		state->load_button_down = false;
 	}

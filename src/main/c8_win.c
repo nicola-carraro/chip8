@@ -2,7 +2,10 @@
 #ifndef C8_WIN_C
 #define C8_WIN_C
 #define _CRT_SECURE_NO_WARNINGS
+#define COBJMACROS
+
 #include "c8_win.h"
+#include "shobjidl.h"
 
 BOOL c8_win_draw_text(C8_Win_State *state)
 {
@@ -1110,6 +1113,34 @@ char *c8_win_get_first_argument(PSTR cmd_line, C8_Arena *arena)
 	}
 
 	return first_argument;
+}
+
+wchar_t *c8_plat_open_file_dialog()
+{
+
+	IFileOpenDialog *fileDialog = NULL;
+
+	HRESULT hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &fileDialog);
+
+	assert(SUCCEEDED(hr));
+
+	hr = IFileOpenDialog_Show(fileDialog, NULL);
+	LPWSTR path = NULL;
+
+	if (SUCCEEDED(hr))
+	{
+		IShellItem *file = NULL;
+
+		hr = IFileDialog_GetResult(fileDialog, &file);
+
+		assert(SUCCEEDED(hr));
+
+		hr = IShellItem_GetDisplayName(file, SIGDN_FILESYSPATH, &path);
+
+		assert(SUCCEEDED(hr));
+	}
+
+	return path;
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
