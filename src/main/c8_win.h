@@ -1,9 +1,11 @@
 #ifndef C8_WIN
 #define C8_WIN
 
+#define UNICODE
+
 #include <Windows.h>
 #include <d3d9.h>
-#include<DSound.h>
+#include <DSound.h>
 #include "c8_app.h"
 
 #define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
@@ -21,7 +23,8 @@ typedef struct
 	float v;
 } C8_Win_Texture_Vertex;
 
-typedef struct {
+typedef struct
+{
 	FLOAT x;
 	FLOAT y;
 	FLOAT z;
@@ -29,7 +32,8 @@ typedef struct {
 	D3DCOLOR color;
 } C8_Win_Color_Vertex;
 
-typedef struct {
+typedef struct
+{
 	LPDIRECT3D9 d3d;
 	LPDIRECT3DDEVICE9 d3d_dev;
 	LPDIRECT3DVERTEXBUFFER9 color_vb;
@@ -44,15 +48,15 @@ typedef struct {
 
 } C8_Win_State;
 
-typedef struct {
+typedef struct
+{
 	LARGE_INTEGER perf_freq;
 	LARGE_INTEGER perf_count;
 	bool has_timer;
-}C8_Win_Timer;
+} C8_Win_Timer;
 
 C8_Win_State *global_state;
 
-int c8_plat_debug_printf(char* format, ...);
-
+int c8_plat_debug_printf(char *format, ...);
 
 #endif // !C8_WIN

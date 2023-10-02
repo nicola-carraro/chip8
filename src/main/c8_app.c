@@ -502,7 +502,13 @@ bool update_emulator(C8_App_State *state)
 		if (is_mouse_over_button)
 		{
 			state->is_file_dialog_open = true;
-			c8_plat_open_file_dialog();
+
+			wchar_t *path = c8_plat_open_file_dialog();
+
+			if (path != NULL)
+			{
+				state->file_name = path;
+			}
 		}
 		state->load_button_down = false;
 	}
@@ -947,13 +953,13 @@ bool update_file_dialog(C8_App_State *state)
 	if (state->file_list.file_names == 0)
 	{
 		c8_file_list_init(&(state->file_list), &state->file_names_arena);
-		char folder_name[] = "C:\\Users\\carra\\source\\repos\\chip8\\data";
+		wchar_t folder_name[] = L"C:\\Users\\carra\\source\\repos\\chip8\\data";
 		c8_plat_list_folder_content(state, folder_name, c8_arr_count(folder_name));
 
 		for (int file_i = 0; file_i < state->file_list.count; file_i++)
 		{
-			OutputDebugStringA(state->file_list.file_names[file_i].text);
-			OutputDebugStringA("\n");
+			OutputDebugString(state->file_list.file_names[file_i].text);
+			OutputDebugString(L"\n");
 		}
 	}
 
@@ -968,7 +974,7 @@ bool c8_app_update(C8_App_State *state)
 	{
 		if (state->file_name != NULL)
 		{
-			C8_File file = c8_plat_read_file(state->file_name, strlen(state->file_name), &state->transient_arena);
+			C8_File file = c8_plat_read_file(state->file_name, wcslen(state->file_name), &state->transient_arena);
 
 			if (file.data != 0)
 			{
@@ -1005,14 +1011,7 @@ bool c8_app_update(C8_App_State *state)
 		}
 	}
 
-	if (state->is_file_dialog_open)
-	{
-		return update_file_dialog(state);
-	}
-	else
-	{
-		return update_emulator(state);
-	}
+	return update_emulator(state);
 }
 
 bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
@@ -1083,7 +1082,7 @@ void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena)
 	}
 }
 
-bool c8_push_file_name(C8_String_List *file_list, char *file_name, size_t name_length)
+bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length)
 {
 
 	if (file_list->count >= file_list->capacity)
@@ -1099,7 +1098,7 @@ bool c8_push_file_name(C8_String_List *file_list, char *file_name, size_t name_l
 		file_list->file_names = new_buffer;
 	}
 
-	char *name_buffer = c8_arena_alloc(file_list->arena, name_length);
+	wchar_t *name_buffer = c8_arena_alloc(file_list->arena, name_length * sizeof(wchar_t));
 
 	if (!name_buffer)
 	{

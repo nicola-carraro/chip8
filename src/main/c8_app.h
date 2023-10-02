@@ -202,7 +202,7 @@ typedef struct
 
 typedef struct
 {
-	char *text;
+	wchar_t *text;
 	size_t length;
 } C8_String;
 
@@ -246,7 +246,7 @@ typedef struct
 	uint32_t text_vertex_count;
 	bool is_file_dialog_open;
 	C8_String_List file_list;
-	char *file_name;
+	wchar_t *file_name;
 } C8_App_State;
 
 #define C8_FILE_LIST_INITIAL_CAPACITY 10
@@ -279,10 +279,10 @@ bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b
 
 void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena);
 
-bool c8_plat_list_folder_content(C8_App_State *state, char *folder_name, size_t folder_name_length);
+bool c8_plat_list_folder_content(C8_App_State *state, wchar_t *folder_name, size_t folder_name_length);
 
-bool c8_push_file_name(C8_String_List *file_list, char *file_name, size_t name_length);
+bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length);
 
-C8_File c8_plat_read_file(char *name, size_t name_length, C8_Arena *arena);
+C8_File c8_plat_read_file(wchar_t *name, size_t name_length, C8_Arena *arena);
 
 #endif // !C8_APP

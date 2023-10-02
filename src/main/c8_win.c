@@ -6,6 +6,7 @@
 
 #include "c8_win.h"
 #include "shobjidl.h"
+#include "wchar.h"
 
 BOOL c8_win_draw_text(C8_Win_State *state)
 {
@@ -93,7 +94,7 @@ BOOL c8_win_draw_text(C8_Win_State *state)
 	return result;
 }
 
-BOOL c8_win_load_font(C8_Win_State *state, char *file_name, i32 name_length)
+BOOL c8_win_load_font(C8_Win_State *state, wchar_t *file_name, i32 name_length)
 {
 
 	BOOL result = false;
@@ -440,7 +441,7 @@ bool c8_win_render(C8_Win_State *state)
 	return result;
 }
 
-bool c8_win_init_texture(C8_Win_State *state, char *file_name, i32 name_length)
+bool c8_win_init_texture(C8_Win_State *state, wchar_t *file_name, i32 name_length)
 {
 
 	bool result = false;
@@ -560,7 +561,7 @@ bool c8_win_initd3d(C8_Win_State *state, HWND window)
 			if (SUCCEEDED(vb_created))
 			{
 				result = true;
-				char file_name[] = "data/atlas.atl";
+				wchar_t file_name[] = L"data/atlas.atl";
 				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
@@ -1002,7 +1003,7 @@ bool c8_win_process_msgs(C8_Win_State *state, HWND window)
 
 bool c8_plat_list_folder_content(
 	C8_App_State *state,
-	char *folder_name,
+	wchar_t *folder_name,
 	size_t folder_name_length)
 {
 	WIN32_FIND_DATA find_data;
@@ -1010,25 +1011,25 @@ bool c8_plat_list_folder_content(
 #define buffer_size (256)
 
 	assert(folder_name_length < buffer_size - 3);
-	char buffer[buffer_size];
+	wchar_t buffer[buffer_size];
 
-	strcpy(buffer, folder_name);
-	strcat(buffer, "\\*");
+	wcscpy(buffer, folder_name);
+	wcscat(buffer, L"\\*");
 
-	HANDLE file_handle = FindFirstFileA(buffer, &find_data);
+	HANDLE file_handle = FindFirstFile(buffer, &find_data);
 
-	char *file_name = find_data.cFileName;
-	size_t file_name_length = strlen(file_name);
+	wchar_t *file_name = find_data.cFileName;
+	size_t file_name_length = wcslen(file_name);
 	if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
 	{
 		return false;
 	};
 	if (file_handle != INVALID_HANDLE_VALUE)
 	{
-		while (FindNextFileA(file_handle, &find_data))
+		while (FindNextFile(file_handle, &find_data))
 		{
 			file_name = find_data.cFileName;
-			file_name_length = strlen(file_name);
+			file_name_length = wcslen(file_name);
 			if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
 			{
 				return false;
@@ -1084,14 +1085,14 @@ bool c8_win_stop_beep(C8_Win_State *state)
 	return result;
 }
 
-char *c8_win_get_first_argument(PSTR cmd_line, C8_Arena *arena)
+wchar_t *c8_win_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 {
-	char *first_argument = 0;
+	wchar_t *first_argument = 0;
 
 	size_t length = 0;
 	size_t start = 0;
 
-	char *next_char = cmd_line;
+	wchar_t *next_char = cmd_line;
 	while (*next_char != '\0' && isspace(*next_char))
 	{
 		next_char++;
@@ -1106,8 +1107,8 @@ char *c8_win_get_first_argument(PSTR cmd_line, C8_Arena *arena)
 
 	if (length > 0)
 	{
-		first_argument = c8_arena_alloc(arena, length + 1);
-		strncpy(first_argument, cmd_line + start, length);
+		first_argument = c8_arena_alloc(arena, sizeof(*first_argument) * (length + 1));
+		wcsncpy(first_argument, cmd_line + start, length);
 
 		assert(first_argument && "Allocation failed");
 	}
@@ -1167,7 +1168,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	{
 		if (c8_arena_init(&(global_state->app_state.transient_arena), 5 * 1024 * 1024, 4))
 		{
-			char *file_name = c8_win_get_first_argument(cmd_line, &global_state->app_state.transient_arena);
+			wchar_t *file_name = c8_win_get_first_argument(GetCommandLine(), &global_state->app_state.transient_arena);
 			global_state->app_state.file_name = file_name;
 
 			if (c8_win_initd3d(global_state, window))
@@ -1277,15 +1278,15 @@ void *c8_plat_allocate(psz size)
 	return result;
 }
 
-C8_File c8_plat_read_file(char *name, size_t name_length, C8_Arena *arena)
+C8_File c8_plat_read_file(wchar_t *name, size_t name_length, C8_Arena *arena)
 {
 	UNREFERENCED_PARAMETER(name_length);
 
 	C8_File result;
 	c8_clear_struct(result);
 
-	char buf[256];
-	HANDLE f = CreateFileA(
+	wchar_t buf[256];
+	HANDLE f = CreateFile(
 		name,
 		GENERIC_READ,
 		FILE_SHARE_READ,
@@ -1324,37 +1325,37 @@ C8_File c8_plat_read_file(char *name, size_t name_length, C8_Arena *arena)
 					}
 					else
 					{
-						sprintf(buf, "Could not read %s\n", name);
-						OutputDebugStringA(buf);
+						swprintf(buf, sizeof(buf) - 1, L"Could not read %s\n", name);
+						OutputDebugString(buf);
 					}
 				}
 				else
 				{
-					OutputDebugStringA("Failed to allocate memory for file");
+					OutputDebugString(L"Failed to allocate memory for file");
 				}
 			}
 			else
 			{
-				sprintf(buf, "%s is too large\n", name);
-				OutputDebugStringA(buf);
+				swprintf(buf, sizeof(buf) - 1, L"%s is too large\n", name);
+				OutputDebugString(buf);
 			}
 		}
 		else
 		{
-			sprintf(buf, "Could not get size of %s\n", name);
-			OutputDebugStringA(buf);
+			swprintf(buf, sizeof(buf) - 1, L"Could not get size of %s\n", name);
+			OutputDebugString(buf);
 		}
 
 		if (!CloseHandle(f))
 		{
-			sprintf(buf, "Could not close %s\n", name);
-			OutputDebugStringA(buf);
+			swprintf(buf, sizeof(buf) - 1, L"Could not close %s\n", name);
+			OutputDebugString(buf);
 		}
 	}
 	else
 	{
-		sprintf(buf, "Could not open %s\n", name);
-		OutputDebugStringA(buf);
+		swprintf(buf, sizeof(buf) - 1, L"Could not open %s\n", name);
+		OutputDebugString(buf);
 	}
 
 	return result;
