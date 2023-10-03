@@ -96,6 +96,44 @@ bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 
 	return result;
 }
 
+void c8_load_roam(wchar_t *filePath, C8_App_State *state)
+{
+	C8_File file = c8_plat_read_file(filePath, wcslen(filePath), &state->transient_arena);
+
+	if (file.data != 0)
+	{
+		if (file.size <= sizeof(state->ram))
+		{
+			state->pc = C8_PROG_ADDR;
+			memcpy(state->ram + state->pc, file.data, file.size);
+
+			c8_arena_free_all(&state->transient_arena);
+			state->program_loaded = true;
+		}
+	}
+
+	const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+		0x20, 0x60, 0x20, 0x20, 0x70, // 1
+		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+	};
+
+	memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
+}
+
 bool c8_push_text_triangle(C8_App_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
 	bool push1 = c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
@@ -508,6 +546,7 @@ bool update_emulator(C8_App_State *state)
 			if (path != NULL)
 			{
 				state->file_name = path;
+				c8_load_roam( path, state);
 			}
 		}
 		state->load_button_down = false;
@@ -943,29 +982,6 @@ bool update_emulator(C8_App_State *state)
 	return push_frame && push_pixels;
 }
 
-bool update_file_dialog(C8_App_State *state)
-{
-	if (state->control_keys.control_keys.esc.was_pressed)
-	{
-		state->is_file_dialog_open = false;
-	}
-
-	if (state->file_list.file_names == 0)
-	{
-		c8_file_list_init(&(state->file_list), &state->file_names_arena);
-		wchar_t folder_name[] = L"C:\\Users\\carra\\source\\repos\\chip8\\data";
-		c8_plat_list_folder_content(state, folder_name, c8_arr_count(folder_name));
-
-		for (int file_i = 0; file_i < state->file_list.count; file_i++)
-		{
-			OutputDebugString(state->file_list.file_names[file_i].text);
-			OutputDebugString(L"\n");
-		}
-	}
-
-	return true;
-}
-
 bool c8_app_update(C8_App_State *state)
 {
 	state->color_vertex_count = 0;
@@ -974,40 +990,7 @@ bool c8_app_update(C8_App_State *state)
 	{
 		if (state->file_name != NULL)
 		{
-			C8_File file = c8_plat_read_file(state->file_name, wcslen(state->file_name), &state->transient_arena);
-
-			if (file.data != 0)
-			{
-				if (file.size <= sizeof(state->ram))
-				{
-					state->pc = C8_PROG_ADDR;
-					memcpy(state->ram + state->pc, file.data, file.size);
-
-					c8_arena_free_all(&state->transient_arena);
-					state->program_loaded = true;
-				}
-			}
-
-			const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
-				0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-				0x20, 0x60, 0x20, 0x20, 0x70, // 1
-				0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-				0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-				0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-				0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-				0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-				0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-				0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-				0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-				0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-				0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-				0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-				0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-				0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-				0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-			};
-
-			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
+			c8_load_roam(state->file_name, state);
 		}
 	}
 
