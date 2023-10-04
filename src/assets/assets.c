@@ -88,9 +88,10 @@ void write_bmp(stbtt_fontinfo *font, char c)
 	stbtt_FreeBitmap(bitmap, 0);
 }
 
-void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, bool write_ppm)
+void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char one_past_end_char)
 {
 
+#if 0
 	int32_t total_width = 0;
 
 	int32_t total_height = 0;
@@ -110,6 +111,7 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 	int32_t max_descender = 0;
 
 	float scale_factor = stbtt_ScaleForPixelHeight(font, 120);
+	
 
 	for (char i = 0; i < (char_count); i++)
 	{
@@ -194,10 +196,12 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 			glyph.u_advancement = u_pixel * advance_in_pixels;
 
 			header.glyphs[glyph_index] = glyph;
+
+			
 		}
 	}
 
-	char f_name[256];
+		char f_name[256];
 
 	if (write_ppm)
 	{
@@ -285,10 +289,61 @@ void write_atlas(stbtt_fontinfo *font, char start_char, char one_past_end_char, 
 			}
 
 			fflush(o);
-		}
+					}
 	}
 
 	// stbtt_FreeBitmap(bitmap, 0);
+#else
+
+	int bounding_x0 = 0;
+
+	int bounding_x1 = 0;
+
+	int bounding_y0 = 0;
+
+	int bounding_y1 = 0;
+
+	stbtt_GetFontBoundingBox(info, &bounding_x0, &bounding_y0, &bounding_x1, &bounding_y1);
+
+	float scale = stbtt_ScaleForPixelHeight(info, (float)pixel_height);
+
+	float baseline = scale * bounding_y1;
+
+	int bounding_width = bounding_x1 - bounding_x0;
+
+	int bounding_height = bounding_y1 - bounding_y0;
+
+	printf("bounding_x0: %d\n", bounding_x0);
+	printf("bounding_x1: %d\n", bounding_x1);
+	printf("bounding_y0: %d\n", bounding_y0);
+	printf("bounding_y1: %d\n", bounding_y1);
+	printf("bounding_width: %d\n", bounding_width);
+	printf("bounding_height: %d\n", bounding_height);
+
+	printf("baseline: %f\n", baseline);
+
+	FILE *o = fopen("font.ppm", "wb");
+
+	assert(o);
+
+	for (char c = start_char; c < one_past_end_char; c++)
+	{
+		int width = 0;
+		int height = 0;
+		uint8_t *bitmap = stbtt_GetCodepointBitmap(info, 0, scale, c, &width, &height, 0, 0);
+
+		int glyph_x0 = 0;
+
+		int glyph_x1 = 0;
+
+		int glyph_y0 = 0;
+
+		int glyph_y1 = 0;
+		stbtt_GetCodepointBitmapBox(info, c, 0, scale, &glyph_x0, &glyph_y0, &glyph_x1, &glyph_y1);
+			bitmap;
+	}
+
+#endif
 }
 
 int main(void)
@@ -316,7 +371,7 @@ int main(void)
 				stbtt_fontinfo font;
 				stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
 
-				write_atlas(&font, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR, false);
+				write_atlas(&font, 80, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR);
 			}
 			else
 			{

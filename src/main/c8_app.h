@@ -103,7 +103,7 @@ typedef struct
 	float u_right;
 	float v_top;
 	float v_bottom;
-	float v_offset;
+	float y_offset;
 	float u_advancement;
 } C8_Atlas_Glyph;
 
