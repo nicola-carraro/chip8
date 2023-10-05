@@ -10,7 +10,7 @@ REM cl ../src/test/test.c /Fe:c8_test.exe  /WX /W4 /Z7 -nologo -Od  kernel32.lib
 
  cl ../src/assets/assets.c /Fe:c8_assets.exe  /WX /W4 /Z7 -Od -nologo -Od  kernel32.lib user32.lib D3d9.lib Dsound.lib
 
- c8_assets.exe
+REM c8_assets.exe
 
 REM c8_test.exe
 

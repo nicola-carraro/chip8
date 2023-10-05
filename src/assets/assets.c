@@ -111,7 +111,6 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	int32_t max_descender = 0;
 
 	float scale_factor = stbtt_ScaleForPixelHeight(font, 120);
-	
 
 	for (char i = 0; i < (char_count); i++)
 	{
@@ -197,7 +196,6 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 			header.glyphs[glyph_index] = glyph;
 
-			
 		}
 	}
 
@@ -309,9 +307,9 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	float baseline = scale * bounding_y1;
 
-	int bounding_width = bounding_x1 - bounding_x0;
+	int bounding_width = (int)((bounding_x1 - bounding_x0) * scale);
 
-	int bounding_height = bounding_y1 - bounding_y0;
+	int bounding_height = (int)((bounding_y1 - bounding_y0) * scale);
 
 	printf("bounding_x0: %d\n", bounding_x0);
 	printf("bounding_x1: %d\n", bounding_x1);
@@ -322,7 +320,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	printf("baseline: %f\n", baseline);
 
-	FILE *o = fopen("font.ppm", "wb");
+	FILE *o = fopen("data/font.ppm", "wb");
 
 	assert(o);
 
@@ -332,11 +330,11 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	int atlas_height = bounding_height;
 
-	char *atlas_buffer = malloc(atlas_width * atlas_height);
+	uint8_t *atlas_buffer = malloc(atlas_width * atlas_height);
 
 	assert(atlas_buffer);
 
-	// int x_offset = 0;
+	int x_offset = 0;
 	for (char c = start_char; c < one_past_end_char; c++)
 	{
 		int width = 0;
@@ -355,13 +353,51 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 		printf("\n");
 		printf("c: %c\n", c);
+		printf("height: %d\n", height);
+		printf("width: %d\n", width);
 		printf("glyph_x0: %d\n", glyph_x0);
 		printf("glyph_y0: %d\n", glyph_y0);
 		printf("glyph_x1: %d\n", glyph_x1);
 		printf("glyph_y1: %d\n", glyph_y1);
 
+		int y_offset = (int)baseline + glyph_y0;
+
+		for (int row = 0; row < height; row++)
+		{
+			for (int col = 0; col < width; col++)
+			{
+
+				atlas_buffer[(row + y_offset) * atlas_width + (col + x_offset)] = bitmap[row * width + col];
+			}
+		}
+
+		x_offset += bounding_width;
+
 		// int y_offset = baseline
 	}
+
+	fprintf(o, "P6\n");
+	fprintf(o, "%d\n", atlas_width);
+	fprintf(o, "%d\n", atlas_height);
+	fprintf(o, "255\n");
+
+	for (int i = 0; i < atlas_width * atlas_height; i++)
+
+	{
+		uint8_t alpha = atlas_buffer[i];
+		// if (alpha == 255)
+		// {
+		// 	printf("i %d\n", i);
+		// }
+		// printf("pixel %d\n", alpha);
+		fputc(alpha, o);
+		for (int channel = 0; channel < 2; channel++)
+		{
+			fputc(0, o);
+		}
+	}
+
+	fflush(o);
 
 #endif
 }
