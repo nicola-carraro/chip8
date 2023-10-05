@@ -326,6 +326,17 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	assert(o);
 
+	int char_count = one_past_end_char - start_char;
+
+	int atlas_width = bounding_width * char_count;
+
+	int atlas_height = bounding_height;
+
+	char *atlas_buffer = malloc(atlas_width * atlas_height);
+
+	assert(atlas_buffer);
+
+	// int x_offset = 0;
 	for (char c = start_char; c < one_past_end_char; c++)
 	{
 		int width = 0;
@@ -339,8 +350,17 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 		int glyph_y0 = 0;
 
 		int glyph_y1 = 0;
-		stbtt_GetCodepointBitmapBox(info, c, 0, scale, &glyph_x0, &glyph_y0, &glyph_x1, &glyph_y1);
-			bitmap;
+		stbtt_GetCodepointBitmapBox(info, c, scale, scale, &glyph_x0, &glyph_y0, &glyph_x1, &glyph_y1);
+		bitmap;
+
+		printf("\n");
+		printf("c: %c\n", c);
+		printf("glyph_x0: %d\n", glyph_x0);
+		printf("glyph_y0: %d\n", glyph_y0);
+		printf("glyph_x1: %d\n", glyph_x1);
+		printf("glyph_y1: %d\n", glyph_y1);
+
+		// int y_offset = baseline
 	}
 
 #endif
