@@ -104,15 +104,15 @@ typedef struct
 	float v_top;
 	float v_bottom;
 	float y_offset;
-	float u_advancement;
+	float advancement;
 } C8_Atlas_Glyph;
 
 typedef struct
 {
 	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
-	uint32_t total_width_pixels;
-	uint32_t total_height_pixels;
-	float v_line_height;
+	uint32_t width;
+	uint32_t height;
+	float line_height;
 } C8_Atlas_Header;
 
 typedef struct

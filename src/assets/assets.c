@@ -303,6 +303,12 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	stbtt_GetFontBoundingBox(info, &bounding_x0, &bounding_y0, &bounding_x1, &bounding_y1);
 
+	int ascent = 0;
+	int descent = 0;
+	int line_gap = 0;
+
+	stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
+
 	float scale = stbtt_ScaleForPixelHeight(info, (float)pixel_height);
 
 	float baseline = scale * bounding_y1;
@@ -320,10 +326,6 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	printf("baseline: %f\n", baseline);
 
-	FILE *o = fopen("data/font.ppm", "wb");
-
-	assert(o);
-
 	int char_count = one_past_end_char - start_char;
 
 	int atlas_width = bounding_width * char_count;
@@ -333,6 +335,11 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	uint8_t *atlas_buffer = malloc(atlas_width * atlas_height);
 
 	assert(atlas_buffer);
+
+	C8_Atlas_Header header = {
+		.width = bounding_width,
+		.height = bounding_height,
+		.line_height = (descent + ascent + line_gap) * scale};
 
 	int x_offset = 0;
 	for (char c = start_char; c < one_past_end_char; c++)
@@ -349,7 +356,10 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 		int glyph_y1 = 0;
 		stbtt_GetCodepointBitmapBox(info, c, scale, scale, &glyph_x0, &glyph_y0, &glyph_x1, &glyph_y1);
-		bitmap;
+
+		int advanceWidth = 0;
+		int leftSideBearing = 0;
+		stbtt_GetCodepointHMetrics(info, c, &advanceWidth, &leftSideBearing);
 
 		printf("\n");
 		printf("c: %c\n", c);
@@ -371,10 +381,31 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 			}
 		}
 
+		float u_left = (float)atlas_width / (float)x_offset;
+
+		float u_right = (float)atlas_width / (float)(x_offset + width);
+
+		float v_top = (float)atlas_height / (float)y_offset;
+
+		float v_bottom = (float)atlas_height / (float)(y_offset + height);
+
 		x_offset += bounding_width;
 
+		C8_Atlas_Glyph glyph = {
+			.u_left = u_left,
+			.u_right = u_right,
+			.v_top = v_top,
+			.v_bottom = v_bottom,
+			.y_offset = (float)y_offset,
+			.advancement = advanceWidth * scale};
+
+		header.glyphs[c - start_char] = glyph;
 		// int y_offset = baseline
 	}
+
+	FILE *o = fopen("data/font.ppm", "wb");
+
+	assert(o);
 
 	fprintf(o, "P6\n");
 	fprintf(o, "%d\n", atlas_width);
@@ -385,11 +416,6 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	{
 		uint8_t alpha = atlas_buffer[i];
-		// if (alpha == 255)
-		// {
-		// 	printf("i %d\n", i);
-		// }
-		// printf("pixel %d\n", alpha);
 		fputc(alpha, o);
 		for (int channel = 0; channel < 2; channel++)
 		{
@@ -397,7 +423,23 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 		}
 	}
 
-	fflush(o);
+	fclose(o);
+
+	o = fopen("data/fonts", "wb");
+
+	fwrite(&header, sizeof(header), 1, o);
+
+	assert(o);
+
+	for (int i = 0; i < atlas_width * atlas_height; i++)
+
+	{
+		uint8_t alpha = atlas_buffer[i];
+
+		fputc(alpha, o);
+	}
+
+	fclose(o);
 
 #endif
 }

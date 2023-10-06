@@ -111,8 +111,8 @@ BOOL c8_win_load_font(C8_Win_State *state, wchar_t *file_name, i32 name_length)
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
-				atlas_header.total_width_pixels,
-				atlas_header.total_height_pixels,
+				atlas_header.width,
+				atlas_header.height,
 				0,
 				0,
 				D3DFMT_A32B32G32R32F,
@@ -129,12 +129,12 @@ BOOL c8_win_load_font(C8_Win_State *state, wchar_t *file_name, i32 name_length)
 			{
 
 				uint8_t *row_start = (uint8_t *)(out_rect.pBits);
-				for (uint32_t row = 0; row < atlas_header.total_height_pixels; row++)
+				for (uint32_t row = 0; row < atlas_header.height; row++)
 				{
 
-					for (uint32_t column = 0; column < atlas_header.total_width_pixels; column++)
+					for (uint32_t column = 0; column < atlas_header.width; column++)
 					{
-						uint8_t src_pixel = input_bitmap[(row * atlas_header.total_width_pixels) + column];
+						uint8_t src_pixel = input_bitmap[(row * atlas_header.width) + column];
 
 						float alpha = ((float)src_pixel) / 255.0f;
 

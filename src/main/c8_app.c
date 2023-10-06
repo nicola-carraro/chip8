@@ -198,7 +198,7 @@ bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, 
 			return false;
 		}
 
-		glyph_x += glyph.u_advancement * text_size.horizontal_scaling;
+		glyph_x += glyph.advancement * text_size.horizontal_scaling;
 	}
 
 	return true;
@@ -444,7 +444,7 @@ C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float ma
 
 	float vertical_scaling_factor = max_height_pixels / max_v_height;
 
-	float aspect_ratio = ((float)atlas_header->total_width_pixels) / ((float)atlas_header->total_height_pixels);
+	float aspect_ratio = ((float)atlas_header->width) / ((float)atlas_header->height);
 
 	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
 
@@ -461,7 +461,7 @@ C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float ma
 
 		if (i < text_length - 1)
 		{
-			width_pixels += glyph.u_advancement * horizontal_scaling_factor;
+			width_pixels += glyph.advancement * horizontal_scaling_factor;
 		}
 		else
 		{
@@ -546,7 +546,7 @@ bool update_emulator(C8_App_State *state)
 			if (path != NULL)
 			{
 				state->file_name = path;
-				c8_load_roam( path, state);
+				c8_load_roam(path, state);
 			}
 		}
 		state->load_button_down = false;
