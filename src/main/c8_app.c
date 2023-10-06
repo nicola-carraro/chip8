@@ -145,21 +145,6 @@ bool c8_push_text_triangle(C8_App_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8
 
 bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
 {
-	C8_V2 p1 = {0};
-	p1.xy.x = x;
-	p1.xy.y = y;
-
-	C8_V2 p2 = {0};
-	p2.xy.x = x + width;
-	p2.xy.y = y;
-
-	C8_V2 p3 = {0};
-	p3.xy.x = x + width;
-	p3.xy.y = y + height;
-
-	C8_V2 p4 = {0};
-	p4.xy.x = x;
-	p4.xy.y = y + height;
 
 	bool push1 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
 	bool push2 = c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
@@ -171,6 +156,8 @@ bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, 
 
 	return push1 && push2 && push3 && push4 && push5 && push6;
 }
+
+#if 0
 
 bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb)
 {
@@ -202,6 +189,25 @@ bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, 
 	}
 
 	return true;
+}
+
+#endif
+
+void c8_text(C8_App_State *state, char *text, float x, float y, C8_Rgba rgba)
+{
+
+	float x_offset = 0;
+
+	char c = 0;
+
+	while (*text)
+	{
+		c = *text;
+		C8_Atlas_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
+		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset, glyph.width, glyph.height, rgba);
+		x_offset += glyph.advancement;
+		text++;
+	}
 }
 
 bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
@@ -496,30 +502,32 @@ void c8_push_load_button(
 	float button_height)
 {
 
-	float vertical_padding = 5.0f;
+	// float vertical_padding = 5.0f;
 
-	float horizontal_padding = 20.0f;
+	// float horizontal_padding = 20.0f;
 
-	char text[] = "Load";
+	// char text[] = "Load";
 
-	size_t text_length = sizeof(text) - 1;
+	// size_t text_length = sizeof(text) - 1;
 
-	float text_max_width_pixels = button_width - (2.0f * horizontal_padding);
+	// float text_max_width_pixels = button_width - (2.0f * horizontal_padding);
 
-	float text_max_height_pixels = button_height - (2.0f * vertical_padding);
+	// float text_max_height_pixels = button_height - (2.0f * vertical_padding);
 
-	C8_Text_Size text_size = c8_text_scale_for_max_size(text, text_length, text_max_width_pixels, text_max_height_pixels, &state->atlas_header);
+	// C8_Text_Size text_size = c8_text_scale_for_max_size(text, text_length, text_max_width_pixels, text_max_height_pixels, &state->atlas_header);
 
 	C8_Rgba button_color = {0, 0, 0, 255};
 
 	c8_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
 
-	C8_Rgba text_color = {255, 255, 255, 255};
+	C8_Rgba text_color = {0, 0, 255, 255};
 
-	float text_x = button_x + horizontal_padding + ((text_max_width_pixels - text_size.width_pixels) / 2.0f);
-	float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
+	// float text_x = button_x + horizontal_padding + ((text_max_width_pixels - text_size.width_pixels) / 2.0f);
+	// float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
 
-	c8_push_text(state, text, text_length, text_x, text_y, text_size, text_color);
+	// c8_push_text(state, text, text_length, 109, text_size, text_color);
+
+	c8_text(state, "A", 10, 10, text_color);
 }
 
 bool update_emulator(C8_App_State *state)

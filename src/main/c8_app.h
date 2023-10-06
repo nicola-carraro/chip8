@@ -61,9 +61,9 @@ typedef uint8_t u8;
 
 #define C8_FLAG_REG 0xf
 
-#define C8_FIRST_CHAR '!'
+#define C8_FIRST_CHAR 'A'
 
-#define C8_ONE_PAST_LAST_CHAR 0x7f
+#define C8_ONE_PAST_LAST_CHAR 'B'
 
 #define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
 
@@ -104,6 +104,8 @@ typedef struct
 	float v_top;
 	float v_bottom;
 	float y_offset;
+	float width;
+	float height;
 	float advancement;
 } C8_Atlas_Glyph;
 

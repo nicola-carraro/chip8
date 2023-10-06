@@ -381,13 +381,13 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 			}
 		}
 
-		float u_left = (float)atlas_width / (float)x_offset;
+		float u_left = (float)x_offset / (float)atlas_width;
 
-		float u_right = (float)atlas_width / (float)(x_offset + width);
+		float u_right = (float)(x_offset + width) / (float)atlas_width;
 
-		float v_top = (float)atlas_height / (float)y_offset;
+		float v_top = (float)y_offset / (float)atlas_height;
 
-		float v_bottom = (float)atlas_height / (float)(y_offset + height);
+		float v_bottom = (float)(y_offset + height) / (float)atlas_height;
 
 		x_offset += bounding_width;
 
@@ -397,7 +397,10 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 			.v_top = v_top,
 			.v_bottom = v_bottom,
 			.y_offset = (float)y_offset,
-			.advancement = advanceWidth * scale};
+			.width = (float)width,
+			.height = (float)height,
+			.advancement = advanceWidth * scale,
+		};
 
 		header.glyphs[c - start_char] = glyph;
 		// int y_offset = baseline

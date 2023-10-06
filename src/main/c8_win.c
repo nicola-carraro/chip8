@@ -561,7 +561,7 @@ bool c8_win_initd3d(C8_Win_State *state, HWND window)
 			if (SUCCEEDED(vb_created))
 			{
 				result = true;
-				wchar_t file_name[] = L"data/atlas.atl";
+				wchar_t file_name[] = L"data/fonts";
 				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
