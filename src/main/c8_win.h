@@ -42,6 +42,7 @@ typedef struct
 	LPDIRECTSOUND ds;
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	C8_App_State app_state;
+	HWND window;
 
 	bool has_sound;
 	bool is_beeping;
@@ -55,7 +56,7 @@ typedef struct
 	bool has_timer;
 } C8_Win_Timer;
 
-C8_Win_State *global_state;
+static C8_Win_State global_state;
 
 int c8_plat_debug_printf(char *format, ...);
 

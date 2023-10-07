@@ -230,8 +230,7 @@ typedef struct
 	u16 stack[16];
 	u8 stack_pointer;
 	u64 frame_count;
-	C8_Arena transient_arena;
-	C8_Arena file_names_arena;
+	C8_Arena arena;
 	u16 pc;
 	bool initialised;
 	bool program_loaded;
@@ -246,9 +245,6 @@ typedef struct
 	uint32_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
-	bool is_file_dialog_open;
-	C8_String_List file_list;
-	wchar_t *file_name;
 } C8_App_State;
 
 #define C8_FILE_LIST_INITIAL_CAPACITY 10
@@ -271,7 +267,7 @@ const C8_Rgba emulator_color = {0, 0, 0, 255};
 
 bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
-bool c8_push_color_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb);
+bool c8_draw_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
 bool c8_plat_push_text(char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
 

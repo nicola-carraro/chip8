@@ -99,7 +99,7 @@ BOOL c8_win_load_font(C8_Win_State *state, wchar_t *file_name, i32 name_length)
 
 	BOOL result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.transient_arena);
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
 
 	if (file.data)
 	{
@@ -446,7 +446,7 @@ bool c8_win_init_texture(C8_Win_State *state, wchar_t *file_name, i32 name_lengt
 
 	bool result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.transient_arena);
+	C8_File file = c8_plat_read_file(file_name, name_length, &state->app_state.arena);
 
 	if (file.data != 0)
 	{
@@ -763,49 +763,49 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
-		global_state->app_state.running = false;
+		global_state.app_state.running = false;
 	}
 	break;
 	case WM_QUIT:
 	{
-		global_state->app_state.running = false;
+		global_state.app_state.running = false;
 	}
 	break;
 	case WM_SIZE:
 	{
 
-		global_state->app_state.cli_width = LOWORD(lparam);
-		global_state->app_state.cli_height = HIWORD(lparam);
+		global_state.app_state.cli_width = LOWORD(lparam);
+		global_state.app_state.cli_height = HIWORD(lparam);
 
-		if (global_state->d3d_dev != 0)
+		if (global_state.d3d_dev != 0)
 		{
 			D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
-			IDirect3DDevice9_Reset(global_state->d3d_dev, &d3dpp);
+			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
 		}
 	}
 	break;
 	case WM_LBUTTONDOWN:
 	{
-		global_state->app_state.mouse_buttons.left_button.ended_down = true;
-		global_state->app_state.mouse_buttons.left_button.was_pressed = true;
+		global_state.app_state.mouse_buttons.left_button.ended_down = true;
+		global_state.app_state.mouse_buttons.left_button.was_pressed = true;
 	}
 	break;
 	case WM_LBUTTONUP:
 	{
-		global_state->app_state.mouse_buttons.left_button.ended_down = false;
-		global_state->app_state.mouse_buttons.left_button.was_lifted = true;
+		global_state.app_state.mouse_buttons.left_button.ended_down = false;
+		global_state.app_state.mouse_buttons.left_button.was_lifted = true;
 	}
 	break;
 	case WM_RBUTTONDOWN:
 	{
-		global_state->app_state.mouse_buttons.right_button.ended_down = true;
-		global_state->app_state.mouse_buttons.right_button.was_pressed = true;
+		global_state.app_state.mouse_buttons.right_button.ended_down = true;
+		global_state.app_state.mouse_buttons.right_button.was_pressed = true;
 	}
 	break;
 	case WM_RBUTTONUP:
 	{
-		global_state->app_state.mouse_buttons.right_button.ended_down = false;
-		global_state->app_state.mouse_buttons.right_button.was_lifted = true;
+		global_state.app_state.mouse_buttons.right_button.ended_down = false;
+		global_state.app_state.mouse_buttons.right_button.was_lifted = true;
 	}
 	break;
 	case WM_KEYDOWN:
@@ -814,7 +814,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		WORD key_flags = HIWORD(lparam);
 		WORD scan_code = LOBYTE(key_flags);
 		WORD vkey_code = LOWORD(wparam);
-		C8_Control_Keys *controls = &(global_state->app_state.control_keys);
+		C8_Control_Keys *controls = &(global_state.app_state.control_keys);
 		switch (vkey_code)
 		{
 		case VK_RETURN:
@@ -843,7 +843,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		break;
 		}
 
-		C8_Keypad *keypad = &(global_state->app_state.keypad);
+		C8_Keypad *keypad = &(global_state.app_state.keypad);
 		switch (scan_code)
 		{
 		case 2:
@@ -952,9 +952,9 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 {
-	const char *class_name = "chip8";
+	const wchar_t *class_name = L"chip8";
 
-	WNDCLASSA wc;
+	WNDCLASS wc;
 
 	c8_clear_struct(wc);
 
@@ -962,13 +962,13 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 	wc.hInstance = instance;
 	wc.lpszClassName = class_name;
 	HWND window = 0;
-	if (RegisterClassA(&wc) != 0)
+	if (RegisterClass(&wc) != 0)
 	{
 
-		window = CreateWindowExA(
+		window = CreateWindowEx(
 			0,
 			class_name,
-			"Chip 8",
+			L"Chip 8",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 			0,
@@ -978,7 +978,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 	}
 	else
 	{
-		OutputDebugStringA("Could not register window class\n");
+		OutputDebugString(L"Could not register window class\n");
 	}
 
 	return window;
@@ -996,45 +996,6 @@ bool c8_win_process_msgs(C8_Win_State *state, HWND window)
 	if (!state->app_state.running)
 	{
 		return false;
-	}
-
-	return true;
-}
-
-bool c8_plat_list_folder_content(
-	C8_App_State *state,
-	wchar_t *folder_name,
-	size_t folder_name_length)
-{
-	WIN32_FIND_DATA find_data;
-
-#define buffer_size (256)
-
-	assert(folder_name_length < buffer_size - 3);
-	wchar_t buffer[buffer_size];
-
-	wcscpy(buffer, folder_name);
-	wcscat(buffer, L"\\*");
-
-	HANDLE file_handle = FindFirstFile(buffer, &find_data);
-
-	wchar_t *file_name = find_data.cFileName;
-	size_t file_name_length = wcslen(file_name);
-	if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
-	{
-		return false;
-	};
-	if (file_handle != INVALID_HANDLE_VALUE)
-	{
-		while (FindNextFile(file_handle, &find_data))
-		{
-			file_name = find_data.cFileName;
-			file_name_length = wcslen(file_name);
-			if (!c8_push_file_name(&state->file_list, find_data.cFileName, file_name_length + 1))
-			{
-				return false;
-			};
-		}
 	}
 
 	return true;
@@ -1144,127 +1105,136 @@ wchar_t *c8_plat_open_file_dialog()
 	return path;
 }
 
+void c8_plat_message_box(const wchar_t *message)
+{
+	BOOL succeded = MessageBox(
+		global_state.window,
+		message,
+		L"Error",
+		MB_OK);
+
+	if (!succeded)
+	{
+		OutputDebugString(L"Error while showing message box");
+	}
+}
+
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
-
-	printf("Hi\n");
-
-	OutputDebugStringA(cmd_line);
 
 	C8_UNREFERENCED(cmd_line);
 
 	C8_UNREFERENCED(prev_instance);
 
-	global_state = malloc(sizeof(*global_state));
-
-	memset(global_state, 0, sizeof(*global_state));
-
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
+
+	const wchar_t *initError = L"Fatal error while initialising application";
+
+	if (!window)
+	{
+		c8_plat_message_box(initError);
+		return -1;
+	}
+
+	global_state.window = window;
 
 	C8_Win_Timer timer = c8_win_init_timer();
 
 	i32 samples_per_sec = 8000;
-	if (c8_arena_init(&(global_state->app_state.file_names_arena), 5 * 1024 * 1024, 4))
+
+	if (c8_arena_init(&(global_state.app_state.arena), 5 * 1024 * 1024, 4))
 	{
-		if (c8_arena_init(&(global_state->app_state.transient_arena), 5 * 1024 * 1024, 4))
+		if (c8_win_initd3d(&global_state, window))
 		{
-			wchar_t *file_name = c8_win_get_first_argument(GetCommandLine(), &global_state->app_state.transient_arena);
-			global_state->app_state.file_name = file_name;
+			ShowWindow(window, cmd_show);
+			global_state.app_state.running = true;
 
-			if (c8_win_initd3d(global_state, window))
+			global_state.has_sound = false;
+			if (c8_win_init_dsound(&global_state, window, samples_per_sec))
 			{
-				ShowWindow(window, cmd_show);
-				global_state->app_state.running = true;
+				global_state.has_sound = true;
+			}
+			else
+			{
+				OutputDebugStringA("Could not initialize Direct Sound\n");
+				assert(false);
+			}
 
-				global_state->has_sound = false;
-				if (c8_win_init_dsound(global_state, window, samples_per_sec))
+			while (global_state.app_state.running)
+			{
+
+				if (!c8_win_process_msgs(&global_state, window))
 				{
-					global_state->has_sound = true;
+					break;
 				}
-				else
+
+				WINDOWPLACEMENT window_placement;
+				window_placement.length = sizeof(WINDOWPLACEMENT);
+				if (GetWindowPlacement(
+						window,
+						&window_placement))
 				{
-					OutputDebugStringA("Could not initialize Direct Sound\n");
-					assert(false);
-				}
-
-				while (global_state->app_state.running)
-				{
-
-					if (!c8_win_process_msgs(global_state, window))
+					POINT point;
+					if (GetCursorPos(&point))
 					{
-						break;
-					}
-
-					WINDOWPLACEMENT window_placement;
-					window_placement.length = sizeof(WINDOWPLACEMENT);
-					if (GetWindowPlacement(
-							window,
-							&window_placement))
-					{
-						POINT point;
-						if (GetCursorPos(&point))
-						{
-							global_state->app_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
-							global_state->app_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
-						}
-						else
-						{
-							OutputDebugStringA("Could not get mouse position\n");
-							assert(false);
-						}
+						global_state.app_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
+						global_state.app_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
 					}
 					else
 					{
-						OutputDebugStringA("Could not get client position\n");
+						OutputDebugStringA("Could not get mouse position\n");
 						assert(false);
 					}
-
-					if (!c8_app_update(&(global_state->app_state)))
-					{
-						OutputDebugStringA("Could not update app\n");
-						assert(false);
-					}
-
-					if (!c8_win_render(global_state))
-					{
-						OutputDebugStringA("Could not render\n");
-						// assert(false);
-					}
-
-					if (!global_state->is_beeping && global_state->app_state.should_beep)
-					{
-						bool beeped = c8_win_start_beep(global_state);
-						assert(beeped);
-					}
-
-					if (global_state->is_beeping && !global_state->app_state.should_beep)
-					{
-						bool stopped = c8_win_stop_beep(global_state);
-						assert(stopped);
-					}
-
-					float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
-					char str[255];
-					sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-					// OutputDebugStringA(str);
 				}
-			}
+				else
+				{
+					OutputDebugStringA("Could not get client position\n");
+					assert(false);
+				}
 
-			else
-			{
-				OutputDebugStringA("Could not initialize Direct3D\n");
+				if (!c8_app_update(&(global_state.app_state)))
+				{
+					OutputDebugStringA("Could not update app\n");
+					assert(false);
+				}
+
+				if (!c8_win_render(&global_state))
+				{
+					OutputDebugStringA("Could not render\n");
+					// assert(false);
+				}
+
+				if (!global_state.is_beeping && global_state.app_state.should_beep)
+				{
+					bool beeped = c8_win_start_beep(&global_state);
+					assert(beeped);
+				}
+
+				if (global_state.is_beeping && !global_state.app_state.should_beep)
+				{
+					bool stopped = c8_win_stop_beep(&global_state);
+					assert(stopped);
+				}
+
+				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+
+				char str[255];
+				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+				// OutputDebugStringA(str);
 			}
 		}
+
 		else
 		{
-			OutputDebugStringA("Could not open window\n");
+			OutputDebugStringA("Could not initialize Direct3D\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Failed to initialize arena\n");
+		OutputDebugStringA("Could not open window\n");
 	}
+
+	return 0;
 }
 
 void *c8_plat_allocate(psz size)

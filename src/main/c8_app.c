@@ -29,7 +29,7 @@ bool c8_push_frame(C8_App_State *state)
 
 	float frame_y = c8_frame_y(state);
 
-	bool push1 = c8_push_color_rect(
+	bool push1 = c8_draw_rect(
 		state,
 		frame_x,
 		frame_y,
@@ -37,7 +37,7 @@ bool c8_push_frame(C8_App_State *state)
 		C8_FRAME_WIDTH,
 		emulator_color);
 
-	bool push2 = c8_push_color_rect(
+	bool push2 = c8_draw_rect(
 		state,
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
@@ -45,7 +45,7 @@ bool c8_push_frame(C8_App_State *state)
 		C8_MONITOR_HEIGHT,
 		emulator_color);
 
-	bool push3 = c8_push_color_rect(
+	bool push3 = c8_draw_rect(
 		state,
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
@@ -55,7 +55,7 @@ bool c8_push_frame(C8_App_State *state)
 
 	);
 
-	bool push4 = c8_push_color_rect(
+	bool push4 = c8_draw_rect(
 		state,
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
@@ -98,7 +98,7 @@ bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 
 
 void c8_load_roam(wchar_t *filePath, C8_App_State *state)
 {
-	C8_File file = c8_plat_read_file(filePath, wcslen(filePath), &state->transient_arena);
+	C8_File file = c8_plat_read_file(filePath, wcslen(filePath), &state->arena);
 
 	if (file.data != 0)
 	{
@@ -107,31 +107,32 @@ void c8_load_roam(wchar_t *filePath, C8_App_State *state)
 			state->pc = C8_PROG_ADDR;
 			memcpy(state->ram + state->pc, file.data, file.size);
 
-			c8_arena_free_all(&state->transient_arena);
 			state->program_loaded = true;
+
+			c8_arena_free_all(&state->arena);
+
+			const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+				0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+				0x20, 0x60, 0x20, 0x20, 0x70, // 1
+				0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+				0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+				0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+				0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+				0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+				0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+				0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+				0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+				0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+				0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+				0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+				0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+				0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+				0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+			};
+
+			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 		}
 	}
-
-	const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
-		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-		0x20, 0x60, 0x20, 0x20, 0x70, // 1
-		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-	};
-
-	memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 }
 
 bool c8_push_text_triangle(C8_App_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
@@ -193,7 +194,7 @@ bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, 
 
 #endif
 
-void c8_text(C8_App_State *state, char *text, float x, float y, float height, C8_Rgba rgba)
+void c8_draw_text(C8_App_State *state, char *text, float x, float y, float height, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
@@ -241,7 +242,7 @@ bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b
 	return result;
 }
 
-bool c8_push_color_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb)
+bool c8_draw_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb)
 {
 	C8_V2 p1 = {0};
 	p1.xy.x = x;
@@ -277,7 +278,7 @@ bool c8_push_pixels(C8_App_State *state)
 				float frame_x = c8_frame_x(state);
 				float frame_y = c8_frame_y(state);
 
-				bool push = c8_push_color_rect(
+				bool push = c8_draw_rect(
 					state,
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
@@ -496,7 +497,7 @@ C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float ma
 	return scaling;
 }
 
-void c8_push_load_button(
+void c8_draw_button(
 	C8_App_State *state,
 	float button_x,
 	float button_y,
@@ -504,43 +505,16 @@ void c8_push_load_button(
 	float button_height)
 {
 
-	// float vertical_padding = 5.0f;
-
-	// float horizontal_padding = 20.0f;
-
-	// char text[] = "Load";
-
-	// size_t text_length = sizeof(text) - 1;
-
-	// float text_max_width_pixels = button_width - (2.0f * horizontal_padding);
-
-	// float text_max_height_pixels = button_height - (2.0f * vertical_padding);
-
-	// C8_Text_Size text_size = c8_text_scale_for_max_size(text, text_length, text_max_width_pixels, text_max_height_pixels, &state->atlas_header);
-
 	C8_Rgba button_color = {0, 0, 0, 255};
 
-	c8_push_color_rect(state, button_x, button_y, button_width, button_height, button_color);
+	c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
 
-	C8_Rgba text_color = {0, 0, 255, 255};
+	C8_Rgba text_color = {255, 0, 0, 255};
 
-	// float text_x = button_x + horizontal_padding + ((text_max_width_pixels - text_size.width_pixels) / 2.0f);
-	// float text_y = button_y + vertical_padding + ((text_max_height_pixels - text_size.height_pixels) / 2.0f);
-
-	// c8_push_text(state, text, text_length, 109, text_size, text_color);
-
-	c8_text(state, "Load", button_x + 20.0f, button_y + 10.0f, 30.0f, text_color);
-
-	// c8_push_text_vertex(state, 0, 0, text_color.r, text_color.g, text_color.b, text_color.a, 0, 0);
-	// c8_push_text_vertex(state, 100, 0, text_color.r, text_color.g, text_color.b, text_color.a, 1, 0);
-	// c8_push_text_vertex(state, 100, 100, text_color.r, text_color.g, text_color.b, text_color.a, 1, 1);
-
-	// c8_push_text_vertex(state, 0, 0, text_color.r, text_color.g, text_color.b, text_color.a, 0, 0);
-	// c8_push_text_vertex(state, 100, 100, text_color.r, text_color.g, text_color.b, text_color.a, 1, 1);
-	// c8_push_text_vertex(state, 0, 100, text_color.r, text_color.g, text_color.b, text_color.a, 0, 1);
+	c8_draw_text(state, "Load", button_x + 20.0f, button_y + 10.0f, 30.0f, text_color);
 }
 
-bool update_emulator(C8_App_State *state)
+bool c8_update_emulator(C8_App_State *state)
 {
 
 	char buf[256];
@@ -557,13 +531,10 @@ bool update_emulator(C8_App_State *state)
 
 		if (is_mouse_over_button)
 		{
-			state->is_file_dialog_open = true;
-
 			wchar_t *path = c8_plat_open_file_dialog();
 
 			if (path != NULL)
 			{
-				state->file_name = path;
 				c8_load_roam(path, state);
 			}
 		}
@@ -575,9 +546,7 @@ bool update_emulator(C8_App_State *state)
 		state->load_button_down = true;
 	}
 
-	c8_push_load_button(state, button_x, button_y, button_width, button_height);
-
-	c8_plat_debug_printf("MOUSE POSITION : %f, %f\n", state->mouse_position.xy.x, state->mouse_position.xy.y);
+	c8_draw_button(state, button_x, button_y, button_width, button_height);
 
 	if (state->program_loaded)
 	{
@@ -1004,15 +973,8 @@ bool c8_app_update(C8_App_State *state)
 {
 	state->color_vertex_count = 0;
 	state->text_vertex_count = 0;
-	if (!state->program_loaded)
-	{
-		if (state->file_name != NULL)
-		{
-			c8_load_roam(state->file_name, state);
-		}
-	}
 
-	return update_emulator(state);
+	return c8_update_emulator(state);
 }
 
 bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
