@@ -332,12 +332,16 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	int atlas_height = bounding_height;
 
-	uint8_t *atlas_buffer = malloc(atlas_width * atlas_height);
+	int atlas_size = atlas_width * atlas_height;
+
+	uint8_t *atlas_buffer = malloc(atlas_size);
+
+	memset(atlas_buffer, 0, atlas_size);
 
 	assert(atlas_buffer);
 
 	C8_Atlas_Header header = {
-		.width = bounding_width,
+		.width = bounding_width * char_count,
 		.height = bounding_height,
 		.line_height = (descent + ascent + line_gap) * scale};
 
@@ -415,7 +419,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	fprintf(o, "%d\n", atlas_height);
 	fprintf(o, "255\n");
 
-	for (int i = 0; i < atlas_width * atlas_height; i++)
+	for (int i = 0; i < atlas_size; i++)
 
 	{
 		uint8_t alpha = atlas_buffer[i];
@@ -434,7 +438,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	assert(o);
 
-	for (int i = 0; i < atlas_width * atlas_height; i++)
+	for (int i = 0; i < atlas_size; i++)
 
 	{
 		uint8_t alpha = atlas_buffer[i];

@@ -527,7 +527,15 @@ void c8_push_load_button(
 
 	// c8_push_text(state, text, text_length, 109, text_size, text_color);
 
-	c8_text(state, "A", 10, 10, text_color);
+	c8_text(state, "Load", 10, 10, text_color);
+
+	// c8_push_text_vertex(state, 0, 0, text_color.r, text_color.g, text_color.b, text_color.a, 0, 0);
+	// c8_push_text_vertex(state, 100, 0, text_color.r, text_color.g, text_color.b, text_color.a, 1, 0);
+	// c8_push_text_vertex(state, 100, 100, text_color.r, text_color.g, text_color.b, text_color.a, 1, 1);
+
+	// c8_push_text_vertex(state, 0, 0, text_color.r, text_color.g, text_color.b, text_color.a, 0, 0);
+	// c8_push_text_vertex(state, 100, 100, text_color.r, text_color.g, text_color.b, text_color.a, 1, 1);
+	// c8_push_text_vertex(state, 0, 100, text_color.r, text_color.g, text_color.b, text_color.a, 0, 1);
 }
 
 bool update_emulator(C8_App_State *state)

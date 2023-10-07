@@ -63,7 +63,7 @@ typedef uint8_t u8;
 
 #define C8_FIRST_CHAR 'A'
 
-#define C8_ONE_PAST_LAST_CHAR 'B'
+#define C8_ONE_PAST_LAST_CHAR 'z'
 
 #define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
 
