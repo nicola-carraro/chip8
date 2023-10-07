@@ -193,19 +193,21 @@ bool c8_push_text(C8_App_State *state, char *text, size_t text_length, float x, 
 
 #endif
 
-void c8_text(C8_App_State *state, char *text, float x, float y, C8_Rgba rgba)
+void c8_text(C8_App_State *state, char *text, float x, float y, float height, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
 
 	char c = 0;
 
+	float scale = height / state->atlas_header.height;
+
 	while (*text)
 	{
 		c = *text;
 		C8_Atlas_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
-		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset, glyph.width, glyph.height, rgba);
-		x_offset += glyph.advancement;
+		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
+		x_offset += glyph.advancement * scale;
 		text++;
 	}
 }
@@ -527,7 +529,7 @@ void c8_push_load_button(
 
 	// c8_push_text(state, text, text_length, 109, text_size, text_color);
 
-	c8_text(state, "Load", 10, 10, text_color);
+	c8_text(state, "Load", button_x + 20.0f, button_y + 10.0f, 30.0f, text_color);
 
 	// c8_push_text_vertex(state, 0, 0, text_color.r, text_color.g, text_color.b, text_color.a, 0, 0);
 	// c8_push_text_vertex(state, 100, 0, text_color.r, text_color.g, text_color.b, text_color.a, 1, 0);
