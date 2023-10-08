@@ -969,7 +969,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 			0,
 			class_name,
 			L"Chip 8",
-			WS_OVERLAPPEDWINDOW,
+			WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 			CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 			0,
 			0,
