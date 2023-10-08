@@ -34,29 +34,12 @@ typedef struct
 
 typedef struct
 {
-	LPDIRECT3D9 d3d;
-	LPDIRECT3DDEVICE9 d3d_dev;
-	LPDIRECT3DVERTEXBUFFER9 color_vb;
-	LPDIRECT3DVERTEXBUFFER9 text_vb;
-	LPDIRECT3DTEXTURE9 texture;
-	LPDIRECTSOUND ds;
-	LPDIRECTSOUNDBUFFER ds_sec_buf;
-	C8_App_State app_state;
-	HWND window;
-
-	bool has_sound;
-	bool is_beeping;
-
-} C8_Win_State;
-
-typedef struct
-{
 	LARGE_INTEGER perf_freq;
 	LARGE_INTEGER perf_count;
 	bool has_timer;
 } C8_Win_Timer;
 
-static C8_Win_State global_state;
+static C8_State global_state;
 
 int c8_plat_debug_printf(char *format, ...);
 

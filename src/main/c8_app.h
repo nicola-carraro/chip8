@@ -6,6 +6,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define UNICODE
+
+#include <Windows.h>
+#include <d3d9.h>
+#include <DSound.h>
+#include "c8_app.h"
+
 #define C8_DEBUG_PRINT 1
 
 #define C8_MAX_VERTICES (C8_PIXEL_ROWS * C8_PIXEL_COLS * 2 * 3) + (8 * 3)
@@ -245,7 +252,18 @@ typedef struct
 	uint32_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
 	uint32_t text_vertex_count;
-} C8_App_State;
+	LPDIRECT3D9 d3d;
+	LPDIRECT3DDEVICE9 d3d_dev;
+	LPDIRECT3DVERTEXBUFFER9 color_vb;
+	LPDIRECT3DVERTEXBUFFER9 text_vb;
+	LPDIRECT3DTEXTURE9 texture;
+	LPDIRECTSOUND ds;
+	LPDIRECTSOUNDBUFFER ds_sec_buf;
+	HWND window;
+
+	bool has_sound;
+	bool is_beeping;
+} C8_State;
 
 #define C8_FILE_LIST_INITIAL_CAPACITY 10
 
@@ -265,19 +283,19 @@ void c8_plat_debug_out(char *str);
 
 const C8_Rgba emulator_color = {0, 0, 0, 255};
 
-bool c8_push_color_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
+bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
-bool c8_draw_rect(C8_App_State *state, float x, float y, float width, float height, C8_Rgba rgb);
+bool c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
 bool c8_plat_push_text(char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
 
-bool c8_push_glyph(C8_App_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+bool c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
-bool c8_push_text_vertex(C8_App_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena);
 
-bool c8_plat_list_folder_content(C8_App_State *state, wchar_t *folder_name, size_t folder_name_length);
+bool c8_plat_list_folder_content(C8_State *state, wchar_t *folder_name, size_t folder_name_length);
 
 bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length);
 
