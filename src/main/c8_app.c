@@ -104,6 +104,9 @@ void c8_load_roam(wchar_t *filePath, C8_State *state)
 	{
 		if (file.size <= sizeof(state->ram))
 		{
+
+			memset(state->ram, 0, sizeof(state->ram));
+			memset(state->pixels, 0, sizeof(state->pixels));
 			state->pc = C8_PROG_ADDR;
 			memcpy(state->ram + state->pc, file.data, file.size);
 
