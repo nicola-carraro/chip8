@@ -56,7 +56,7 @@ void c8_test_call()
 {
 	c8_test_def("Basic call");
 
-	C8_App_State state;
+	C8_State state;
 
 	c8_clear_struct(state);
 
@@ -77,7 +77,7 @@ void c8_test_add_number_to_register_no_overflow()
 {
 	c8_test_def("Add number to register without overflow");
 
-	C8_App_State state;
+	C8_State state;
 
 	c8_clear_struct(state);
 
@@ -95,7 +95,7 @@ void c8_test_add_number_to_register_overflow()
 {
 
 	c8_test_def("Add number to register with overflow");
-	C8_App_State state;
+	C8_State state;
 
 	c8_clear_struct(state);
 
