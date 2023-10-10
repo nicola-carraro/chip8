@@ -992,9 +992,7 @@ bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
 	}
 	else
 	{
-		OutputDebugStringA("Arena initialization failed");
-		assert(false);
-		arena = 0;
+		C8_LOG_ERROR("Arena initialization failed");
 	}
 
 	return result;

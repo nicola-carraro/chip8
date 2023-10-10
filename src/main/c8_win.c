@@ -251,7 +251,7 @@ C8_Win_Timer c8_win_init_timer()
 	}
 	else
 	{
-		OutputDebugStringA("Could not get performance frequency\n");
+		C8_LOG_ERROR("Could not get performance frequency\n");
 	}
 
 	return result;
@@ -574,12 +574,12 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 			}
 			else
 			{
-				OutputDebugStringA("Failed to create vertex buffer");
+				C8_LOG_ERROR("Failed to create vertex buffer");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Could not create d3d device\n");
+			C8_LOG_ERROR("Could not create d3d device\n");
 		}
 	}
 
@@ -983,6 +983,11 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 			0,
 			instance,
 			0);
+
+		if (!window)
+		{
+			C8_LOG_ERROR("Could not create window");
+		}
 	}
 	else
 	{
@@ -1030,7 +1035,7 @@ bool c8_win_start_beep(C8_State *state)
 	}
 	else
 	{
-		OutputDebugStringA("Could not start beeping\n");
+		C8_LOG_ERROR("Could not start beeping\n");
 	}
 
 	return result;
@@ -1048,7 +1053,7 @@ bool c8_win_stop_beep(C8_State *state)
 	}
 	else
 	{
-		OutputDebugStringA("Could not stop beeping\n");
+		C8_LOG_ERROR("Could not stop beeping\n");
 	}
 
 	return result;
@@ -1123,13 +1128,12 @@ void c8_message_box(const char *message)
 
 	if (!succeded)
 	{
-		OutputDebugString("Error while showing message box");
+		C8_LOG_ERROR("Error while showing message box");
 	}
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
-
 	C8_UNREFERENCED(cmd_line);
 
 	C8_UNREFERENCED(prev_instance);
@@ -1151,96 +1155,93 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	i32 samples_per_sec = 8000;
 
-	if (c8_arena_init(&(global_state.arena), 5 * 1024 * 1024, 4))
+	if (!c8_arena_init(&(global_state.arena), 5 * 1024 * 1024, 4))
 	{
-		if (c8_win_initd3d(&global_state, window))
-		{
-			ShowWindow(window, cmd_show);
-			global_state.running = true;
+		c8_message_box(initError);
+		return -1;
+	}
 
-			global_state.has_sound = false;
-			if (c8_win_init_dsound(&global_state, window, samples_per_sec))
-			{
-				global_state.has_sound = true;
-			}
-			else
-			{
-				OutputDebugStringA("Could not initialize Direct Sound\n");
-				assert(false);
-			}
+	if (!c8_win_initd3d(&global_state, window))
+	{
+		c8_message_box(initError);
+		return -1;
+	}
 
-			while (global_state.running)
-			{
+	ShowWindow(window, cmd_show);
+	global_state.running = true;
 
-				if (!c8_win_process_msgs(&global_state, window))
-				{
-					break;
-				}
-
-				WINDOWPLACEMENT window_placement;
-				window_placement.length = sizeof(WINDOWPLACEMENT);
-				if (GetWindowPlacement(
-						window,
-						&window_placement))
-				{
-					POINT point;
-					if (GetCursorPos(&point))
-					{
-						global_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
-						global_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
-					}
-					else
-					{
-						OutputDebugStringA("Could not get mouse position\n");
-						assert(false);
-					}
-				}
-				else
-				{
-					OutputDebugStringA("Could not get client position\n");
-					assert(false);
-				}
-
-				if (!c8_app_update(&(global_state)))
-				{
-					OutputDebugStringA("Could not update app\n");
-					assert(false);
-				}
-
-				if (!c8_win_render(&global_state))
-				{
-					OutputDebugStringA("Could not render\n");
-					// assert(false);
-				}
-
-				if (!global_state.is_beeping && global_state.should_beep)
-				{
-					bool beeped = c8_win_start_beep(&global_state);
-					assert(beeped);
-				}
-
-				if (global_state.is_beeping && !global_state.should_beep)
-				{
-					bool stopped = c8_win_stop_beep(&global_state);
-					assert(stopped);
-				}
-
-				float milli_elapsed = c8_win_millis_elapsed(&timer, true);
-
-				char str[255];
-				sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-				// OutputDebugStringA(str);
-			}
-		}
-
-		else
-		{
-			OutputDebugStringA("Could not initialize Direct3D\n");
-		}
+	global_state.has_sound = false;
+	if (c8_win_init_dsound(&global_state, window, samples_per_sec))
+	{
+		global_state.has_sound = true;
 	}
 	else
 	{
-		OutputDebugStringA("Could not open window\n");
+		OutputDebugStringA("Could not initialize Direct Sound\n");
+		assert(false);
+	}
+
+	while (global_state.running)
+	{
+
+		if (!c8_win_process_msgs(&global_state, window))
+		{
+			break;
+		}
+
+		WINDOWPLACEMENT window_placement;
+		window_placement.length = sizeof(WINDOWPLACEMENT);
+		if (GetWindowPlacement(
+				window,
+				&window_placement))
+		{
+			POINT point;
+			if (GetCursorPos(&point))
+			{
+				global_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
+				global_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
+			}
+			else
+			{
+				OutputDebugStringA("Could not get mouse position\n");
+				assert(false);
+			}
+		}
+		else
+		{
+			OutputDebugStringA("Could not get client position\n");
+			assert(false);
+		}
+
+		if (!c8_app_update(&(global_state)))
+		{
+			OutputDebugStringA("Could not update app\n");
+			assert(false);
+		}
+
+		if (!c8_win_render(&global_state))
+		{
+			OutputDebugStringA("Could not render\n");
+			// assert(false);
+		}
+
+		if (!global_state.is_beeping && global_state.should_beep)
+		{
+			bool beeped = c8_win_start_beep(&global_state);
+			assert(beeped);
+		}
+
+		if (global_state.is_beeping && !global_state.should_beep)
+		{
+			bool stopped = c8_win_stop_beep(&global_state);
+			assert(stopped);
+		}
+
+		float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+
+		char str[255];
+		sprintf(str, "Milliseconds: %f\n", milli_elapsed);
+		// OutputDebugStringA(str);
 	}
 
 	fflush(stdout);
