@@ -92,12 +92,12 @@ BOOL c8_win_draw_text(C8_State *state)
 	return result;
 }
 
-BOOL c8_win_load_font(C8_State *state, wchar_t *file_name, i32 name_length)
+BOOL c8_win_load_font(C8_State *state, wchar_t *file_name)
 {
 
 	BOOL result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->arena);
+	C8_File file = c8_plat_read_file(file_name, &state->arena);
 
 	if (file.data)
 	{
@@ -439,12 +439,12 @@ bool c8_win_render(C8_State *state)
 	return result;
 }
 
-bool c8_win_init_texture(C8_State *state, wchar_t *file_name, i32 name_length)
+bool c8_win_init_texture(C8_State *state, wchar_t *file_name)
 {
 
 	bool result = false;
 
-	C8_File file = c8_plat_read_file(file_name, name_length, &state->arena);
+	C8_File file = c8_plat_read_file(file_name, &state->arena);
 
 	if (file.data != 0)
 	{
@@ -560,7 +560,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 			{
 				result = true;
 				wchar_t file_name[] = L"data/fonts";
-				c8_win_load_font(state, file_name, C8_ARRCOUNT(file_name) - 1);
+				c8_win_load_font(state, file_name);
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
 				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
@@ -1072,28 +1072,32 @@ wchar_t *c8_win_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 	return first_argument;
 }
 
-wchar_t *c8_plat_open_file_dialog(IFileOpenDialog *file_dialog)
+void c8_load_from_file_dialog(C8_State *state)
 {
 
-	assert(file_dialog);
+	wchar_t path[1024] = {0};
 
-	HRESULT hr = IFileOpenDialog_Show(file_dialog, NULL);
-	LPWSTR path = NULL;
+	OPENFILENAME file_name = {
+		.lStructSize = sizeof(file_name),
+		.hwndOwner = state->window,
+		.hInstance = state->instance,
+		.lpstrFile = path,
+		.nMaxFile = C8_ARRCOUNT(path),
 
-	if (SUCCEEDED(hr))
+	};
+
+	if (GetOpenFileName(&file_name))
 	{
-		IShellItem *file = NULL;
-
-		hr = IFileDialog_GetResult(file_dialog, &file);
-
-		assert(SUCCEEDED(hr));
-
-		hr = IShellItem_GetDisplayName(file, SIGDN_FILESYSPATH, &path);
-
-		assert(SUCCEEDED(hr));
+		c8_load_roam(path, state);
 	}
-
-	return path;
+	else
+	{
+		DWORD error = CommDlgExtendedError();
+		if (error)
+		{
+			c8_message_box(L"Error while opening file");
+		}
+	}
 }
 
 void c8_message_box(const wchar_t *message)
@@ -1123,10 +1127,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
-	hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
-
-	assert(SUCCEEDED(hr));
-
 	const wchar_t *initError = L"Fatal error while initialising application";
 
 	if (!window)
@@ -1136,6 +1136,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	}
 
 	global_state.window = window;
+	global_state.instance = instance;
 
 	C8_Win_Timer timer = c8_win_init_timer();
 
@@ -1158,19 +1159,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				OutputDebugStringA("Could not initialize Direct Sound\n");
 				assert(false);
 			}
-
-			char buffer[1024] = {0};
-
-			OPENFILENAMEA file_name = {
-				.lStructSize = sizeof(file_name),
-				.hwndOwner = window,
-				.hInstance = instance,
-				.lpstrFile = buffer,
-				.nMaxFile = sizeof(buffer),
-
-			};
-
-			assert(GetOpenFileNameA(&file_name));
 
 			while (global_state.running)
 			{
@@ -1262,12 +1250,9 @@ void *c8_plat_allocate(psz size)
 	return result;
 }
 
-C8_File c8_plat_read_file(wchar_t *name, size_t name_length, C8_Arena *arena)
+C8_File c8_plat_read_file(wchar_t *name, C8_Arena *arena)
 {
-	UNREFERENCED_PARAMETER(name_length);
-
-	C8_File result;
-	c8_clear_struct(result);
+	C8_File result = {0};
 
 	wchar_t buf[256];
 	HANDLE f = CreateFile(
@@ -1338,7 +1323,8 @@ C8_File c8_plat_read_file(wchar_t *name, size_t name_length, C8_Arena *arena)
 	}
 	else
 	{
-		swprintf(buf, sizeof(buf) - 1, L"Could not open %s\n", name);
+		DWORD error = GetLastError();
+		swprintf(buf, sizeof(buf) - 1, L"Could not open %s: %d\n", name, error);
 		OutputDebugString(buf);
 	}
 
