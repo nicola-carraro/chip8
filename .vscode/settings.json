@@ -5,7 +5,8 @@
     "c8_app.h": "c",
     "stdlib.h": "c",
     "shobjidl.h": "c",
-    "stb_truetype.h": "c"
+    "stb_truetype.h": "c",
+    "stdbool.h": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

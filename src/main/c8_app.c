@@ -96,7 +96,7 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 	return result;
 }
 
-void c8_load_roam(wchar_t *filePath, C8_State *state)
+void c8_load_roam(char const *const filePath, C8_State *state)
 {
 	C8_File file = c8_plat_read_file(filePath, &state->arena);
 
@@ -536,7 +536,6 @@ bool c8_update_emulator(C8_State *state)
 		{
 			c8_load_from_file_dialog(state);
 		}
-		
 	}
 
 	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button)

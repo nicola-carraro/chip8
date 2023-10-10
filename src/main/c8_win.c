@@ -92,7 +92,7 @@ BOOL c8_win_draw_text(C8_State *state)
 	return result;
 }
 
-BOOL c8_win_load_font(C8_State *state, wchar_t *file_name)
+BOOL c8_win_load_font(C8_State *state, char const *const file_name)
 {
 
 	BOOL result = false;
@@ -439,7 +439,7 @@ bool c8_win_render(C8_State *state)
 	return result;
 }
 
-bool c8_win_init_texture(C8_State *state, wchar_t *file_name)
+bool c8_win_init_texture(C8_State *state, char const *const file_name)
 {
 
 	bool result = false;
@@ -559,7 +559,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 			if (SUCCEEDED(vb_created))
 			{
 				result = true;
-				wchar_t file_name[] = L"data/fonts";
+				const char file_name[] = "data/fonts";
 				c8_win_load_font(state, file_name);
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
@@ -950,7 +950,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 {
-	const wchar_t *class_name = L"chip8";
+	const char *class_name = "chip8";
 
 	WNDCLASS wc = {.lpfnWndProc = WindowProc,
 				   .hInstance = instance,
@@ -963,7 +963,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 		window = CreateWindowEx(
 			0,
 			class_name,
-			L"Chip 8",
+			"Chip 8",
 			WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 			CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 			0,
@@ -973,7 +973,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 	}
 	else
 	{
-		OutputDebugString(L"Could not register window class\n");
+		OutputDebugString("Could not register window class\n");
 	}
 
 	return window;
@@ -1075,7 +1075,7 @@ wchar_t *c8_win_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 void c8_load_from_file_dialog(C8_State *state)
 {
 
-	wchar_t path[1024] = {0};
+	char path[1024] = {0};
 
 	OPENFILENAME file_name = {
 		.lStructSize = sizeof(file_name),
@@ -1095,22 +1095,22 @@ void c8_load_from_file_dialog(C8_State *state)
 		DWORD error = CommDlgExtendedError();
 		if (error)
 		{
-			c8_message_box(L"Error while opening file");
+			c8_message_box("Error while opening file");
 		}
 	}
 }
 
-void c8_message_box(const wchar_t *message)
+void c8_message_box(const char *message)
 {
 	BOOL succeded = MessageBox(
 		global_state.window,
 		message,
-		L"Error",
+		"Error",
 		MB_OK);
 
 	if (!succeded)
 	{
-		OutputDebugString(L"Error while showing message box");
+		OutputDebugString("Error while showing message box");
 	}
 }
 
@@ -1127,7 +1127,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
-	const wchar_t *initError = L"Fatal error while initialising application";
+	const char initError[] = "Fatal error while initialising application";
 
 	if (!window)
 	{
@@ -1250,11 +1250,11 @@ void *c8_plat_allocate(psz size)
 	return result;
 }
 
-C8_File c8_plat_read_file(wchar_t *name, C8_Arena *arena)
+C8_File c8_plat_read_file(char const *const name, C8_Arena *arena)
 {
 	C8_File result = {0};
 
-	wchar_t buf[256];
+	char buf[256];
 	HANDLE f = CreateFile(
 		name,
 		GENERIC_READ,
@@ -1294,37 +1294,37 @@ C8_File c8_plat_read_file(wchar_t *name, C8_Arena *arena)
 					}
 					else
 					{
-						swprintf(buf, sizeof(buf) - 1, L"Could not read %s\n", name);
+						snprintf(buf, sizeof(buf) - 1, "Could not read %s\n", name);
 						OutputDebugString(buf);
 					}
 				}
 				else
 				{
-					OutputDebugString(L"Failed to allocate memory for file");
+					OutputDebugString("Failed to allocate memory for file");
 				}
 			}
 			else
 			{
-				swprintf(buf, sizeof(buf) - 1, L"%s is too large\n", name);
+				snprintf(buf, sizeof(buf) - 1, "%s is too large\n", name);
 				OutputDebugString(buf);
 			}
 		}
 		else
 		{
-			swprintf(buf, sizeof(buf) - 1, L"Could not get size of %s\n", name);
+			snprintf(buf, sizeof(buf) - 1, "Could not get size of %s\n", name);
 			OutputDebugString(buf);
 		}
 
 		if (!CloseHandle(f))
 		{
-			swprintf(buf, sizeof(buf) - 1, L"Could not close %s\n", name);
+			snprintf(buf, sizeof(buf) - 1, "Could not close %s\n", name);
 			OutputDebugString(buf);
 		}
 	}
 	else
 	{
 		DWORD error = GetLastError();
-		swprintf(buf, sizeof(buf) - 1, L"Could not open %s: %d\n", name, error);
+		snprintf(buf, sizeof(buf) - 1, "Could not open %s: %d\n", name, error);
 		OutputDebugString(buf);
 	}
 

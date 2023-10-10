@@ -1,14 +1,13 @@
 #ifndef C8_WIN
 #define C8_WIN
 
-#define UNICODE
+#undef UNICODE
 
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "wchar.h"
 
 #include <Windows.h>
 #include <d3d9.h>
@@ -335,12 +334,12 @@ bool c8_plat_list_folder_content(C8_State *state, wchar_t *folder_name, size_t f
 
 bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length);
 
-C8_File c8_plat_read_file(wchar_t *name, C8_Arena *arena);
+C8_File c8_plat_read_file(char const *const name, C8_Arena *arena);
 
 int c8_plat_debug_printf(char *format, ...);
 
-void c8_message_box(const wchar_t *message);
+void c8_message_box(const char *message);
 
-void c8_load_roam(wchar_t *filePath, C8_State *state);
+void c8_load_roam(char const *const filePath, C8_State *state);
 
 #endif // !C8_WIN
