@@ -948,6 +948,19 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
+void c8_log(char const *const message)
+{
+	printf(message);
+	OutputDebugString(message);
+}
+
+void c8_log_error(char const *const file, uint32_t line, char const *const msg)
+{
+	char buf[1024] = {0};
+	snprintf(buf, sizeof(buf), "ERROR (%s:%u): %s", file, line, msg);
+	c8_log(buf);
+}
+
 HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 {
 	const char *class_name = "chip8";
@@ -1117,13 +1130,11 @@ void c8_message_box(const char *message)
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
 
+	c8_log_error(__FILE__, __LINE__, "trullalla");
+
 	C8_UNREFERENCED(cmd_line);
 
 	C8_UNREFERENCED(prev_instance);
-
-	HRESULT hr = CoInitialize(NULL);
-
-	assert(SUCCEEDED(hr));
 
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
