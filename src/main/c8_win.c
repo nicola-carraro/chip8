@@ -1117,13 +1117,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	C8_UNREFERENCED(prev_instance);
 
-	HRESULT hr =  CoInitialize(NULL);
+	HRESULT hr = CoInitialize(NULL);
 
 	assert(SUCCEEDED(hr));
 
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
-	 hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
+	hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
 
 	assert(SUCCEEDED(hr));
 
@@ -1158,6 +1158,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 				OutputDebugStringA("Could not initialize Direct Sound\n");
 				assert(false);
 			}
+
+			char buffer[1024] = {0};
+
+			OPENFILENAMEA file_name = {
+				.lStructSize = sizeof(file_name),
+				.hwndOwner = window,
+				.hInstance = instance,
+				.lpstrFile = buffer,
+				.nMaxFile = sizeof(buffer),
+
+			};
+
+			assert(GetOpenFileNameA(&file_name));
 
 			while (global_state.running)
 			{
