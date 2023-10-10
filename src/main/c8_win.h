@@ -328,12 +328,6 @@ bool c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, floa
 
 bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
-void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena);
-
-bool c8_plat_list_folder_content(C8_State *state, wchar_t *folder_name, size_t folder_name_length);
-
-bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length);
-
 C8_File c8_plat_read_file(char const *const name, C8_Arena *arena);
 
 int c8_plat_debug_printf(char *format, ...);
