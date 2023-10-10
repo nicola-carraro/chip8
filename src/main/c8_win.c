@@ -1177,7 +1177,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	}
 	else
 	{
-		OutputDebugStringA("Could not initialize Direct Sound\n");
+		C8_LOG_ERROR("Could not initialize Direct Sound\n");
 		assert(false);
 	}
 
@@ -1203,26 +1203,26 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			}
 			else
 			{
-				OutputDebugStringA("Could not get mouse position\n");
+				C8_LOG_ERROR("Could not get mouse position\n");
 				assert(false);
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Could not get client position\n");
+			C8_LOG_ERROR("Could not get client position\n");
 			assert(false);
 		}
 
 		if (!c8_app_update(&(global_state)))
 		{
-			OutputDebugStringA("Could not update app\n");
+			C8_LOG_ERROR("Could not update app\n");
 			assert(false);
 		}
 
 		if (!c8_win_render(&global_state))
 		{
-			OutputDebugStringA("Could not render\n");
-			// assert(false);
+			C8_LOG_ERROR("Could not render\n");
+			assert(false);
 		}
 
 		if (!global_state.is_beeping && global_state.should_beep)
