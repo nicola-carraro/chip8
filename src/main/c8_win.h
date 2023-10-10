@@ -53,8 +53,6 @@ typedef uint8_t u8;
 
 #define C8_ARRCOUNT(a) (sizeof(a) / sizeof(a[0]))
 
-#define C8_LOG_ERROR(msg) (c8_log(L"ERROR %s:%zu, %s", __FILE__, __LINE__, msg))
-
 #define C8_INSTRUCTIONS_PER_SEC 880
 
 #define C8_FRAMES_PER_SEC 60
@@ -86,6 +84,8 @@ typedef uint8_t u8;
 #define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
 #define C8_WIN_TEX_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+
+#define C8_LOG_ERROR(msg) (c8_log_error(__FILE__, __LINE__, msg))
 
 typedef struct
 {

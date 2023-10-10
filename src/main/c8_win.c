@@ -986,7 +986,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 	}
 	else
 	{
-		OutputDebugString("Could not register window class\n");
+		C8_LOG_ERROR("Could not register window class\n");
 	}
 
 	return window;
@@ -1129,8 +1129,6 @@ void c8_message_box(const char *message)
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
 {
-
-	c8_log_error(__FILE__, __LINE__, "trullalla");
 
 	C8_UNREFERENCED(cmd_line);
 
