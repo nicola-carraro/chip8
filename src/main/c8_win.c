@@ -1117,11 +1117,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	C8_UNREFERENCED(prev_instance);
 
-	HRESULT hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
+	HRESULT hr =  CoInitialize(NULL);
 
 	assert(SUCCEEDED(hr));
 
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
+
+	 hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
+
+	assert(SUCCEEDED(hr));
 
 	const wchar_t *initError = L"Fatal error while initialising application";
 
