@@ -5,8 +5,6 @@
 #define COBJMACROS
 
 #include "c8_win.h"
-#include "shobjidl.h"
-#include "wchar.h"
 
 BOOL c8_win_draw_text(C8_State *state)
 {
@@ -562,7 +560,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 			{
 				result = true;
 				wchar_t file_name[] = L"data/fonts";
-				c8_win_load_font(state, file_name, c8_arr_count(file_name) - 1);
+				c8_win_load_font(state, file_name, C8_ARRCOUNT(file_name) - 1);
 				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
 				assert(SUCCEEDED(set_render_state));
 				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
@@ -1074,23 +1072,19 @@ wchar_t *c8_win_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 	return first_argument;
 }
 
-wchar_t *c8_plat_open_file_dialog()
+wchar_t *c8_plat_open_file_dialog(IFileOpenDialog *file_dialog)
 {
 
-	IFileOpenDialog *fileDialog = NULL;
+	assert(file_dialog);
 
-	HRESULT hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &fileDialog);
-
-	assert(SUCCEEDED(hr));
-
-	hr = IFileOpenDialog_Show(fileDialog, NULL);
+	HRESULT hr = IFileOpenDialog_Show(file_dialog, NULL);
 	LPWSTR path = NULL;
 
 	if (SUCCEEDED(hr))
 	{
 		IShellItem *file = NULL;
 
-		hr = IFileDialog_GetResult(fileDialog, &file);
+		hr = IFileDialog_GetResult(file_dialog, &file);
 
 		assert(SUCCEEDED(hr));
 
@@ -1102,7 +1096,7 @@ wchar_t *c8_plat_open_file_dialog()
 	return path;
 }
 
-void c8_plat_message_box(const wchar_t *message)
+void c8_message_box(const wchar_t *message)
 {
 	BOOL succeded = MessageBox(
 		global_state.window,
@@ -1123,13 +1117,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	C8_UNREFERENCED(prev_instance);
 
+	HRESULT hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, &IID_IFileOpenDialog, &global_state.file_dialog);
+
+	assert(SUCCEEDED(hr));
+
 	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
 	const wchar_t *initError = L"Fatal error while initialising application";
 
 	if (!window)
 	{
-		c8_plat_message_box(initError);
+		c8_message_box(initError);
 		return -1;
 	}
 
@@ -1230,6 +1228,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	{
 		OutputDebugStringA("Could not open window\n");
 	}
+
+	fflush(stdout);
 
 	return 0;
 }

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "../main/c8_app.h"
+#include "../main/c8_win.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
@@ -166,7 +166,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	{
 		int32_t current_x = 0;
-		for (char glyph_index = 0; glyph_index < c8_arr_count(header.glyphs); glyph_index++)
+		for (char glyph_index = 0; glyph_index < C8_ARRCOUNT(header.glyphs); glyph_index++)
 		{
 			char c = start_char + glyph_index;
 

@@ -1,7 +1,7 @@
 #ifndef C8_APP_C
 #define C8_APP_C
 
-#include "c8_app.h"
+#include "c8_win.h"
 
 u16 c8_read_instruction(u16 bytes)
 {
@@ -72,9 +72,9 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 {
 	bool result = false;
 
-	assert(state->color_vertex_count < c8_arr_count(state->color_vertices));
+	assert(state->color_vertex_count < C8_ARRCOUNT(state->color_vertices));
 
-	if (state->color_vertex_count < c8_arr_count(state->color_vertices))
+	if (state->color_vertex_count < C8_ARRCOUNT(state->color_vertices))
 	{
 		state->color_vertices[state->color_vertex_count].x = x;
 		state->color_vertices[state->color_vertex_count].y = y;
@@ -220,9 +220,9 @@ bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8
 {
 	bool result = false;
 
-	assert(state->text_vertex_count < c8_arr_count(state->text_vertices));
+	assert(state->text_vertex_count < C8_ARRCOUNT(state->text_vertices));
 
-	if (state->text_vertex_count < c8_arr_count(state->text_vertices))
+	if (state->text_vertex_count < C8_ARRCOUNT(state->text_vertices))
 	{
 		state->text_vertices[state->text_vertex_count].x = x;
 		state->text_vertices[state->text_vertex_count].y = y;
@@ -272,9 +272,9 @@ bool c8_draw_rect(C8_State *state, float x, float y, float width, float height, 
 bool c8_push_pixels(C8_State *state)
 {
 
-	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
+	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
 	{
-		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++)
+		for (i32 c = 0; c < C8_ARRCOUNT(state->pixels[r]); c++)
 		{
 			if (state->pixels[r][c])
 			{
@@ -355,9 +355,9 @@ void c8_reset_key(C8_Key *k)
 
 void c8_debug_display(C8_State *state)
 {
-	for (i32 r = 0; r < c8_arr_count(state->pixels); r++)
+	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
 	{
-		for (i32 c = 0; c < c8_arr_count(state->pixels[r]); c++)
+		for (i32 c = 0; c < C8_ARRCOUNT(state->pixels[r]); c++)
 		{
 
 			if (state->pixels[r][c])
@@ -417,7 +417,7 @@ bool c8_call(C8_State *state, u16 nnn)
 	c8_plat_debug_printf("Call %03x\n", nnn);
 	state->stack[state->stack_pointer] = state->pc;
 	state->stack_pointer++;
-	if (state->stack_pointer >= c8_arr_count(state->stack))
+	if (state->stack_pointer >= C8_ARRCOUNT(state->stack))
 	{
 		assert(false);
 		// TODO: handle stackoverflow
@@ -534,7 +534,7 @@ bool c8_update_emulator(C8_State *state)
 
 		if (is_mouse_over_button)
 		{
-			wchar_t *path = c8_plat_open_file_dialog();
+			wchar_t *path = c8_plat_open_file_dialog(state->file_dialog);
 
 			if (path != NULL)
 			{
@@ -638,7 +638,7 @@ bool c8_update_emulator(C8_State *state)
 
 				c8_plat_debug_printf(
 					buf,
-					c8_arr_count(buf),
+					C8_ARRCOUNT(buf),
 					"Display sprite at %04x at x = v%x (%x), y = v%x (%x) \n",
 					state->index_register,
 					x,
@@ -927,10 +927,10 @@ bool c8_update_emulator(C8_State *state)
 
 	bool push_pixels = c8_push_pixels(state);
 
-	for (int kp = 0; kp < c8_arr_count(state->keypad.keys); kp++)
+	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{
 #if 1
-		snprintf(buf, c8_arr_count(buf), "%x", kp);
+		snprintf(buf, C8_ARRCOUNT(buf), "%x", kp);
 		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
 #endif
 		C8_Key *k = &(state->keypad.keys[kp]);
@@ -943,7 +943,7 @@ bool c8_update_emulator(C8_State *state)
 	c8_debug_keyboard((&state->control_keys.space), "Space");
 	c8_debug_keyboard((&state->control_keys.enter), "Enter");
 #endif
-	for (int ck = 0; ck < c8_arr_count(state->control_keys.keys); ck++)
+	for (int ck = 0; ck < C8_ARRCOUNT(state->control_keys.keys); ck++)
 	{
 		C8_Key *k = &(state->control_keys.keys[ck]);
 		c8_reset_key(k);
@@ -1036,47 +1036,6 @@ void c8_arena_free_all(C8_Arena *arena)
 	assert(arena != 0);
 
 	arena->offset = 0;
-}
-void c8_file_list_init(C8_String_List *file_list, C8_Arena *arena)
-{
-	file_list->arena = arena;
-	file_list->file_names = c8_arena_alloc(arena, C8_FILE_LIST_INITIAL_CAPACITY * sizeof(*(file_list->file_names)));
-	if (file_list->file_names != NULL)
-	{
-		file_list->capacity = C8_FILE_LIST_INITIAL_CAPACITY;
-		file_list->count = 0;
-	}
-}
-
-bool c8_push_file_name(C8_String_List *file_list, wchar_t *file_name, size_t name_length)
-{
-
-	if (file_list->count >= file_list->capacity)
-	{
-		size_t new_capacity = file_list->capacity * 2;
-		C8_String *new_buffer = c8_arena_alloc(file_list->arena, new_capacity * sizeof(*new_buffer));
-		if (!new_buffer)
-		{
-			return false;
-		}
-		memcpy(new_buffer, file_list->file_names, file_list->capacity * sizeof(*new_buffer));
-		file_list->capacity = new_capacity;
-		file_list->file_names = new_buffer;
-	}
-
-	wchar_t *name_buffer = c8_arena_alloc(file_list->arena, name_length * sizeof(wchar_t));
-
-	if (!name_buffer)
-	{
-		return false;
-	}
-
-	memcpy(name_buffer, file_name, name_length);
-	file_list->file_names[file_list->count].length = name_length;
-	file_list->file_names[file_list->count].text = name_buffer;
-	file_list->count++;
-
-	return true;
 }
 
 #endif // !C8_APP_C
