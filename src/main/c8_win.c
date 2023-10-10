@@ -533,7 +533,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 	bool result = false;
 
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
-	if (state->d3d != 0)
+	if (state->d3d)
 	{
 		D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
 		HRESULT device_created = IDirect3D9_CreateDevice(
@@ -709,37 +709,37 @@ bool c8_win_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 							}
 							else
 							{
-								OutputDebugStringA("Could not unlock buffer");
+								C8_LOG_ERROR("Could not unlock buffer");
 							}
 						}
 						else
 						{
-							OutputDebugStringA("Could not lock buffer\n");
+							C8_LOG_ERROR("Could not lock buffer\n");
 						}
 					}
 					else
 					{
-						OutputDebugStringA("Could not create secondary buffer\n");
+						C8_LOG_ERROR("Could not create secondary buffer\n");
 					}
 				}
 				else
 				{
-					OutputDebugStringA("Could not set wave format of buffer\n");
+					C8_LOG_ERROR("Could not set wave format of buffer\n");
 				}
 			}
 			else
 			{
-				OutputDebugStringA("Failed to create primary buffer\n");
+				C8_LOG_ERROR("Failed to create primary buffer\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Failed to set cooperative level\n");
+			C8_LOG_ERROR("Failed to set cooperative level\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Could not create dsound interface\n");
+		C8_LOG_ERROR("Could not create dsound interface\n");
 	}
 
 	return result;
