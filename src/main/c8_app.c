@@ -136,13 +136,11 @@ void c8_load_roam(char const *const filePath, C8_State *state)
 	}
 }
 
-bool c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
+void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
-	bool push1 = c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	bool push2 = c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-	bool push3 = c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
-
-	return push1 && push2 && push3;
+ c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	 c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
 void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
