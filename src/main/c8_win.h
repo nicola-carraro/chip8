@@ -29,7 +29,7 @@ typedef uint8_t u8;
 
 #define C8_UNREFERENCED(a) (a)
 
-#define C8_WIN_DWORD_MAX 4294967295
+#define C8_DWORD_MAX 4294967295
 
 #define C8_RAM_BYTE_SIZE 4096
 
@@ -79,9 +79,9 @@ typedef uint8_t u8;
 
 #define C8_LOAD_BUTTON_Y (10.0f)
 
-#define C8_WIN_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+#define C8_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
-#define C8_WIN_TEX_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+#define C8_TEX_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 #define C8_LOG_ERROR(msg) (c8_log_error(__FILE__, __LINE__, msg))
 
@@ -239,7 +239,7 @@ typedef struct
 	LARGE_INTEGER perf_freq;
 	LARGE_INTEGER perf_count;
 	bool has_timer;
-} C8_Win_Timer;
+} C8_Timer;
 
 typedef struct
 {

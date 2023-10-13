@@ -11,7 +11,7 @@ BOOL c8_win_draw_text(C8_State *state)
 
 	BOOL result = false;
 
-	if (SUCCEEDED(IDirect3DDevice9_SetFVF(state->d3d_dev, C8_WIN_TEX_FVF)))
+	if (SUCCEEDED(IDirect3DDevice9_SetFVF(state->d3d_dev, C8_TEX_FVF)))
 	{
 		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->text_vb, 0, sizeof(C8_Win_Texture_Vertex))))
 		{
@@ -162,7 +162,7 @@ BOOL c8_win_load_font(C8_State *state, char const *const file_name)
 					state->d3d_dev,
 					sizeof(state->text_vertices),
 					0,
-					C8_WIN_TEX_FVF,
+					C8_TEX_FVF,
 					D3DPOOL_MANAGED,
 					&state->text_vb,
 					0);
@@ -215,7 +215,7 @@ D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 	return result;
 }
 
-bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
+bool c8_win_query_perf_count(C8_Timer *timer, LARGE_INTEGER *perf_count)
 {
 	bool result = false;
 	if (QueryPerformanceCounter(perf_count))
@@ -230,9 +230,9 @@ bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
 	return result;
 }
 
-C8_Win_Timer c8_win_init_timer()
+C8_Timer c8_win_init_timer()
 {
-	C8_Win_Timer result = {0};
+	C8_Timer result = {0};
 
 	LARGE_INTEGER perf_freq = {0};
 
@@ -255,7 +255,7 @@ C8_Win_Timer c8_win_init_timer()
 	return result;
 }
 
-float c8_win_compute_millis(C8_Win_Timer timer, LARGE_INTEGER new_perf_count)
+float c8_win_compute_millis(C8_Timer timer, LARGE_INTEGER new_perf_count)
 {
 	float secs_elapsed = ((float)(new_perf_count.QuadPart - timer.perf_count.QuadPart)) /
 						 ((float)(timer.perf_freq.QuadPart));
@@ -265,7 +265,7 @@ float c8_win_compute_millis(C8_Win_Timer timer, LARGE_INTEGER new_perf_count)
 	return result;
 }
 
-float c8_win_millis_elapsed(C8_Win_Timer *timer, bool reset_timer)
+float c8_win_millis_elapsed(C8_Timer *timer, bool reset_timer)
 {
 	float millis_elapsed = -1.0f;
 
@@ -324,7 +324,7 @@ bool c8_draw_color(C8_State *state)
 		{
 			HRESULT fvf_set = IDirect3DDevice9_SetFVF(
 				state->d3d_dev,
-				C8_WIN_D3D_FVF);
+				C8_D3D_FVF);
 
 			if (SUCCEEDED(fvf_set))
 			{
@@ -555,7 +555,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 		state->d3d_dev,
 		sizeof(state->color_vertices),
 		0,
-		C8_WIN_D3D_FVF,
+		C8_D3D_FVF,
 		D3DPOOL_MANAGED,
 		&state->color_vb,
 		0);
@@ -1175,7 +1175,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	global_state.window = window;
 	global_state.instance = instance;
 
-	C8_Win_Timer timer = c8_win_init_timer();
+	C8_Timer timer = c8_win_init_timer();
 
 	i32 samples_per_sec = 8000;
 
@@ -1305,7 +1305,7 @@ C8_File c8_plat_read_file(char const *const name, C8_Arena *arena)
 
 		if (has_sz)
 		{
-			if (f_size.QuadPart <= C8_WIN_DWORD_MAX)
+			if (f_size.QuadPart <= C8_DWORD_MAX)
 			{
 				DWORD bytes_read;
 				void *data = c8_arena_alloc(arena, f_size.QuadPart);
