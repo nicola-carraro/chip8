@@ -23,13 +23,13 @@ float c8_frame_y(C8_State *state)
 	return result;
 }
 
-bool c8_push_frame(C8_State *state)
+void c8_push_frame(C8_State *state)
 {
 	float frame_x = c8_frame_x(state);
 
 	float frame_y = c8_frame_y(state);
 
-	bool push1 = c8_draw_rect(
+	c8_draw_rect(
 		state,
 		frame_x,
 		frame_y,
@@ -37,7 +37,7 @@ bool c8_push_frame(C8_State *state)
 		C8_FRAME_WIDTH,
 		emulator_color);
 
-	bool push2 = c8_draw_rect(
+	c8_draw_rect(
 		state,
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
@@ -45,7 +45,7 @@ bool c8_push_frame(C8_State *state)
 		C8_MONITOR_HEIGHT,
 		emulator_color);
 
-	bool push3 = c8_draw_rect(
+	c8_draw_rect(
 		state,
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
@@ -55,7 +55,7 @@ bool c8_push_frame(C8_State *state)
 
 	);
 
-	bool push4 = c8_draw_rect(
+	c8_draw_rect(
 		state,
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
@@ -64,8 +64,6 @@ bool c8_push_frame(C8_State *state)
 		emulator_color
 
 	);
-
-	return push1 && push2 && push3 && push4;
 }
 
 bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a)
@@ -245,7 +243,7 @@ bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8
 	return result;
 }
 
-bool c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)
 {
 	C8_V2 p1 = {0};
 	p1.xy.x = x;
@@ -263,10 +261,8 @@ bool c8_draw_rect(C8_State *state, float x, float y, float width, float height, 
 	p4.xy.x = x;
 	p4.xy.y = y + height;
 
-	bool push1 = c8_push_color_triangle(state, p1, p2, p3, rgb);
-	bool push2 = c8_push_color_triangle(state, p1, p3, p4, rgb);
-
-	return push1 && push2;
+	c8_push_color_triangle(state, p1, p2, p3, rgb);
+	c8_push_color_triangle(state, p1, p3, p4, rgb);
 }
 
 bool c8_push_pixels(C8_State *state)
@@ -281,18 +277,13 @@ bool c8_push_pixels(C8_State *state)
 				float frame_x = c8_frame_x(state);
 				float frame_y = c8_frame_y(state);
 
-				bool push = c8_draw_rect(
+				c8_draw_rect(
 					state,
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					C8_PIXEL_SIDE,
 					C8_PIXEL_SIDE,
 					emulator_color);
-
-				if (!push)
-				{
-					return false;
-				}
 			}
 		}
 	}
