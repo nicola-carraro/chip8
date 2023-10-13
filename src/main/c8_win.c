@@ -225,7 +225,7 @@ bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
 	else
 	{
 		timer->has_timer = false;
-		OutputDebugStringA("Failed to get perfCount\n");
+		C8_LOG_ERROR("Could not get performance count\n");
 	}
 	return result;
 }
@@ -530,60 +530,87 @@ bool c8_win_init_texture(C8_State *state, char const *const file_name)
 
 bool c8_win_initd3d(C8_State *state, HWND window)
 {
-	bool result = false;
-
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
-	if (state->d3d)
+	if (!state->d3d)
 	{
-		D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
-		HRESULT device_created = IDirect3D9_CreateDevice(
-			state->d3d,
-			D3DADAPTER_DEFAULT,
-			D3DDEVTYPE_HAL,
-			window,
-			D3DCREATE_HARDWARE_VERTEXPROCESSING,
-			&d3dpp,
-			&state->d3d_dev);
-
-		if (SUCCEEDED(device_created))
-		{
-			HRESULT vb_created = IDirect3DDevice9_CreateVertexBuffer(
-				state->d3d_dev,
-				sizeof(state->color_vertices),
-				0,
-				C8_WIN_D3D_FVF,
-				D3DPOOL_MANAGED,
-				&state->color_vb,
-				0);
-
-			if (SUCCEEDED(vb_created))
-			{
-				result = true;
-				const char file_name[] = "data/fonts";
-				c8_win_load_font(state, file_name);
-				HRESULT set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
-				assert(SUCCEEDED(set_render_state));
-				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
-				assert(SUCCEEDED(set_render_state));
-				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-				assert(SUCCEEDED(set_render_state));
-				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-				assert(SUCCEEDED(set_render_state));
-				set_render_state = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-				assert(SUCCEEDED(set_render_state));
-			}
-			else
-			{
-				C8_LOG_ERROR("Failed to create vertex buffer");
-			}
-		}
-		else
-		{
-			C8_LOG_ERROR("Could not create d3d device\n");
-		}
+		C8_LOG_ERROR("Could not create D3D interface\n");
+		return false;
 	}
 
-	return result;
+	D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
+	HRESULT hr = IDirect3D9_CreateDevice(
+		state->d3d,
+		D3DADAPTER_DEFAULT,
+		D3DDEVTYPE_HAL,
+		window,
+		D3DCREATE_HARDWARE_VERTEXPROCESSING,
+		&d3dpp,
+		&state->d3d_dev);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could not create D3D device\n");
+		return false;
+	}
+
+	hr = IDirect3DDevice9_CreateVertexBuffer(
+		state->d3d_dev,
+		sizeof(state->color_vertices),
+		0,
+		C8_WIN_D3D_FVF,
+		D3DPOOL_MANAGED,
+		&state->color_vb,
+		0);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could not create vertex buffer\n");
+		return false;
+	}
+
+	const char file_name[] = "data/fonts";
+
+	if (!c8_win_load_font(state, file_name))
+	{
+		C8_LOG_ERROR("Could not load font\n");
+		return false;
+	}
+	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could notset render state\n");
+		return false;
+	}
+
+	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could notset render state\n");
+		return false;
+	}
+	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could notset render state\n");
+		return false;
+	}
+	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could notset render state\n");
+		return false;
+	}
+	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Could notset render state\n");
+		return false;
+	}
+
+	return true;
 }
 
 void c8_win_process_key(C8_Key *key, WORD key_flags)
@@ -709,7 +736,7 @@ bool c8_win_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 							}
 							else
 							{
-								C8_LOG_ERROR("Could not unlock buffer");
+								C8_LOG_ERROR("Could not unlock buffer\n");
 							}
 						}
 						else
@@ -986,7 +1013,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 
 		if (!window)
 		{
-			C8_LOG_ERROR("Could not create window");
+			C8_LOG_ERROR("Could not create window\n");
 		}
 	}
 	else
@@ -1128,7 +1155,7 @@ void c8_message_box(const char *message)
 
 	if (!succeded)
 	{
-		C8_LOG_ERROR("Error while showing message box");
+		C8_LOG_ERROR("Error while showing message box\n");
 	}
 }
 
@@ -1145,6 +1172,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	if (!window)
 	{
 		c8_message_box(initError);
+		C8_LOG_ERROR("Could not open window'\n");
 		return -1;
 	}
 
@@ -1158,12 +1186,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	if (!c8_arena_init(&(global_state.arena), 5 * 1024 * 1024, 4))
 	{
 		c8_message_box(initError);
+		C8_LOG_ERROR("Could not initialise arena\n");
 		return -1;
 	}
 
 	if (!c8_win_initd3d(&global_state, window))
 	{
 		c8_message_box(initError);
+		C8_LOG_ERROR("Could not initialise Direct3D\n");
 		return -1;
 	}
 
