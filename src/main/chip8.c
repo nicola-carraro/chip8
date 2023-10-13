@@ -13,10 +13,10 @@ BOOL c8_render_text(C8_State *state)
 
 	if (SUCCEEDED(IDirect3DDevice9_SetFVF(state->d3d_dev, C8_TEX_FVF)))
 	{
-		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->text_vb, 0, sizeof(C8_Win_Texture_Vertex))))
+		if (SUCCEEDED(IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->text_vb, 0, sizeof(C8_D3D_Texture_Vertex))))
 		{
 
-			C8_Win_Texture_Vertex *vertices;
+			C8_D3D_Texture_Vertex *vertices;
 
 			HRESULT locked = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void **)&vertices, 0);
 			if (SUCCEEDED(locked))
@@ -25,7 +25,7 @@ BOOL c8_render_text(C8_State *state)
 				for (size_t i = 0; i < state->text_vertex_count; i++)
 				{
 					C8_Texture_Vertex source_vertex = state->text_vertices[i];
-					C8_Win_Texture_Vertex vertex = {0};
+					C8_D3D_Texture_Vertex vertex = {0};
 					vertex.x = source_vertex.x;
 					vertex.y = source_vertex.y;
 					vertex.rhw = 1.0f;
@@ -311,14 +311,14 @@ bool c8_render_color(C8_State *state)
 
 		for (size_t vertex_index = 0; vertex_index < state->color_vertex_count; vertex_index++)
 		{
-			C8_Win_Color_Vertex win_vertex = {0};
+			C8_D3D_Color_Vertex win_vertex = {0};
 			C8_Color_Vertex vertex = state->color_vertices[vertex_index];
 			win_vertex.x = vertex.x;
 			win_vertex.y = vertex.y;
 			win_vertex.rhw = 1.0f;
 			C8_Rgba color = vertex.color;
 			win_vertex.color = D3DCOLOR_ARGB(color.a, color.r, color.g, color.b);
-			((C8_Win_Color_Vertex *)vp)[vertex_index] = win_vertex;
+			((C8_D3D_Color_Vertex *)vp)[vertex_index] = win_vertex;
 		}
 		if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->color_vb)))
 		{
@@ -334,7 +334,7 @@ bool c8_render_color(C8_State *state)
 					0,
 					state->color_vb,
 					0,
-					sizeof(C8_Win_Color_Vertex));
+					sizeof(C8_D3D_Color_Vertex));
 
 				if (SUCCEEDED(stream_src_set))
 				{

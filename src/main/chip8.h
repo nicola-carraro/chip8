@@ -223,7 +223,7 @@ typedef struct
 	D3DCOLOR color;
 	float u;
 	float v;
-} C8_Win_Texture_Vertex;
+} C8_D3D_Texture_Vertex;
 
 typedef struct
 {
@@ -232,7 +232,7 @@ typedef struct
 	FLOAT z;
 	FLOAT rhw;
 	D3DCOLOR color;
-} C8_Win_Color_Vertex;
+} C8_D3D_Color_Vertex;
 
 typedef struct
 {
