@@ -145,18 +145,16 @@ bool c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb
 	return push1 && push2 && push3;
 }
 
-bool c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
 {
 
-	bool push1 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	bool push2 = c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
-	bool push3 = c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
+	c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
 
-	bool push4 = c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	bool push5 = c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
-	bool push6 = c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
-
-	return push1 && push2 && push3 && push4 && push5 && push6;
+	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 }
 
 #if 0
@@ -214,10 +212,8 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, C
 	}
 }
 
-bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
+void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
 {
-	bool result = false;
-
 	assert(state->text_vertex_count < C8_ARRCOUNT(state->text_vertices));
 
 	if (state->text_vertex_count < C8_ARRCOUNT(state->text_vertices))
@@ -233,14 +229,11 @@ bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8
 		color.a = a;
 		state->text_vertices[state->text_vertex_count].color = color;
 		state->text_vertex_count++;
-		result = true;
 	}
 	else
 	{
-		OutputDebugStringA("Vertex buffer size exceeded");
+		C8_LOG_ERROR("Vertex buffer size exceeded");
 	}
-
-	return result;
 }
 
 void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)

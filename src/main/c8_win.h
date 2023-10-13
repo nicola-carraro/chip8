@@ -318,11 +318,9 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 
 void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
-bool c8_plat_push_text(char *text, size_t text_length, float x, float y, C8_Text_Size text_size, C8_Rgba rgb);
+void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
-bool c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
-
-bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 C8_File c8_plat_read_file(char const *const name, C8_Arena *arena);
 
