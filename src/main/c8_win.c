@@ -1335,37 +1335,37 @@ C8_File c8_plat_read_file(char const *const name, C8_Arena *arena)
 					else
 					{
 						snprintf(buf, sizeof(buf) - 1, "Could not read %s\n", name);
-						OutputDebugString(buf);
+						C8_LOG_ERROR(buf);
 					}
 				}
 				else
 				{
-					OutputDebugString("Failed to allocate memory for file");
+					C8_LOG_ERROR("Failed to allocate memory for file");
 				}
 			}
 			else
 			{
 				snprintf(buf, sizeof(buf) - 1, "%s is too large\n", name);
-				OutputDebugString(buf);
+				C8_LOG_ERROR(buf);
 			}
 		}
 		else
 		{
 			snprintf(buf, sizeof(buf) - 1, "Could not get size of %s\n", name);
-			OutputDebugString(buf);
+			C8_LOG_ERROR(buf);
 		}
 
 		if (!CloseHandle(f))
 		{
 			snprintf(buf, sizeof(buf) - 1, "Could not close %s\n", name);
-			OutputDebugString(buf);
+			C8_LOG_ERROR(buf);
 		}
 	}
 	else
 	{
 		DWORD error = GetLastError();
 		snprintf(buf, sizeof(buf) - 1, "Could not open %s: %d\n", name, error);
-		OutputDebugString(buf);
+		C8_LOG_ERROR(buf);
 	}
 
 	return result;
