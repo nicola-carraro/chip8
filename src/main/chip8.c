@@ -1,10 +1,10 @@
 
-#ifndef C8_WIN_C
-#define C8_WIN_C
+#ifndef CHIP8_C
+#define CHIP8_C
 #define _CRT_SECURE_NO_WARNINGS
 #define COBJMACROS
 
-#include "c8_win.h"
+#include "chip8.h"
 
 BOOL c8_render_text(C8_State *state)
 {
@@ -2189,4 +2189,4 @@ void c8_arena_free_all(C8_Arena *arena)
 
 	arena->offset = 0;
 }
-#endif // !C8_WIN_C
+#endif // !CHIP8_C

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "../main/c8_win.h"
+#include "../main/chip8.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"

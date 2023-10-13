@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "../main/c8_win.c"
+#include "../main/chip8.c"
 
 #define c8_test_def(a) (printf("TEST : %s\n", a))
 

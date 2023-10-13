@@ -1,5 +1,5 @@
-#ifndef C8_WIN
-#define C8_WIN
+#ifndef CHIP8_H
+#define CHIP8_H
 
 #undef UNICODE
 
@@ -314,4 +314,4 @@ void c8_load_roam(char const *const filePath, C8_State *state);
 
 void c8_log_error(char const *const file, uint32_t line, char const *const msg);
 
-#endif // !C8_WIN
+#endif // !CHIP8_H
