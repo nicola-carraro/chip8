@@ -462,7 +462,7 @@ void c8_update_emulator(C8_State *state)
 			if (instruction == 0x00e0)
 			{
 				// Clear
-				c8_clear_struct(state->pixels);
+				memset(state->pixels, 0, sizeof(state->pixels));
 			}
 			else if (op == 0x1)
 			{

@@ -49,8 +49,6 @@ typedef uint8_t u8;
 
 #define C8_MONITOR_HEIGHT (C8_SCREEN_HEIGHT + (2 * C8_FRAME_WIDTH))
 
-#define c8_clear_struct(obj) (memset(&obj, 0, sizeof(obj)))
-
 #define C8_ARRCOUNT(a) (sizeof(a) / sizeof(a[0]))
 
 #define C8_INSTRUCTIONS_PER_SEC 880

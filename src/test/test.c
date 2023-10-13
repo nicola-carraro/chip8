@@ -56,9 +56,7 @@ void c8_test_call()
 {
 	c8_test_def("Basic call");
 
-	C8_State state;
-
-	c8_clear_struct(state);
+	C8_State state = {0};
 
 	state.pc = C8_PROG_ADDR;
 
@@ -77,9 +75,7 @@ void c8_test_add_number_to_register_no_overflow()
 {
 	c8_test_def("Add number to register without overflow");
 
-	C8_State state;
-
-	c8_clear_struct(state);
+	C8_State state = {0};
 
 	state.var_registers[0] = 8;
 
@@ -95,9 +91,7 @@ void c8_test_add_number_to_register_overflow()
 {
 
 	c8_test_def("Add number to register with overflow");
-	C8_State state;
-
-	c8_clear_struct(state);
+	C8_State state = {0};
 
 	state.var_registers[0] = 252;
 

@@ -232,11 +232,9 @@ bool c8_win_query_perf_count(C8_Win_Timer *timer, LARGE_INTEGER *perf_count)
 
 C8_Win_Timer c8_win_init_timer()
 {
-	C8_Win_Timer result;
-	c8_clear_struct(result);
-	result.has_timer = false;
+	C8_Win_Timer result = {0};
 
-	LARGE_INTEGER perf_freq;
+	LARGE_INTEGER perf_freq = {0};
 
 	if (QueryPerformanceFrequency(&perf_freq))
 	{
@@ -657,8 +655,7 @@ bool c8_win_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 		HRESULT cl = IDirectSound_SetCooperativeLevel(dsound, window, DSSCL_PRIORITY);
 		if (SUCCEEDED(cl))
 		{
-			DSBUFFERDESC pbuf_desc;
-			c8_clear_struct(pbuf_desc);
+			DSBUFFERDESC pbuf_desc = {0};
 			pbuf_desc.dwSize = sizeof(pbuf_desc);
 			pbuf_desc.dwFlags = DSBCAPS_PRIMARYBUFFER;
 			LPDIRECTSOUNDBUFFER pbuf;
@@ -670,8 +667,7 @@ bool c8_win_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 				HRESULT fset = IDirectSoundBuffer_SetFormat(pbuf, &wformat);
 				if (SUCCEEDED(fset))
 				{
-					DSBUFFERDESC sbuf_desc;
-					c8_clear_struct(sbuf_desc);
+					DSBUFFERDESC sbuf_desc = {0};
 					sbuf_desc.dwSize = sizeof(sbuf_desc);
 					sbuf_desc.dwBufferBytes = buf_bytes;
 					sbuf_desc.lpwfxFormat = &wformat;
