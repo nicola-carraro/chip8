@@ -1109,13 +1109,11 @@ void c8_load_from_file_dialog(C8_State *state)
 
 	char path[1024] = {0};
 
-	char filter[] = {"Chip 8 rom\0*.ch8"};
-
 	OPENFILENAME file_name = {
 		.lStructSize = sizeof(file_name),
 		.hwndOwner = state->window,
 		.hInstance = state->instance,
-		.lpstrFilter = filter,
+		.lpstrFilter = "Chip 8 rom\0*.ch8",
 		.lpstrFile = path,
 		.nMaxFile = C8_ARRCOUNT(path),
 		.lpstrInitialDir = "data"
