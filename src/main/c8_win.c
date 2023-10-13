@@ -6,7 +6,7 @@
 
 #include "c8_win.h"
 
-BOOL c8_win_draw_text(C8_State *state)
+BOOL c8_render_text(C8_State *state)
 {
 
 	BOOL result = false;
@@ -397,7 +397,7 @@ bool c8_win_render(C8_State *state)
 
 			c8_draw_color(state);
 
-			c8_win_draw_text(state);
+			c8_render_text(state);
 		}
 		else
 		{
