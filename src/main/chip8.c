@@ -59,32 +59,32 @@ BOOL c8_render_text(C8_State *state)
 						}
 						else
 						{
-							OutputDebugStringA("Could not draw primitive\n");
+							C8_LOG_ERROR("Could not draw primitive\n");
 						}
 					}
 					else
 					{
-						OutputDebugStringA("Could not set texture\n");
+						C8_LOG_ERROR("Could not set texture\n");
 					}
 				}
 				else
 				{
-					OutputDebugStringA("Could not unlock vertex buffer\n");
+					C8_LOG_ERROR("Could not unlock vertex buffer\n");
 				}
 			}
 			else
 			{
-				OutputDebugStringA("Could not lock vertex buffer\n");
+				C8_LOG_ERROR("Could not lock vertex buffer\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Could not set stream source texture\n");
+			C8_LOG_ERROR("Could not set stream source texture\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Could not set FVF for texture\n");
+		C8_LOG_ERROR("Could not set FVF for texture\n");
 	}
 
 	state->text_vertex_count = 0;
@@ -142,14 +142,12 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 						((float *)row_start)[column * 4 + 3] = alpha;
 					}
 
-					OutputDebugStringA("\n");
-
 					row_start += out_rect.Pitch;
 				}
 			}
 			else
 			{
-				OutputDebugStringA("Could not lock triangle\n");
+				C8_LOG_ERROR("Could not lock triangle\n");
 			}
 
 			input_bitmap = ((uint8_t *)file.data + 2);
@@ -173,17 +171,17 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 				}
 				else
 				{
-					OutputDebugStringA("Could not create vertex buffer\n");
+					C8_LOG_ERROR("Could not create vertex buffer\n");
 				}
 			}
 			else
 			{
-				OutputDebugStringA("Could not unlock rect\n");
+				C8_LOG_ERROR("Could not unlock rect\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Could not create texture\n");
+			C8_LOG_ERROR("Could not create texture\n");
 		}
 	}
 
@@ -472,14 +470,6 @@ bool c8_init_texture(C8_State *state, char const *const file_name)
 					for (u32 column = 0; column < width; column++)
 					{
 						u8 pixel = input_bitmap[(row * width) + column];
-						if (pixel != 0)
-						{
-							OutputDebugStringA("x");
-						}
-						else
-						{
-							OutputDebugStringA(".");
-						}
 
 						for (u32 channel = 0; channel < 4; channel++)
 						{
@@ -489,7 +479,6 @@ bool c8_init_texture(C8_State *state, char const *const file_name)
 							float_count++;
 						}
 					}
-					OutputDebugStringA("\n");
 				}
 
 				HRESULT unlocked = IDirect3DTexture9_UnlockRect(state->texture, 0);
@@ -500,17 +489,17 @@ bool c8_init_texture(C8_State *state, char const *const file_name)
 				}
 				else
 				{
-					OutputDebugStringA("Failed to unlock texture\n");
+					C8_LOG_ERROR("Failed to unlock texture\n");
 				}
 			}
 			else
 			{
-				OutputDebugStringA("Failed to lock texture\n");
+				C8_LOG_ERROR("Failed to lock texture\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Failed to create texture\n");
+			C8_LOG_ERROR("Failed to create texture\n");
 		}
 	}
 
@@ -767,7 +756,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		if (!DestroyWindow(window))
 		{
-			OutputDebugStringA("Could not destroy window\n");
+			C8_LOG_ERROR("Could not destroy window\n");
 		}
 	}
 	break;
@@ -1256,7 +1245,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		char str[255];
 		sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-		// OutputDebugStringA(str);
+		// c8_log(str);
 	}
 
 	fflush(stdout);
@@ -1441,7 +1430,7 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 	}
 	else
 	{
-		OutputDebugStringA("Vertex buffer size exceeded");
+		C8_LOG_ERROR("Vertex buffer size exceeded\n");
 	}
 
 	return result;
