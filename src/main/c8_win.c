@@ -1367,29 +1367,5 @@ C8_File c8_plat_read_file(char const *const name, C8_Arena *arena)
 	return result;
 }
 
-void c8_plat_debug_out(char *str)
-{
-#if C8_DEBUG_PRINT
-
-	OutputDebugStringA(str);
-#endif
-}
-
-int c8_plat_debug_printf(char *format, ...)
-{
-
-#if C8_DEBUG_PRINT
-	char buf[256];
-	va_list argp;
-	va_start(argp, format);
-	int result = vsnprintf(buf, sizeof(buf), format, argp);
-	va_end(argp);
-	OutputDebugStringA(buf);
-	return result;
-#else
-	return 0;
-#endif
-}
-
 #include "c8_app.c"
 #endif // !C8_WIN_C

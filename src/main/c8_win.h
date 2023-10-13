@@ -312,8 +312,6 @@ void c8_arena_free_all(C8_Arena *arena);
 
 void c8_app_update(C8_State *state);
 
-void c8_plat_debug_out(char *str);
-
 const C8_Rgba emulator_color = {0, 0, 0, 255};
 
 bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
@@ -327,8 +325,6 @@ bool c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, floa
 bool c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 C8_File c8_plat_read_file(char const *const name, C8_Arena *arena);
-
-int c8_plat_debug_printf(char *format, ...);
 
 void c8_message_box(const char *message);
 

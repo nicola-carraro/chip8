@@ -300,50 +300,6 @@ bool c8_push_pixels(C8_State *state)
 	return true;
 }
 
-void c8_debug_keyboard(C8_Key *key, char *n)
-{
-	bool printed = false;
-	if (key->started_down)
-	{
-		c8_plat_debug_printf("%s started down\n", n);
-		printed = true;
-	}
-
-	if (key->was_down)
-	{
-		c8_plat_debug_printf("%s was down\n", n);
-		printed = true;
-	}
-
-	if (key->ended_down)
-	{
-		c8_plat_debug_printf("%s ended down\n", n);
-		printed = true;
-	}
-	if (key->was_pressed)
-	{
-		c8_plat_debug_printf("%s was pressed\n", n);
-		printed = true;
-	}
-	if (key->was_lifted)
-	{
-		c8_plat_debug_printf("%s was lifted\n", n);
-		printed = true;
-	}
-
-	if (key->half_transitions != 0)
-	{
-		c8_plat_debug_printf("%s half transitions : %d\n", n, key->half_transitions);
-
-		printed = true;
-	}
-
-	if (printed)
-	{
-		c8_plat_debug_out("\n");
-	}
-}
-
 void c8_reset_key(C8_Key *k)
 {
 	k->started_down = k->ended_down;
@@ -353,53 +309,12 @@ void c8_reset_key(C8_Key *k)
 	k->half_transitions = 0;
 }
 
-void c8_debug_display(C8_State *state)
-{
-	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
-	{
-		for (i32 c = 0; c < C8_ARRCOUNT(state->pixels[r]); c++)
-		{
-
-			if (state->pixels[r][c])
-			{
-				c8_plat_debug_out("x");
-			}
-			else
-			{
-				c8_plat_debug_out(".");
-			}
-		}
-		c8_plat_debug_out("\n");
-	}
-}
-
-void c8_debug_row(u8 row)
-{
-
-	for (i32 i = 0; i < 8; i++)
-	{
-		u8 pixel = (row >> (7 - i)) & 0x01;
-
-		if (pixel == 1)
-		{
-			c8_plat_debug_out("x");
-		}
-		else
-		{
-			c8_plat_debug_out(".");
-		}
-	}
-
-	c8_plat_debug_out("\n");
-}
-
 void c8_add_number_to_register(C8_State *state, u8 x, u8 nn)
 {
 
 	u8 vx = state->var_registers[x];
 	u16 result = (u16)vx + (u16)nn;
 
-	c8_plat_debug_printf("Add %2x to v%x (%2x) = %2x\n", nn, x, vx, result);
 	if (result > 0xff)
 	{
 		state->var_registers[C8_FLAG_REG] = 1;
@@ -414,7 +329,6 @@ void c8_add_number_to_register(C8_State *state, u8 x, u8 nn)
 
 bool c8_call(C8_State *state, u16 nnn)
 {
-	c8_plat_debug_printf("Call %03x\n", nnn);
 	state->stack[state->stack_pointer] = state->pc;
 	state->stack_pointer++;
 	if (state->stack_pointer >= C8_ARRCOUNT(state->stack))
@@ -519,8 +433,6 @@ void c8_draw_button(
 
 bool c8_update_emulator(C8_State *state)
 {
-
-	char buf[256];
 	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
 
 	float button_y = C8_LOAD_BUTTON_Y;
@@ -565,32 +477,25 @@ bool c8_update_emulator(C8_State *state)
 
 			state->pc += 2;
 
-			c8_plat_debug_printf("Pc %02x\n", state->pc);
-
-#if 1
-			sprintf(buf, "Instruction : %04X \n", instruction);
-			c8_plat_debug_out(buf);
-#endif
-
 			if (instruction == 0x00e0)
 			{
-				c8_plat_debug_out("Clear\n");
+				// Clear
 				c8_clear_struct(state->pixels);
 			}
 			else if (op == 0x1)
 			{
-				c8_plat_debug_printf("Jump to %03X\n", nnn);
+				// Jump
 
 				state->pc = nnn;
 			}
 			else if (op == 0x2)
 			{
-
+				// Call
 				c8_call(state, nnn);
 			}
 			else if (instruction == 0x00ee)
 			{
-				c8_plat_debug_out("Return\n");
+				// Return
 
 				state->stack_pointer--;
 				if (state->stack_pointer < 0)
@@ -602,22 +507,23 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if (op == 0x6)
 			{
-				c8_plat_debug_printf("Set register %X to %02X\n", x, nn);
+				// Set register
 				state->var_registers[x] = nn;
 			}
 			else if (op == 0x7)
 			{
+				// Add number to register
 
 				c8_add_number_to_register(state, x, nn);
 			}
 			else if (op == 0xa)
 			{
-				c8_plat_debug_printf("Set index register to %03x\n", nnn);
+				// Set index to register
 				state->index_register = nnn;
 			}
 			else if (op == 0xc)
 			{
-				c8_plat_debug_out("Random\n");
+				// Random
 
 				int random = rand();
 				u8 result = (u8)((u16)random & nn);
@@ -625,27 +531,17 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if (op == 0xd)
 			{
+				// Display sprite
+
 				u8 flag_register = 0;
 				u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
 				u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
 				u8 *sprite_start = state->ram + state->index_register;
 
-				c8_plat_debug_printf(
-					buf,
-					C8_ARRCOUNT(buf),
-					"Display sprite at %04x at x = v%x (%x), y = v%x (%x) \n",
-					state->index_register,
-					x,
-					sprite_x,
-					y,
-					sprite_y);
-
 				for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
 				{
 					u8 sprite_row = *(sprite_start + r);
-					// sprintf(buf, "Row : %x \n", instruction);
-					// c8_plat_debug_out(buf);
-					// c8_debug_row(sprite_row);
+
 					for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
 					{
 						u8 on = (sprite_row >> (7 - c)) & 0x01;
@@ -669,17 +565,11 @@ bool c8_update_emulator(C8_State *state)
 				}
 
 				state->var_registers[C8_FLAG_REG] = flag_register;
-
-#if 0
-			c8_debug_display(state);
-			c8_plat_debug_out("\n");
-#endif
 			}
+			// Skip
 			else if (op == 0x3)
 			{
-#if 0
-			c8_plat_debug_printf( "Skip if v%x (%x) equals %02x\n", x, vx, nn);
-#endif
+
 				if (vx == nn)
 				{
 					state->pc += 2;
@@ -691,16 +581,9 @@ bool c8_update_emulator(C8_State *state)
 				{
 					state->pc += 2;
 				}
-#if 0
-
-			c8_plat_debug_printf( "Skip if v%x (%x) not equals %02x\n", x, vx, nn);
-
-#endif
 			}
 			else if ((instruction & 0xf00f) == 0x5000)
 			{
-				c8_plat_debug_out("Skip if x equals y\n");
-
 				if (state->var_registers[x] == state->var_registers[y])
 				{
 					state->pc += 2;
@@ -708,8 +591,6 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x9000)
 			{
-				c8_plat_debug_out("Skip if x not equals y\n");
-
 				if (state->var_registers[x] != state->var_registers[y])
 				{
 					state->pc += 2;
@@ -717,28 +598,28 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x8000)
 			{
-				c8_plat_debug_out("Set x register to value of y register\n");
+				// Set register to register
 				state->var_registers[x] = state->var_registers[y];
 			}
 			else if ((instruction & 0xf00f) == 0x8001)
 			{
-				c8_plat_debug_out("Binary or\n");
+				// Binary or
 				state->var_registers[x] = state->var_registers[x] | state->var_registers[y];
 			}
 			else if ((instruction & 0xf00f) == 0x8002)
 			{
 				u8 result = vx & vy;
-				c8_plat_debug_printf("v%x = v%x (%x) & v%x (%x) = %x\n", x, x, vx, y, vy, result);
+				// Binary and
 				state->var_registers[x] = result;
 			}
 			else if ((instruction & 0xf00f) == 0x8003)
 			{
-				c8_plat_debug_out("Binary xor\n");
+				// Binary xor
 				state->var_registers[x] = state->var_registers[x] ^ state->var_registers[y];
 			}
 			else if ((instruction & 0xf00f) == 0x8004)
 			{
-				c8_plat_debug_out("x + y\n");
+				// Add
 				u16 result = state->var_registers[x] + state->var_registers[y];
 				if (result > 0xff)
 				{
@@ -752,7 +633,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x8006)
 			{
-				c8_plat_debug_out("Shift right\n");
+				// Shift right
 
 				u8 bit = state->var_registers[x] & 0x1;
 				state->var_registers[x] = state->var_registers[x] >> 1;
@@ -760,7 +641,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x8005)
 			{
-				c8_plat_debug_out("x - y\n");
+				// x - y
 
 				if (state->var_registers[x] > state->var_registers[y])
 				{
@@ -777,7 +658,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x8007)
 			{
-				c8_plat_debug_out("y - x\n");
+				// y - x
 
 				if (state->var_registers[y] > state->var_registers[x])
 				{
@@ -794,7 +675,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf00f) == 0x800e)
 			{
-				c8_plat_debug_out("Shift left\n");
+				// Shift left
 
 				u8 bit = state->var_registers[x] >> 7;
 				state->var_registers[x] = state->var_registers[x] << 1;
@@ -802,7 +683,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf0ff) == 0xE09E)
 			{
-				c8_plat_debug_printf("Skip if %x key is pressed\n", x);
+				// Skip if key pressed
 				u8 key = state->var_registers[x];
 
 				if (state->keypad.keys[key].ended_down)
@@ -812,7 +693,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf0ff) == 0xE0A1)
 			{
-				c8_plat_debug_printf("Skip if %x key is not pressed\n", state->var_registers[x]);
+				// Skip if key is not pressed
 				u8 key = state->var_registers[x];
 				if (!state->keypad.keys[key].ended_down)
 				{
@@ -821,7 +702,7 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf0ff) == 0xF00A)
 			{
-				c8_plat_debug_printf("Wait for %x key\n", x);
+				// Wait for key
 
 				if (!state->keypad.keys[x].ended_down)
 				{
@@ -830,21 +711,23 @@ bool c8_update_emulator(C8_State *state)
 			}
 			else if ((instruction & 0xf0ff) == 0xF007)
 			{
-				c8_plat_debug_out("Set register to delay timer\n");
+				// Get delay timer
 				state->var_registers[x] = state->delay_timer;
 			}
 			else if ((instruction & 0xf0ff) == 0xF015)
 			{
-				c8_plat_debug_out("Set delay timer\n");
+				// Set delay timer
 				state->delay_timer = state->var_registers[x];
 			}
 			else if ((instruction & 0xf0ff) == 0xF018)
 			{
-				c8_plat_debug_out("Set sound timer\n");
+				// Set sound timer
 				state->sound_timer = state->var_registers[x];
 			}
 			else if ((instruction & 0xf0ff) == 0xF01E)
 			{
+
+				// Add to index
 				u16 result = state->index_register + vx;
 
 				if (result > 0x0fff)
@@ -853,23 +736,17 @@ bool c8_update_emulator(C8_State *state)
 					result &= 0x0fff;
 				}
 
-				c8_plat_debug_printf("Add v%x (%x) to index (%x) giving %x\n",
-									 x,
-									 vx,
-									 state->index_register,
-									 result);
-
 				state->index_register = result;
 			}
 			else if ((instruction & 0xf0ff) == 0xF029)
 			{
-				c8_plat_debug_printf("Point index  to font v%x (%x) \n", x, vx);
+				// Point index to font
 				u8 c = (state->var_registers[x]) & 0x0f;
 				state->index_register = C8_FONT_ADDR + (C8_FONT_SIZE * c);
 			}
 			else if ((instruction & 0xf0ff) == 0xF033)
 			{
-				c8_plat_debug_out("Decimal conversion\n");
+				// Decimal conversion
 				u16 start = state->index_register;
 				u8 dividend = state->var_registers[x];
 				u8 divisor = 100;
@@ -883,35 +760,28 @@ bool c8_update_emulator(C8_State *state)
 			else if ((instruction & 0xf0ff) == 0xF055)
 			{
 
+				// Store register
 				u16 start = state->index_register;
-
-				c8_plat_debug_printf(
-					"Store registers 0 to %x at memory  location %2x\n", x, start);
 
 				for (int reg_i = 0; reg_i <= x; reg_i++)
 				{
 					state->ram[start + reg_i] = state->var_registers[reg_i];
-					c8_plat_debug_printf(
-						"v%x = %x\n", reg_i, state->var_registers[reg_i]);
 				}
 			}
 			else if ((instruction & 0xf0ff) == 0xF065)
 			{
-				u16 start = state->index_register;
+				// Load register
 
-				c8_plat_debug_printf(
-					"Load registers 0 to %x from memory location %2x\n", x, start);
+				u16 start = state->index_register;
 
 				for (i32 reg_i = 0; reg_i <= x; reg_i++)
 				{
 					state->var_registers[reg_i] = state->ram[start + reg_i];
-					c8_plat_debug_printf(
-						"v%x = %x\n", reg_i, state->var_registers[reg_i]);
 				}
 			}
 			else
 			{
-				c8_plat_debug_out("Unimplemented instruction\n");
+				C8_LOG_ERROR("Unimplemented instruction\n");
 				assert(false);
 			}
 		}
@@ -923,10 +793,7 @@ bool c8_update_emulator(C8_State *state)
 
 	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{
-#if 1
-		snprintf(buf, C8_ARRCOUNT(buf), "%x", kp);
-		c8_debug_keyboard((&state->keypad.keys[kp]), buf);
-#endif
+
 		C8_Key *k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
 	}
