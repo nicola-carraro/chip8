@@ -216,20 +216,6 @@ typedef struct
 
 typedef struct
 {
-	wchar_t *text;
-	size_t length;
-} C8_String;
-
-typedef struct
-{
-	C8_Arena *arena;
-	C8_String *file_names;
-	size_t count;
-	size_t capacity;
-} C8_String_List;
-
-typedef struct
-{
 	FLOAT x;
 	FLOAT y;
 	FLOAT z;
