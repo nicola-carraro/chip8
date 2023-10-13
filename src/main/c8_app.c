@@ -265,7 +265,7 @@ void c8_draw_rect(C8_State *state, float x, float y, float width, float height, 
 	c8_push_color_triangle(state, p1, p3, p4, rgb);
 }
 
-bool c8_push_pixels(C8_State *state)
+void c8_push_pixels(C8_State *state)
 {
 
 	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
@@ -287,8 +287,6 @@ bool c8_push_pixels(C8_State *state)
 			}
 		}
 	}
-
-	return true;
 }
 
 void c8_reset_key(C8_Key *k)
@@ -422,7 +420,7 @@ void c8_draw_button(
 	c8_draw_text(state, "Load", button_x + 20.0f, button_y + 10.0f, 30.0f, text_color);
 }
 
-bool c8_update_emulator(C8_State *state)
+void c8_update_emulator(C8_State *state)
 {
 	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
 
@@ -778,9 +776,9 @@ bool c8_update_emulator(C8_State *state)
 		}
 	}
 
-	bool push_frame = c8_push_frame(state);
+	c8_push_frame(state);
 
-	bool push_pixels = c8_push_pixels(state);
+	c8_push_pixels(state);
 
 	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{
@@ -820,8 +818,6 @@ bool c8_update_emulator(C8_State *state)
 	{
 		state->delay_timer--;
 	}
-
-	return push_frame && push_pixels;
 }
 
 void c8_app_update(C8_State *state)
