@@ -1115,6 +1115,7 @@ void c8_load_from_file_dialog(C8_State *state)
 		.hInstance = state->instance,
 		.lpstrFile = path,
 		.nMaxFile = C8_ARRCOUNT(path),
+		.lpstrInitialDir = "data"
 
 	};
 
