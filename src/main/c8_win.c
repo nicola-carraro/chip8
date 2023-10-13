@@ -92,12 +92,12 @@ BOOL c8_render_text(C8_State *state)
 	return result;
 }
 
-BOOL c8_win_load_font(C8_State *state, char const *const file_name)
+BOOL c8_load_font(C8_State *state, char const *const file_name)
 {
 
 	BOOL result = false;
 
-	C8_File file = c8_plat_read_file(file_name, &state->arena);
+	C8_File file = c8_read_file(file_name, &state->arena);
 
 	if (file.data)
 	{
@@ -190,7 +190,7 @@ BOOL c8_win_load_font(C8_State *state, char const *const file_name)
 	return result;
 }
 
-D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
+D3DPRESENT_PARAMETERS c8_init_d3d_params(HWND window)
 {
 	D3DPRESENT_PARAMETERS result = {0};
 
@@ -215,7 +215,7 @@ D3DPRESENT_PARAMETERS c8_win_init_d3d_params(HWND window)
 	return result;
 }
 
-bool c8_win_query_perf_count(C8_Timer *timer, LARGE_INTEGER *perf_count)
+bool c8_query_perf_count(C8_Timer *timer, LARGE_INTEGER *perf_count)
 {
 	bool result = false;
 	if (QueryPerformanceCounter(perf_count))
@@ -230,7 +230,7 @@ bool c8_win_query_perf_count(C8_Timer *timer, LARGE_INTEGER *perf_count)
 	return result;
 }
 
-C8_Timer c8_win_init_timer()
+C8_Timer c8_init_timer()
 {
 	C8_Timer result = {0};
 
@@ -240,7 +240,7 @@ C8_Timer c8_win_init_timer()
 	{
 		LARGE_INTEGER perf_count;
 
-		if (c8_win_query_perf_count(&result, &perf_count))
+		if (c8_query_perf_count(&result, &perf_count))
 		{
 			result.has_timer = true;
 			result.perf_freq = perf_freq;
@@ -255,7 +255,7 @@ C8_Timer c8_win_init_timer()
 	return result;
 }
 
-float c8_win_compute_millis(C8_Timer timer, LARGE_INTEGER new_perf_count)
+float c8_compute_millis(C8_Timer timer, LARGE_INTEGER new_perf_count)
 {
 	float secs_elapsed = ((float)(new_perf_count.QuadPart - timer.perf_count.QuadPart)) /
 						 ((float)(timer.perf_freq.QuadPart));
@@ -265,7 +265,7 @@ float c8_win_compute_millis(C8_Timer timer, LARGE_INTEGER new_perf_count)
 	return result;
 }
 
-float c8_win_millis_elapsed(C8_Timer *timer, bool reset_timer)
+float c8_millis_elapsed(C8_Timer *timer, bool reset_timer)
 {
 	float millis_elapsed = -1.0f;
 
@@ -273,10 +273,10 @@ float c8_win_millis_elapsed(C8_Timer *timer, bool reset_timer)
 	{
 		LARGE_INTEGER perf_count;
 
-		if (c8_win_query_perf_count(timer, &perf_count))
+		if (c8_query_perf_count(timer, &perf_count))
 		{
 
-			millis_elapsed = c8_win_compute_millis(*timer, perf_count);
+			millis_elapsed = c8_compute_millis(*timer, perf_count);
 
 			if (reset_timer)
 			{
@@ -288,7 +288,7 @@ float c8_win_millis_elapsed(C8_Timer *timer, bool reset_timer)
 	return millis_elapsed;
 }
 
-bool c8_draw_color(C8_State *state)
+bool c8_render_color(C8_State *state)
 {
 
 	BOOL result = FALSE;
@@ -351,33 +351,33 @@ bool c8_draw_color(C8_State *state)
 					}
 					else
 					{
-						OutputDebugStringA("DrawPrimitive failed\n");
+						C8_LOG_ERROR("DrawPrimitive failed\n");
 					}
 				}
 				else
 				{
-					OutputDebugStringA("SetStreamSource failed\n");
+					C8_LOG_ERROR("SetStreamSource failed\n");
 				}
 			}
 			else
 			{
-				OutputDebugStringA("SetFVF failed\n");
+				C8_LOG_ERROR("SetFVF failed\n");
 			}
 		}
 		else
 		{
-			OutputDebugStringA("Failed to unlock vertex buffer\n");
+			C8_LOG_ERROR("Failed to unlock vertex buffer\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Failed to lock vertex buffer\n");
+		C8_LOG_ERROR("Failed to lock vertex buffer\n");
 	}
 
 	return result;
 }
 
-bool c8_win_render(C8_State *state)
+bool c8_render(C8_State *state)
 {
 
 	bool result = false;
@@ -395,27 +395,18 @@ bool c8_win_render(C8_State *state)
 		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev)))
 		{
 
-			c8_draw_color(state);
+			c8_render_color(state);
 
 			c8_render_text(state);
 		}
 		else
 		{
-			OutputDebugStringA("BeginScene failed\n");
+			C8_LOG_ERROR("BeginScene failed\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Could not clear screen\n");
-
-		if (cleared == D3DERR_INVALIDCALL)
-		{
-			OutputDebugStringA("Invalid call\n");
-		}
-		else
-		{
-			OutputDebugStringA("Something else");
-		}
+		C8_LOG_ERROR("Could not clear screen\n");
 	}
 
 	if (SUCCEEDED(IDirect3DDevice9_EndScene(state->d3d_dev)))
@@ -426,23 +417,23 @@ bool c8_win_render(C8_State *state)
 		}
 		else
 		{
-			OutputDebugStringA("Present failed\n");
+			C8_LOG_ERROR("Present failed\n");
 		}
 	}
 	else
 	{
-		OutputDebugStringA("EndScene failed\n");
+		C8_LOG_ERROR("EndScene failed\n");
 	}
 
 	return result;
 }
 
-bool c8_win_init_texture(C8_State *state, char const *const file_name)
+bool c8_init_texture(C8_State *state, char const *const file_name)
 {
 
 	bool result = false;
 
-	C8_File file = c8_plat_read_file(file_name, &state->arena);
+	C8_File file = c8_read_file(file_name, &state->arena);
 
 	if (file.data != 0)
 	{
@@ -526,7 +517,7 @@ bool c8_win_init_texture(C8_State *state, char const *const file_name)
 	return result;
 }
 
-bool c8_win_initd3d(C8_State *state, HWND window)
+bool c8_initd3d(C8_State *state, HWND window)
 {
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
 	if (!state->d3d)
@@ -535,7 +526,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 		return false;
 	}
 
-	D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
+	D3DPRESENT_PARAMETERS d3dpp = c8_init_d3d_params(window);
 	HRESULT hr = IDirect3D9_CreateDevice(
 		state->d3d,
 		D3DADAPTER_DEFAULT,
@@ -568,7 +559,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 
 	const char file_name[] = "data/fonts";
 
-	if (!c8_win_load_font(state, file_name))
+	if (!c8_load_font(state, file_name))
 	{
 		C8_LOG_ERROR("Could not load font\n");
 		return false;
@@ -611,7 +602,7 @@ bool c8_win_initd3d(C8_State *state, HWND window)
 	return true;
 }
 
-void c8_win_process_key(C8_Key *key, WORD key_flags)
+void c8_process_key(C8_Key *key, WORD key_flags)
 {
 
 	BOOL is_up = (key_flags & KF_UP) == KF_UP;
@@ -630,7 +621,7 @@ void c8_win_process_key(C8_Key *key, WORD key_flags)
 	key->half_transitions++;
 }
 
-bool c8_win_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
+bool c8_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 {
 	bool result = false;
 
@@ -800,7 +791,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		if (global_state.d3d_dev != 0)
 		{
-			D3DPRESENT_PARAMETERS d3dpp = c8_win_init_d3d_params(window);
+			D3DPRESENT_PARAMETERS d3dpp = c8_init_d3d_params(window);
 			IDirect3DDevice9_Reset(global_state.d3d_dev, &d3dpp);
 		}
 	}
@@ -841,25 +832,25 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		case VK_RETURN:
 		{
 			C8_Key *key = &(controls->control_keys.enter);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case VK_ESCAPE:
 		{
 			C8_Key *key = &(controls->control_keys.esc);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 'P':
 		{
 			C8_Key *key = &(controls->control_keys.p);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case VK_SPACE:
 		{
 			C8_Key *key = &(controls->control_keys.space);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		}
@@ -870,97 +861,97 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		case 2:
 		{
 			C8_Key *key = &(keypad->keypad.kp_1);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 3:
 		{
 			C8_Key *key = &(keypad->keypad.kp_2);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 4:
 		{
 			C8_Key *key = &(keypad->keypad.kp_3);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 5:
 		{
 			C8_Key *key = &(keypad->keypad.kp_c);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 16:
 		{
 			C8_Key *key = &(keypad->keypad.kp_4);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 17:
 		{
 			C8_Key *key = &(keypad->keypad.kp_5);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 18:
 		{
 			C8_Key *key = &(keypad->keypad.kp_6);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 19:
 		{
 			C8_Key *key = &(keypad->keypad.kp_d);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 30:
 		{
 			C8_Key *key = &(keypad->keypad.kp_7);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 31:
 		{
 			C8_Key *key = &(keypad->keypad.kp_8);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 32:
 		{
 			C8_Key *key = &(keypad->keypad.kp_9);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 33:
 		{
 			C8_Key *key = &(keypad->keypad.kp_e);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 44:
 		{
 			C8_Key *key = &(keypad->keypad.kp_a);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 45:
 		{
 			C8_Key *key = &(keypad->keypad.kp_0);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 46:
 		{
 			C8_Key *key = &(keypad->keypad.kp_b);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		case 47:
 		{
 			C8_Key *key = &(keypad->keypad.kp_f);
-			c8_win_process_key(key, key_flags);
+			c8_process_key(key, key_flags);
 		}
 		break;
 		}
@@ -984,7 +975,7 @@ void c8_log_error(char const *const file, uint32_t line, char const *const msg)
 	c8_log(buf);
 }
 
-HWND c8_win_create_window(HINSTANCE instance, int width, int height)
+HWND c8_create_window(HINSTANCE instance, int width, int height)
 {
 	const char *class_name = "chip8";
 
@@ -1020,7 +1011,7 @@ HWND c8_win_create_window(HINSTANCE instance, int width, int height)
 	return window;
 }
 
-bool c8_win_process_msgs(C8_State *state, HWND window)
+bool c8_process_msgs(C8_State *state, HWND window)
 {
 	MSG msg;
 	while (PeekMessage(&msg, window, 0, 0, PM_REMOVE))
@@ -1046,7 +1037,7 @@ bool c8_push_color_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rg
 	return push1 && push2 && push3;
 }
 
-bool c8_win_start_beep(C8_State *state)
+bool c8_start_beep(C8_State *state)
 {
 	bool result = false;
 
@@ -1064,7 +1055,7 @@ bool c8_win_start_beep(C8_State *state)
 	return result;
 }
 
-bool c8_win_stop_beep(C8_State *state)
+bool c8_stop_beep(C8_State *state)
 {
 	bool result = false;
 
@@ -1082,7 +1073,7 @@ bool c8_win_stop_beep(C8_State *state)
 	return result;
 }
 
-wchar_t *c8_win_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
+wchar_t *c8_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 {
 	wchar_t *first_argument = 0;
 
@@ -1161,7 +1152,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 	C8_UNREFERENCED(prev_instance);
 
-	HWND window = c8_win_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
+	HWND window = c8_create_window(instance, CW_USEDEFAULT, CW_USEDEFAULT);
 
 	const char initError[] = "Fatal error while initialising application";
 
@@ -1175,7 +1166,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	global_state.window = window;
 	global_state.instance = instance;
 
-	C8_Timer timer = c8_win_init_timer();
+	C8_Timer timer = c8_init_timer();
 
 	i32 samples_per_sec = 8000;
 
@@ -1186,7 +1177,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		return -1;
 	}
 
-	if (!c8_win_initd3d(&global_state, window))
+	if (!c8_initd3d(&global_state, window))
 	{
 		c8_message_box(initError);
 		C8_LOG_ERROR("Could not initialise Direct3D\n");
@@ -1197,7 +1188,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	global_state.running = true;
 
 	global_state.has_sound = false;
-	if (c8_win_init_dsound(&global_state, window, samples_per_sec))
+	if (c8_init_dsound(&global_state, window, samples_per_sec))
 	{
 		global_state.has_sound = true;
 	}
@@ -1210,7 +1201,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	while (global_state.running)
 	{
 
-		if (!c8_win_process_msgs(&global_state, window))
+		if (!c8_process_msgs(&global_state, window))
 		{
 			break;
 		}
@@ -1241,7 +1232,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		c8_app_update(&global_state);
 
-		if (!c8_win_render(&global_state))
+		if (!c8_render(&global_state))
 		{
 			C8_LOG_ERROR("Could not render\n");
 			assert(false);
@@ -1249,17 +1240,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		if (!global_state.is_beeping && global_state.should_beep)
 		{
-			bool beeped = c8_win_start_beep(&global_state);
+			bool beeped = c8_start_beep(&global_state);
 			assert(beeped);
 		}
 
 		if (global_state.is_beeping && !global_state.should_beep)
 		{
-			bool stopped = c8_win_stop_beep(&global_state);
+			bool stopped = c8_stop_beep(&global_state);
 			assert(stopped);
 		}
 
-		float milli_elapsed = c8_win_millis_elapsed(&timer, true);
+		float milli_elapsed = c8_millis_elapsed(&timer, true);
 
 		char str[255];
 		sprintf(str, "Milliseconds: %f\n", milli_elapsed);
@@ -1271,7 +1262,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	return 0;
 }
 
-void *c8_plat_allocate(psz size)
+void *c8_allocate(psz size)
 {
 	void *result = VirtualAlloc(
 		0,
@@ -1282,7 +1273,7 @@ void *c8_plat_allocate(psz size)
 	return result;
 }
 
-C8_File c8_plat_read_file(char const *const name, C8_Arena *arena)
+C8_File c8_read_file(char const *const name, C8_Arena *arena)
 {
 	C8_File result = {0};
 

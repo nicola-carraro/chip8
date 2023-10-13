@@ -96,7 +96,7 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 
 void c8_load_roam(char const *const filePath, C8_State *state)
 {
-	C8_File file = c8_plat_read_file(filePath, &state->arena);
+	C8_File file = c8_read_file(filePath, &state->arena);
 
 	if (file.data != 0)
 	{
@@ -138,9 +138,9 @@ void c8_load_roam(char const *const filePath, C8_State *state)
 
 void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
- c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	 c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
+	c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
 void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
@@ -825,7 +825,7 @@ bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
 
 	assert(size % alignement == 0);
 
-	void *mem = c8_plat_allocate(size);
+	void *mem = c8_allocate(size);
 
 	if (mem != 0)
 	{
