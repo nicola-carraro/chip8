@@ -1243,11 +1243,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			assert(false);
 		}
 
-		if (!c8_app_update(&(global_state)))
-		{
-			C8_LOG_ERROR("Could not update app\n");
-			assert(false);
-		}
+		c8_app_update(&global_state);
 
 		if (!c8_win_render(&global_state))
 		{

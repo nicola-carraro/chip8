@@ -304,15 +304,13 @@ static C8_State global_state;
 
 void *c8_plat_allocate(psz size);
 
-bool c8_app_update();
-
 void *c8_arena_alloc(C8_Arena *arena, psz size);
 
 bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement);
 
 void c8_arena_free_all(C8_Arena *arena);
 
-bool c8_app_update();
+void c8_app_update(C8_State *state);
 
 void c8_plat_debug_out(char *str);
 

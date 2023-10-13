@@ -966,12 +966,12 @@ bool c8_update_emulator(C8_State *state)
 	return push_frame && push_pixels;
 }
 
-bool c8_app_update(C8_State *state)
+void c8_app_update(C8_State *state)
 {
 	state->color_vertex_count = 0;
 	state->text_vertex_count = 0;
 
-	return c8_update_emulator(state);
+	c8_update_emulator(state);
 }
 
 bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
