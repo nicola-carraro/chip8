@@ -1500,7 +1500,6 @@ void c8_load_rom(const char *path, C8_State *state)
 
 	if (handle == INVALID_HANDLE_VALUE)
 	{
-
 		C8_LOG_ERROR("Could not read rom: ");
 		c8_logln(path);
 		goto cleanup;
@@ -1510,16 +1509,19 @@ void c8_load_rom(const char *path, C8_State *state)
 
 	if (size > sizeof(state->ram))
 	{
-		c8_message_box("File is too large for emulator's RAM");
+		c8_message_box("File is too large for emulator's RAM\n");
 		goto cleanup;
 	}
 
 	char *buffer = c8_arena_alloc(&state->arena, size);
 
+	if (!buffer) {
+		C8_LOG_ERROR("Could not allocate memory for ROM\n");
+		goto cleanup;
+	}
+
 	if (c8_read_file(handle, buffer, size))
 	{
-		if (size <= sizeof(state->ram))
-		{
 
 			memset(state->ram, 0, sizeof(state->ram));
 			memset(state->pixels, 0, sizeof(state->pixels));
@@ -1550,7 +1552,7 @@ void c8_load_rom(const char *path, C8_State *state)
 			};
 
 			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
-		}
+	
 	}
 	else
 	{
