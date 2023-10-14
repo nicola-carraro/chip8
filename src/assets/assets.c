@@ -49,7 +49,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 	assert(atlas_buffer);
 
-	C8_Atlas_Header header = {
+	C8_Font header = {
 		.width = bounding_width * char_count,
 		.height = bounding_height,
 		.line_height = (descent + ascent + line_gap) * scale};
@@ -95,7 +95,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 		x_offset += bounding_width;
 
-		C8_Atlas_Glyph glyph = {
+		C8_Glyph glyph = {
 			.u_left = u_left,
 			.u_right = u_right,
 			.v_top = v_top,

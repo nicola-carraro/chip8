@@ -101,7 +101,7 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 
 	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
-		C8_Atlas_Header atlas_header = *((C8_Atlas_Header *)file.data);
+		C8_Font atlas_header = *((C8_Font *)file.data);
 
 		state->atlas_header = atlas_header;
 
@@ -1576,7 +1576,7 @@ void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgb
 	c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
-void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
 {
 
 	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
@@ -1600,7 +1600,7 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, f
 	while (*text)
 	{
 		c = *text;
-		C8_Atlas_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
+		C8_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
 		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
 		x_offset += glyph.width * scale;
 		x_offset += spacing * scale;
@@ -1719,7 +1719,7 @@ bool c8_call(C8_State *state, u16 nnn)
 	return true;
 }
 
-float c8_max_v_height(char *text, size_t text_length, C8_Atlas_Header *atlas_header)
+float c8_max_v_height(char *text, size_t text_length, C8_Font *atlas_header)
 {
 
 	float result = 0.0f;
@@ -1728,7 +1728,7 @@ float c8_max_v_height(char *text, size_t text_length, C8_Atlas_Header *atlas_hea
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Atlas_Glyph glyph = atlas_header->glyphs[glyph_index];
+		C8_Glyph glyph = atlas_header->glyphs[glyph_index];
 
 		float v_height = glyph.v_bottom - glyph.v_top;
 
@@ -1741,7 +1741,7 @@ float c8_max_v_height(char *text, size_t text_length, C8_Atlas_Header *atlas_hea
 	return result;
 }
 
-C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float max_width_pixels, float max_height_pixels, C8_Atlas_Header *atlas_header)
+C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float max_width_pixels, float max_height_pixels, C8_Font *atlas_header)
 {
 
 	float max_v_height = c8_max_v_height(text, text_length, atlas_header);
@@ -1761,7 +1761,7 @@ C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float ma
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Atlas_Glyph glyph = atlas_header->glyphs[glyph_index];
+		C8_Glyph glyph = atlas_header->glyphs[glyph_index];
 
 		if (i < text_length - 1)
 		{
@@ -1792,21 +1792,76 @@ C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float ma
 	return scaling;
 }
 
+float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
+{
+	float result = 0.0f;
+	float scale = text_height / font->height;
+	while (*text)
+	{
+		char c = *text;
+		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
+		result += glyph.width * scale;
+		result += spacing * scale;
+		text++;
+	}
+
+	return result;
+}
+
+float c8_text_max_height(C8_Font *font, const char *text, float text_height)
+{
+	float result = 0.0f;
+	float scale = text_height / font->height;
+	while (*text)
+	{
+		char c = *text;
+		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
+		float glyph_height = glyph.height * scale;
+		if (glyph_height > result)
+		{
+			result = glyph_height;
+		}
+		text++;
+	}
+
+	return result;
+}
+
 void c8_draw_button(
 	C8_State *state,
 	float button_x,
 	float button_y,
 	float button_width,
-	float button_height)
+	float button_height,
+	float border,
+	float text_height,
+	float text_spacing)
 {
 
-	C8_Rgba button_color = {255, 255, 255, 255};
+	// C8_Rgba button_color = {255, 255, 255, 255};
 
-	c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
+	// c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
 
 	C8_Rgba text_color = {0, 0, 0, 255};
 
-	c8_draw_text(state, "Load", button_x + 15.0f, button_y + 10.0f, 80.0f, 5.0f, text_color);
+	c8_draw_rect(state, button_x, button_y, button_width, border, text_color);
+
+	c8_draw_rect(state, button_x, button_y, border, button_height, text_color);
+
+	c8_draw_rect(state, button_x, button_y + button_height - border, button_width, border, text_color);
+
+	c8_draw_rect(state, button_x + button_width - border, button_y, border, button_height, text_color);
+
+	char text[] = "Load";
+
+	float text_max_height = c8_text_max_height(&state->atlas_header, text, text_height);
+
+	float top_offset = (button_height - text_max_height) / 2.0f;
+
+	float text_width = c8_text_width(&state->atlas_header, text, text_height, text_spacing);
+	float left_offset = (button_width - text_width) / 2.0f;
+
+	c8_draw_text(state, text, button_x + left_offset, button_y + top_offset, text_height, text_spacing, text_color);
 }
 
 void c8_update_emulator(C8_State *state)
@@ -1833,7 +1888,7 @@ void c8_update_emulator(C8_State *state)
 		state->load_button_down = true;
 	}
 
-	c8_draw_button(state, button_x, button_y, button_width, button_height);
+	c8_draw_button(state, button_x, button_y, button_width, button_height, C8_LOAD_BUTTON_BORDER, C8_TEXT_HEIGHT, C8_TEXT_SPACING);
 
 	if (state->program_loaded)
 	{

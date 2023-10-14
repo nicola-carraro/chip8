@@ -73,11 +73,17 @@ typedef uint8_t u8;
 
 #define C8_CHAR_COUNT (C8_ONE_PAST_LAST_CHAR - C8_FIRST_CHAR)
 
-#define C8_LOAD_BUTTON_WIDTH (100.0f)
+#define C8_LOAD_BUTTON_WIDTH (150.0f)
 
-#define C8_LOAD_BUTTON_HEIGHT (50.0f)
+#define C8_LOAD_BUTTON_HEIGHT (70.0f)
+
+#define C8_LOAD_BUTTON_BORDER (3.0f)
 
 #define C8_LOAD_BUTTON_Y (10.0f)
+
+#define C8_TEXT_HEIGHT (80.0f)
+
+#define C8_TEXT_SPACING (3.0f)
 
 #define C8_D3D_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
@@ -119,15 +125,15 @@ typedef struct
 	float width;
 	float height;
 	float advancement;
-} C8_Atlas_Glyph;
+} C8_Glyph;
 
 typedef struct
 {
-	C8_Atlas_Glyph glyphs[C8_CHAR_COUNT];
+	C8_Glyph glyphs[C8_CHAR_COUNT];
 	uint32_t width;
 	uint32_t height;
 	float line_height;
-} C8_Atlas_Header;
+} C8_Font;
 
 typedef struct
 {
@@ -262,7 +268,7 @@ typedef struct
 	C8_Keypad keypad;
 	C8_Control_Keys control_keys;
 	bool should_beep;
-	C8_Atlas_Header atlas_header;
+	C8_Font atlas_header;
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
 	bool load_button_down;
@@ -302,7 +308,7 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 
 void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
-void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
 void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
