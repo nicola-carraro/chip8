@@ -1102,7 +1102,7 @@ void c8_load_from_file_dialog(C8_State *state)
 		.lStructSize = sizeof(file_name),
 		.hwndOwner = state->window,
 		.hInstance = state->instance,
-		.lpstrFilter = "Chip 8 rom\0*.ch8",
+		.lpstrFilter = "Chip 8 rom (*.ch8)\0*.ch8\0All files (*.*)'\0*.*",
 		.lpstrFile = path,
 		.nMaxFile = C8_ARRCOUNT(path),
 		.lpstrInitialDir = "data"
@@ -2079,17 +2079,10 @@ void c8_update_emulator(C8_State *state)
 
 	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{
-
 		C8_Key *k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
 	}
 
-#if 0
-	c8_debug_keyboard((&state->control_keys.esc), "Esc");
-	c8_debug_keyboard((&state->control_keys.p), "P");
-	c8_debug_keyboard((&state->control_keys.space), "Space");
-	c8_debug_keyboard((&state->control_keys.enter), "Enter");
-#endif
 	for (int ck = 0; ck < C8_ARRCOUNT(state->control_keys.keys); ck++)
 	{
 		C8_Key *k = &(state->control_keys.keys[ck]);
