@@ -306,7 +306,7 @@ void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, floa
 
 void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
-C8_File c8_read_file(char const *const name, C8_Arena *arena);
+bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result);
 
 void c8_message_box(const char *message);
 

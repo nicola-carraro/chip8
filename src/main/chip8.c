@@ -97,9 +97,9 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 
 	BOOL result = false;
 
-	C8_File file = c8_read_file(file_name, &state->arena);
+	C8_File file = {0};
 
-	if (file.data)
+	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
 		C8_Atlas_Header atlas_header = *((C8_Atlas_Header *)file.data);
 
@@ -183,6 +183,10 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 		{
 			C8_LOG_ERROR("Could not create texture\n");
 		}
+	}
+	else
+	{
+		C8_LOG_ERROR("Could not load font\n");
 	}
 
 	return result;
@@ -431,9 +435,9 @@ bool c8_init_texture(C8_State *state, char const *const file_name)
 
 	bool result = false;
 
-	C8_File file = c8_read_file(file_name, &state->arena);
+	C8_File file = {0};
 
-	if (file.data != 0)
+	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
 
 		UINT width = ((UINT *)file.data)[0];
@@ -501,6 +505,11 @@ bool c8_init_texture(C8_State *state, char const *const file_name)
 		{
 			C8_LOG_ERROR("Failed to create texture\n");
 		}
+	}
+
+	else
+	{
+		C8_LOG_ERROR("Could not read texture file\n");
 	}
 
 	return result;
@@ -957,6 +966,12 @@ void c8_log(char const *const message)
 	OutputDebugString(message);
 }
 
+void c8_logln(char const *const message)
+{
+	c8_log(message);
+	c8_log("\n");
+}
+
 void c8_log_error(char const *const file, uint32_t line, char const *const msg)
 {
 	char buf[1024] = {0};
@@ -1264,13 +1279,10 @@ void *c8_allocate(psz size)
 	return result;
 }
 
-C8_File c8_read_file(char const *const name, C8_Arena *arena)
+HANDLE c8_open_file_for_read(const char *path)
 {
-	C8_File result = {0};
-
-	char buf[256];
 	HANDLE f = CreateFile(
-		name,
+		path,
 		GENERIC_READ,
 		FILE_SHARE_READ,
 		0,
@@ -1278,68 +1290,108 @@ C8_File c8_read_file(char const *const name, C8_Arena *arena)
 		FILE_ATTRIBUTE_NORMAL,
 		0);
 
+	if (f == INVALID_HANDLE_VALUE)
+	{
+		C8_LOG_ERROR("Could not open file");
+		c8_logln(path);
+	}
+
+	return f;
+}
+
+uint64_t file_size(HANDLE file)
+{
+
+	uint64_t result = 0;
+	LARGE_INTEGER f_size = {0};
+	if (GetFileSizeEx(
+			file,
+			&f_size))
+	{
+		result = f_size.QuadPart;
+	}
+	else
+	{
+		C8_LOG_ERROR("Could not get size of file");
+	}
+
+	return result;
+}
+
+bool c8_read_file(HANDLE f, char *buffer, uint64_t total_bytes_to_read)
+{
+	while (total_bytes_to_read > 0)
+	{
+		DWORD bytes_to_read;
+		if (total_bytes_to_read <= MAXDWORD)
+		{
+			bytes_to_read = (DWORD)total_bytes_to_read;
+		}
+		else
+		{
+			bytes_to_read = MAXDWORD;
+		}
+
+		DWORD bytes_read;
+
+		if (!ReadFile(
+				f,
+				buffer,
+				bytes_to_read,
+				&bytes_read,
+				0))
+		{
+			return false;
+		}
+
+		total_bytes_to_read -= bytes_read;
+	}
+
+	return true;
+}
+
+bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result)
+{
+
+	bool result = false;
+	char buf[256];
+
+	HANDLE f = c8_open_file_for_read(path);
 	if (f != INVALID_HANDLE_VALUE)
 	{
-		LARGE_INTEGER f_size;
-		BOOL has_sz = GetFileSizeEx(
-			f,
-			&f_size);
+		uint64_t size = file_size(f);
 
-		if (has_sz)
+		void *data = c8_arena_alloc(arena, size);
+
+		if (data != 0)
 		{
-			if (f_size.QuadPart <= C8_DWORD_MAX)
+			if (c8_read_file(f, data, size))
 			{
-				DWORD bytes_read;
-				void *data = c8_arena_alloc(arena, f_size.QuadPart);
-
-				if (data != 0)
-				{
-					BOOL read = ReadFile(
-						f,
-						data,
-						f_size.LowPart,
-						&bytes_read,
-						0);
-
-					if (read)
-					{
-						result.size = bytes_read;
-						result.data = data;
-					}
-					else
-					{
-						snprintf(buf, sizeof(buf) - 1, "Could not read %s\n", name);
-						C8_LOG_ERROR(buf);
-					}
-				}
-				else
-				{
-					C8_LOG_ERROR("Failed to allocate memory for file");
-				}
+				read_result->size = size;
+				read_result->data = data;
+				result = true;
 			}
 			else
 			{
-				snprintf(buf, sizeof(buf) - 1, "%s is too large\n", name);
-				C8_LOG_ERROR(buf);
+				C8_LOG_ERROR("Could not read file: ");
+				c8_logln(path);
 			}
 		}
 		else
 		{
-			snprintf(buf, sizeof(buf) - 1, "Could not get size of %s\n", name);
-			C8_LOG_ERROR(buf);
+			C8_LOG_ERROR("Could not allocate memory for file");
 		}
 
 		if (!CloseHandle(f))
 		{
-			snprintf(buf, sizeof(buf) - 1, "Could not close %s\n", name);
+			snprintf(buf, sizeof(buf) - 1, "Could not close %s\n", path);
 			C8_LOG_ERROR(buf);
 		}
 	}
 	else
 	{
-		DWORD error = GetLastError();
-		snprintf(buf, sizeof(buf) - 1, "Could not open %s: %d\n", name, error);
-		C8_LOG_ERROR(buf);
+		C8_LOG_ERROR("Could not open file:");
+		c8_logln(path);
 	}
 
 	return result;
@@ -1436,9 +1488,17 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 	return result;
 }
 
-void c8_load_roam(char const *const filePath, C8_State *state)
+void c8_load_roam(const char *path, C8_State *state)
 {
-	C8_File file = c8_read_file(filePath, &state->arena);
+	C8_File file = {0};
+
+	if (!c8_read_entire_file(path, &state->arena, &file))
+	{
+		C8_LOG_ERROR("Could not read file: ");
+		c8_logln(path);
+
+		c8_message_box("Could not read file");
+	}
 
 	if (file.data != 0)
 	{
