@@ -1515,7 +1515,8 @@ void c8_load_rom(const char *path, C8_State *state)
 
 	char *buffer = c8_arena_alloc(&state->arena, size);
 
-	if (!buffer) {
+	if (!buffer)
+	{
 		C8_LOG_ERROR("Could not allocate memory for ROM\n");
 		goto cleanup;
 	}
@@ -1523,36 +1524,35 @@ void c8_load_rom(const char *path, C8_State *state)
 	if (c8_read_file(handle, buffer, size))
 	{
 
-			memset(state->ram, 0, sizeof(state->ram));
-			memset(state->pixels, 0, sizeof(state->pixels));
-			state->pc = C8_PROG_ADDR;
-			memcpy(state->ram + state->pc, buffer, size);
+		memset(state->ram, 0, sizeof(state->ram));
+		memset(state->pixels, 0, sizeof(state->pixels));
+		state->pc = C8_PROG_ADDR;
+		memcpy(state->ram + state->pc, buffer, size);
 
-			state->program_loaded = true;
+		state->program_loaded = true;
 
-			c8_arena_free_all(&state->arena);
+		c8_arena_free_all(&state->arena);
 
-			const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
-				0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-				0x20, 0x60, 0x20, 0x20, 0x70, // 1
-				0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-				0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-				0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-				0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-				0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-				0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-				0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-				0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-				0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-				0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-				0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-				0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-				0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-				0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-			};
+		const u8 font_sprites[C8_FONT_SIZE * C8_FONT_COUNT] = {
+			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+			0x20, 0x60, 0x20, 0x20, 0x70, // 1
+			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+		};
 
-			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
-	
+		memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 	}
 	else
 	{
@@ -1563,10 +1563,10 @@ void c8_load_rom(const char *path, C8_State *state)
 	}
 
 cleanup:
-	if (handle != INVALID_HANDLE_VALUE) {
+	if (handle != INVALID_HANDLE_VALUE)
+	{
 		c8_close_file(handle);
 	}
-	
 }
 
 void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
@@ -1588,7 +1588,7 @@ void c8_push_glyph(C8_State *state, C8_Atlas_Glyph glyph, float x, float y, floa
 	c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 }
 
-void c8_draw_text(C8_State *state, char *text, float x, float y, float height, C8_Rgba rgba)
+void c8_draw_text(C8_State *state, char *text, float x, float y, float height, float spacing, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
@@ -1602,7 +1602,8 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, C
 		c = *text;
 		C8_Atlas_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
 		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
-		x_offset += glyph.advancement * scale;
+		x_offset += glyph.width * scale;
+		x_offset += spacing * scale;
 		text++;
 	}
 }
@@ -1799,13 +1800,13 @@ void c8_draw_button(
 	float button_height)
 {
 
-	C8_Rgba button_color = {0, 0, 0, 255};
+	C8_Rgba button_color = {255, 255, 255, 255};
 
 	c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
 
-	C8_Rgba text_color = {255, 0, 0, 255};
+	C8_Rgba text_color = {0, 0, 0, 255};
 
-	c8_draw_text(state, "Load", button_x + 20.0f, button_y + 10.0f, 30.0f, text_color);
+	c8_draw_text(state, "Load", button_x + 15.0f, button_y + 10.0f, 80.0f, 5.0f, text_color);
 }
 
 void c8_update_emulator(C8_State *state)

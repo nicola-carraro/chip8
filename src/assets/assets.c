@@ -147,13 +147,12 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	}
 
 	fclose(o);
-
 }
 
 int main(void)
 {
 
-	char file_name[] = "..\\src\\assets\\data\\MonospaceTypewriter.ttf";
+	char file_name[] = "..\\src\\assets\\data\\VT323-Regular.ttf";
 	FILE *i = fopen(file_name, "rb");
 
 	if (i != 0)
@@ -175,7 +174,7 @@ int main(void)
 				stbtt_fontinfo font;
 				stbtt_InitFont(&font, data, stbtt_GetFontOffsetForIndex(data, 0));
 
-				write_atlas(&font, 80, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR);
+				write_atlas(&font, 120, C8_FIRST_CHAR, C8_ONE_PAST_LAST_CHAR);
 			}
 			else
 			{
