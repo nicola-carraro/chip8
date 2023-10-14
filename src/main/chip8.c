@@ -1126,7 +1126,7 @@ void c8_load_from_file_dialog(C8_State *state)
 
 	if (GetOpenFileName(&file_name))
 	{
-		c8_load_roam(path, state);
+		c8_load_rom(path, state);
 	}
 	else
 	{
@@ -1299,7 +1299,7 @@ HANDLE c8_open_file_for_read(const char *path)
 	return f;
 }
 
-uint64_t file_size(HANDLE file)
+uint64_t c8_file_size(HANDLE file)
 {
 
 	uint64_t result = 0;
@@ -1350,6 +1350,11 @@ bool c8_read_file(HANDLE f, char *buffer, uint64_t total_bytes_to_read)
 	return true;
 }
 
+bool c8_close_file(HANDLE file)
+{
+	return CloseHandle(file);
+}
+
 bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result)
 {
 
@@ -1359,7 +1364,7 @@ bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result
 	HANDLE f = c8_open_file_for_read(path);
 	if (f != INVALID_HANDLE_VALUE)
 	{
-		uint64_t size = file_size(f);
+		uint64_t size = c8_file_size(f);
 
 		void *data = c8_arena_alloc(arena, size);
 
@@ -1382,7 +1387,7 @@ bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result
 			C8_LOG_ERROR("Could not allocate memory for file");
 		}
 
-		if (!CloseHandle(f))
+		if (!c8_close_file(f))
 		{
 			snprintf(buf, sizeof(buf) - 1, "Could not close %s\n", path);
 			C8_LOG_ERROR(buf);
@@ -1488,27 +1493,38 @@ bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 	return result;
 }
 
-void c8_load_roam(const char *path, C8_State *state)
+void c8_load_rom(const char *path, C8_State *state)
 {
-	C8_File file = {0};
 
-	if (!c8_read_entire_file(path, &state->arena, &file))
+	HANDLE handle = c8_open_file_for_read(path);
+
+	if (handle == INVALID_HANDLE_VALUE)
 	{
-		C8_LOG_ERROR("Could not read file: ");
-		c8_logln(path);
 
-		c8_message_box("Could not read file");
+		C8_LOG_ERROR("Could not read rom: ");
+		c8_logln(path);
+		goto cleanup;
 	}
 
-	if (file.data != 0)
+	uint64_t size = c8_file_size(handle);
+
+	if (size > sizeof(state->ram))
 	{
-		if (file.size <= sizeof(state->ram))
+		c8_message_box("File is too large for emulator's RAM");
+		goto cleanup;
+	}
+
+	char *buffer = c8_arena_alloc(&state->arena, size);
+
+	if (c8_read_file(handle, buffer, size))
+	{
+		if (size <= sizeof(state->ram))
 		{
 
 			memset(state->ram, 0, sizeof(state->ram));
 			memset(state->pixels, 0, sizeof(state->pixels));
 			state->pc = C8_PROG_ADDR;
-			memcpy(state->ram + state->pc, file.data, file.size);
+			memcpy(state->ram + state->pc, buffer, size);
 
 			state->program_loaded = true;
 
@@ -1536,6 +1552,19 @@ void c8_load_roam(const char *path, C8_State *state)
 			memcpy(state->ram + C8_FONT_ADDR, font_sprites, sizeof(font_sprites));
 		}
 	}
+	else
+	{
+		C8_LOG_ERROR("Could not read file: ");
+		c8_logln(path);
+
+		c8_message_box("Could not read rom");
+	}
+
+cleanup:
+	if (handle != INVALID_HANDLE_VALUE) {
+		c8_close_file(handle);
+	}
+	
 }
 
 void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)

@@ -310,7 +310,7 @@ bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result
 
 void c8_message_box(const char *message);
 
-void c8_load_roam(char const *const filePath, C8_State *state);
+void c8_load_rom(char const *const filePath, C8_State *state);
 
 void c8_log_error(char const *const file, uint32_t line, char const *const msg);
 
