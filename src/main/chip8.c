@@ -1595,7 +1595,7 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, f
 
 	char c = 0;
 
-	float scale = height / state->font.height;
+	float scale = height / state->font.text_height;
 
 	while (*text)
 	{
@@ -1744,7 +1744,7 @@ float c8_max_v_height(char *text, size_t text_length, C8_Font *font)
 float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 {
 	float result = 0.0f;
-	float scale = text_height / font->height;
+	float scale = text_height / font->text_height;
 
 	float scaled_spacing = spacing * scale;
 	while (*text)
@@ -1767,7 +1767,7 @@ float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_height, float container_height)
 {
 	C8_UNREFERENCED(container_height);
-	float scale = text_height / font->height;
+	float scale = text_height / font->text_height;
 
 	float max_ascent = 0.0f;
 	float max_descent = 0.0f;
@@ -1795,6 +1795,20 @@ float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text
 	float result = top_padding + max_ascent;
 	return result;
 }
+
+// void c8_button_init(
+// 	C8_Button *button,
+// 	char *text,
+// 	C8_State *state,
+// 	float button_x,
+// 	float button_y,
+// 	float button_width,
+// 	float button_height,
+// 	float border,
+// 	float text_height,
+// 	float text_spacing)
+// {
+// }
 
 void c8_draw_button(
 	C8_State *state,

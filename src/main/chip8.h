@@ -81,7 +81,7 @@ typedef uint8_t u8;
 
 #define C8_LOAD_BUTTON_Y (10.0f)
 
-#define C8_TEXT_HEIGHT (80.0f)
+#define C8_TEXT_HEIGHT (60.0f)
 
 #define C8_TEXT_SPACING (3.0f)
 
@@ -135,6 +135,7 @@ typedef struct
 	uint32_t width;
 	uint32_t height;
 	float above_bl;
+	float text_height;
 } C8_Font;
 
 typedef struct
@@ -243,6 +244,19 @@ typedef struct
 
 typedef struct
 {
+	float x;
+	float y;
+	float width;
+	float height;
+	float text_y_offset;
+	float text_x_offset;
+	float text_spacing;
+	float margin;
+	char *title;
+} C8_Button;
+
+typedef struct
+{
 	bool running;
 	i32 cli_width;
 	i32 cli_height;
@@ -279,7 +293,7 @@ typedef struct
 	LPDIRECTSOUNDBUFFER ds_sec_buf;
 	HWND window;
 	HINSTANCE instance;
-
+	C8_Button load_button;
 	bool has_sound;
 	bool is_beeping;
 } C8_State;
