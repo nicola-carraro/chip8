@@ -1741,68 +1741,24 @@ float c8_max_v_height(char *text, size_t text_length, C8_Font *atlas_header)
 	return result;
 }
 
-C8_Text_Size c8_text_scale_for_max_size(char *text, size_t text_length, float max_width_pixels, float max_height_pixels, C8_Font *atlas_header)
-{
-
-	float max_v_height = c8_max_v_height(text, text_length, atlas_header);
-
-	float vertical_scaling_factor = max_height_pixels / max_v_height;
-
-	float aspect_ratio = ((float)atlas_header->width) / ((float)atlas_header->height);
-
-	float horizontal_scaling_factor = vertical_scaling_factor * aspect_ratio;
-
-	float height_pixels = max_height_pixels;
-
-	float width_pixels = 0;
-
-	for (size_t i = 0; i < text_length; i++)
-	{
-		char c = text[i];
-
-		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Glyph glyph = atlas_header->glyphs[glyph_index];
-
-		if (i < text_length - 1)
-		{
-			width_pixels += glyph.advancement * horizontal_scaling_factor;
-		}
-		else
-		{
-			width_pixels += (glyph.u_right - glyph.u_left) * horizontal_scaling_factor;
-		}
-	}
-
-	if (width_pixels > max_width_pixels)
-	{
-		float rescaling = (max_width_pixels / width_pixels);
-		horizontal_scaling_factor *= rescaling;
-		vertical_scaling_factor *= rescaling;
-		width_pixels = max_width_pixels;
-		height_pixels *= rescaling;
-	}
-
-	C8_Text_Size scaling;
-
-	scaling.horizontal_scaling = horizontal_scaling_factor;
-	scaling.vertical_scaling = vertical_scaling_factor;
-	scaling.width_pixels = width_pixels;
-	scaling.height_pixels = height_pixels;
-
-	return scaling;
-}
-
 float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 {
 	float result = 0.0f;
 	float scale = text_height / font->height;
+
+	float scaled_spacing = spacing * scale;
 	while (*text)
 	{
 		char c = *text;
 		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
 		result += glyph.width * scale;
-		result += spacing * scale;
+		result += scaled_spacing;
 		text++;
+	}
+
+	if (result > 0.0f)
+	{
+		result -= scaled_spacing;
 	}
 
 	return result;
@@ -1854,14 +1810,14 @@ void c8_draw_button(
 
 	char text[] = "Load";
 
-	float text_max_height = c8_text_max_height(&state->atlas_header, text, text_height);
+	// float text_max_height = c8_text_max_height(&state->atlas_header, text, text_height);
 
-	float top_offset = (button_height - text_max_height) / 2.0f;
+	// float top_offset = (button_height - text_max_height) / 2.0f;
 
 	float text_width = c8_text_width(&state->atlas_header, text, text_height, text_spacing);
 	float left_offset = (button_width - text_width) / 2.0f;
 
-	c8_draw_text(state, text, button_x + left_offset, button_y + top_offset, text_height, text_spacing, text_color);
+	c8_draw_text(state, text, button_x + left_offset, button_y - 12.0f, text_height, text_spacing, text_color);
 }
 
 void c8_update_emulator(C8_State *state)

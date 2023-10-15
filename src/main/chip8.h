@@ -132,16 +132,7 @@ typedef struct
 	C8_Glyph glyphs[C8_CHAR_COUNT];
 	uint32_t width;
 	uint32_t height;
-	float line_height;
 } C8_Font;
-
-typedef struct
-{
-	float horizontal_scaling;
-	float vertical_scaling;
-	float width_pixels;
-	float height_pixels;
-} C8_Text_Size;
 
 typedef struct
 {

@@ -52,7 +52,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	C8_Font header = {
 		.width = bounding_width * char_count,
 		.height = bounding_height,
-		.line_height = (descent + ascent + line_gap) * scale};
+	};
 
 	int x_offset = 0;
 	for (char c = start_char; c < one_past_end_char; c++)
