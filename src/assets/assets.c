@@ -113,11 +113,9 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 			.u_right = u_right,
 			.v_top = v_top,
 			.v_bottom = v_bottom,
-			.y_offset = (float)y_offset,
-			.y_0 = (float)glyph_y0,
+			.y_offset = (float)glyph_y0,
 			.width = (float)width,
 			.height = (float)height,
-			.advancement = advanceWidth * scale,
 			.ascent = g_ascent,
 			.descent = g_descent};
 

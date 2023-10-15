@@ -101,16 +101,16 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 
 	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
-		C8_Font atlas_header = *((C8_Font *)file.data);
+		C8_Font font = *((C8_Font *)file.data);
 
-		state->atlas_header = atlas_header;
+		state->font = font;
 
-		u8 *input_bitmap = (u8 *)file.data + sizeof(atlas_header);
+		u8 *input_bitmap = (u8 *)file.data + sizeof(font);
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
-				atlas_header.width,
-				atlas_header.height,
+				font.width,
+				font.height,
 				0,
 				0,
 				D3DFMT_A32B32G32R32F,
@@ -127,12 +127,12 @@ BOOL c8_load_font(C8_State *state, char const *const file_name)
 			{
 
 				uint8_t *row_start = (uint8_t *)(out_rect.pBits);
-				for (uint32_t row = 0; row < atlas_header.height; row++)
+				for (uint32_t row = 0; row < font.height; row++)
 				{
 
-					for (uint32_t column = 0; column < atlas_header.width; column++)
+					for (uint32_t column = 0; column < font.width; column++)
 					{
-						uint8_t src_pixel = input_bitmap[(row * atlas_header.width) + column];
+						uint8_t src_pixel = input_bitmap[(row * font.width) + column];
 
 						float alpha = ((float)src_pixel) / 255.0f;
 
@@ -1595,13 +1595,13 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, f
 
 	char c = 0;
 
-	float scale = height / state->atlas_header.height;
+	float scale = height / state->font.height;
 
 	while (*text)
 	{
 		c = *text;
-		C8_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
-		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_0 * scale, glyph.width * scale, glyph.height * scale, rgba);
+		C8_Glyph glyph = state->font.glyphs[c - C8_FIRST_CHAR];
+		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
 		x_offset += glyph.width * scale;
 		x_offset += spacing * scale;
 		text++;
@@ -1719,7 +1719,7 @@ bool c8_call(C8_State *state, u16 nnn)
 	return true;
 }
 
-float c8_max_v_height(char *text, size_t text_length, C8_Font *atlas_header)
+float c8_max_v_height(char *text, size_t text_length, C8_Font *font)
 {
 
 	float result = 0.0f;
@@ -1728,7 +1728,7 @@ float c8_max_v_height(char *text, size_t text_length, C8_Font *atlas_header)
 		char c = text[i];
 
 		i32 glyph_index = c - C8_FIRST_CHAR;
-		C8_Glyph glyph = atlas_header->glyphs[glyph_index];
+		C8_Glyph glyph = font->glyphs[glyph_index];
 
 		float v_height = glyph.v_bottom - glyph.v_top;
 
@@ -1823,11 +1823,11 @@ void c8_draw_button(
 
 	char text[] = "Load";
 
-	// float text_max_height = c8_text_max_height(&state->atlas_header, text, text_height);
+	// float text_max_height = c8_text_max_height(&state->font, text, text_height);
 
-		float y_offset = c8_offset_to_center_vertically(&state->atlas_header, text, text_height, button_height);
+	float y_offset = c8_offset_to_center_vertically(&state->font, text, text_height, button_height);
 
-	float text_width = c8_text_width(&state->atlas_header, text, text_height, text_spacing);
+	float text_width = c8_text_width(&state->font, text, text_height, text_spacing);
 	float left_offset = (button_width - text_width) / 2.0f;
 
 	c8_draw_text(state, text, button_x + left_offset, button_y + y_offset, text_height, text_spacing, text_color);

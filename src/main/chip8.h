@@ -122,7 +122,6 @@ typedef struct
 	float v_top;
 	float v_bottom;
 	float y_offset;
-	float y_0;
 	float width;
 	float height;
 	float advancement;
@@ -263,7 +262,7 @@ typedef struct
 	C8_Keypad keypad;
 	C8_Control_Keys control_keys;
 	bool should_beep;
-	C8_Font atlas_header;
+	C8_Font font;
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
 	bool load_button_down;
