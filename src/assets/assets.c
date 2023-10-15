@@ -52,7 +52,7 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 	C8_Font header = {
 		.width = bounding_width * char_count,
 		.height = bounding_height,
-	};
+		.above_bl = -bounding_y0 * scale};
 
 	int x_offset = 0;
 	for (char c = start_char; c < one_past_end_char; c++)
@@ -95,16 +95,31 @@ void write_atlas(stbtt_fontinfo *info, int pixel_height, char start_char, char o
 
 		x_offset += bounding_width;
 
+		float g_ascent = 0.0f;
+		float g_descent = 0.0f;
+
+		if (glyph_y0 < 0.0f)
+		{
+			g_ascent = -(float)glyph_y0;
+		}
+
+		if (glyph_y1 > 0.0f)
+		{
+			g_descent = (float)glyph_y1;
+		}
+
 		C8_Glyph glyph = {
 			.u_left = u_left,
 			.u_right = u_right,
 			.v_top = v_top,
 			.v_bottom = v_bottom,
 			.y_offset = (float)y_offset,
+			.y_0 = (float)glyph_y0,
 			.width = (float)width,
 			.height = (float)height,
 			.advancement = advanceWidth * scale,
-		};
+			.ascent = g_ascent,
+			.descent = g_descent};
 
 		header.glyphs[c - start_char] = glyph;
 		// int y_offset = baseline

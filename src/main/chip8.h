@@ -122,9 +122,12 @@ typedef struct
 	float v_top;
 	float v_bottom;
 	float y_offset;
+	float y_0;
 	float width;
 	float height;
 	float advancement;
+	float ascent;
+	float descent;
 } C8_Glyph;
 
 typedef struct
@@ -132,6 +135,7 @@ typedef struct
 	C8_Glyph glyphs[C8_CHAR_COUNT];
 	uint32_t width;
 	uint32_t height;
+	float above_bl;
 } C8_Font;
 
 typedef struct

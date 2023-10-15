@@ -1601,7 +1601,7 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float height, f
 	{
 		c = *text;
 		C8_Glyph glyph = state->atlas_header.glyphs[c - C8_FIRST_CHAR];
-		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
+		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_0 * scale, glyph.width * scale, glyph.height * scale, rgba);
 		x_offset += glyph.width * scale;
 		x_offset += spacing * scale;
 		text++;
@@ -1764,21 +1764,32 @@ float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 	return result;
 }
 
-float c8_text_max_height(C8_Font *font, const char *text, float text_height)
+float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_height, float container_height)
 {
+	C8_UNREFERENCED(container_height);
 	float result = 0.0f;
 	float scale = text_height / font->height;
+
+	float max_ascent = 0.0f;
+	float max_descent = 0.0f;
 	while (*text)
 	{
 		char c = *text;
 		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
-		float glyph_height = glyph.height * scale;
-		if (glyph_height > result)
+		float scaled_ascent = glyph.ascent * scale;
+		float scaled_descent = glyph.descent * scale;
+		if (scaled_ascent > max_ascent)
 		{
-			result = glyph_height;
+			max_ascent = scaled_ascent;
+		}
+		if (scaled_descent > max_descent)
+		{
+			max_descent = scaled_descent;
 		}
 		text++;
 	}
+
+	// float text_height = max_descent + max_ascent;
 
 	return result;
 }
@@ -1814,10 +1825,12 @@ void c8_draw_button(
 
 	// float top_offset = (button_height - text_max_height) / 2.0f;
 
+	c8_offset_to_center_vertically(&state->atlas_header, text, text_height, button_height);
+
 	float text_width = c8_text_width(&state->atlas_header, text, text_height, text_spacing);
 	float left_offset = (button_width - text_width) / 2.0f;
 
-	c8_draw_text(state, text, button_x + left_offset, button_y - 12.0f, text_height, text_spacing, text_color);
+	c8_draw_text(state, text, button_x + left_offset, button_y, text_height, text_spacing, text_color);
 }
 
 void c8_update_emulator(C8_State *state)
