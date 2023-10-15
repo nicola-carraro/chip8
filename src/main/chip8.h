@@ -81,6 +81,8 @@ typedef uint8_t u8;
 
 #define C8_LOAD_BUTTON_Y (10.0f)
 
+#define C8_LOAD_BUTTON_TITLE ("Load")
+
 #define C8_TEXT_HEIGHT (60.0f)
 
 #define C8_TEXT_SPACING (3.0f)
@@ -251,8 +253,10 @@ typedef struct
 	float text_y_offset;
 	float text_x_offset;
 	float text_spacing;
-	float margin;
-	char *title;
+	float text_scale;
+	float border;
+	C8_Rgba text_color;
+	char  * title;
 } C8_Button;
 
 typedef struct
@@ -328,4 +332,5 @@ void c8_load_rom(char const *const filePath, C8_State *state);
 
 void c8_log_error(char const *const file, uint32_t line, char const *const msg);
 
+void c8_load_button_init(C8_State *state, C8_Button *button);
 #endif // !CHIP8_H

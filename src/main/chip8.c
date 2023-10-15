@@ -1191,6 +1191,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	}
 
 	ShowWindow(window, cmd_show);
+	c8_load_button_init(&global_state, &global_state.load_button);
+
 	global_state.running = true;
 
 	global_state.has_sound = false;
@@ -1792,9 +1794,35 @@ float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text
 	return result;
 }
 
-// void c8_button_init(
-// 	C8_Button *button,
-// 	char *text,
+void c8_load_button_init(
+	C8_State *state,
+	C8_Button *button)
+{
+	button->x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
+
+	button->y = C8_LOAD_BUTTON_Y;
+	button->width = C8_LOAD_BUTTON_WIDTH;
+	button->height = C8_LOAD_BUTTON_HEIGHT;
+
+	button->text_spacing = C8_TEXT_SPACING;
+
+	button->text_color.a = 255;
+
+	button->text_scale = C8_TEXT_HEIGHT / state->font.text_height;
+
+	button->border = C8_LOAD_BUTTON_BORDER;
+
+	button->title = C8_LOAD_BUTTON_TITLE;
+
+	// float text_max_height = c8_text_max_height(&state->font, text, text_height);
+
+	button->text_y_offset = c8_offset_to_center_vertically(&state->font, button->title, button->text_scale, button->height);
+
+	float text_width = c8_text_width(&state->font, button->title, button->text_scale, button->text_spacing);
+	button->text_x_offset = (button->width - text_width) / 2.0f;
+}
+
+// void c8_draw_button(
 // 	C8_State *state,
 // 	float button_x,
 // 	float button_y,
@@ -1803,57 +1831,44 @@ float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text
 // 	float border,
 // 	float text_height,
 // 	float text_spacing)
-// {
-// }
-
-void c8_draw_button(
-	C8_State *state,
-	float button_x,
-	float button_y,
-	float button_width,
-	float button_height,
-	float border,
-	float text_height,
-	float text_spacing)
+void c8_draw_load_button(C8_State *state)
 {
 
 	// C8_Rgba button_color = {255, 255, 255, 255};
 
 	// c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
 
-	C8_Rgba text_color = {0, 0, 0, 255};
+	C8_Button button = state->load_button;
 
-	c8_draw_rect(state, button_x, button_y, button_width, border, text_color);
+	c8_draw_rect(state, button.x, button.y, button.width, button.border, button.text_color);
 
-	c8_draw_rect(state, button_x, button_y, border, button_height, text_color);
+	c8_draw_rect(state, button.x, button.y, button.border, button.height, button.text_color);
 
-	c8_draw_rect(state, button_x, button_y + button_height - border, button_width, border, text_color);
+	c8_draw_rect(state, button.x, button.y + button.height - button.border, button.width, button.border, button.text_color);
 
-	c8_draw_rect(state, button_x + button_width - border, button_y, border, button_height, text_color);
-
-	char text[] = "Load";
-
-	float text_scale = text_height / state->font.text_height;
+	c8_draw_rect(state, button.x + button.width - button.border, button.y, button.border, button.height, button.text_color);
 
 	// float text_max_height = c8_text_max_height(&state->font, text, text_height);
 
-	float y_offset = c8_offset_to_center_vertically(&state->font, text, text_scale, button_height);
+	// float y_offset = c8_offset_to_center_vertically(&state->font, button.text, button.text_scale, button.button_height);
 
-	float text_width = c8_text_width(&state->font, text, text_scale, text_spacing);
-	float left_offset = (button_width - text_width) / 2.0f;
+	// float text_width = c8_text_width(&state->font, button.text, button.text_scale, button.text_spacing);
+	// float left_offset = (button_width - text_width) / 2.0f;
 
-	c8_draw_text(state, text, button_x + left_offset, button_y + y_offset, text_scale, text_spacing, text_color);
+	c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, button.text_color);
 }
 
 void c8_update_emulator(C8_State *state)
 {
-	float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
+	// float button_x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
 
-	float button_y = C8_LOAD_BUTTON_Y;
-	float button_width = C8_LOAD_BUTTON_WIDTH;
-	float button_height = C8_LOAD_BUTTON_HEIGHT;
+	// float button_y = C8_LOAD_BUTTON_Y;
+	// float button_width = C8_LOAD_BUTTON_WIDTH;
+	//  float button_height = C8_LOAD_BUTTON_HEIGHT;
 
-	bool is_mouse_over_button = state->mouse_position.xy.x >= button_x && state->mouse_position.xy.x <= button_x + button_width && state->mouse_position.xy.y >= button_y && state->mouse_position.xy.y <= button_y + button_width;
+	C8_Button load_button = state->load_button;
+
+	bool is_mouse_over_button = state->mouse_position.xy.x >= load_button.x && state->mouse_position.xy.x <= load_button.x + load_button.width && state->mouse_position.xy.y >= load_button.y && state->mouse_position.xy.y <= load_button.y + load_button.width;
 
 	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted)
 	{
@@ -1869,7 +1884,7 @@ void c8_update_emulator(C8_State *state)
 		state->load_button_down = true;
 	}
 
-	c8_draw_button(state, button_x, button_y, button_width, button_height, C8_LOAD_BUTTON_BORDER, C8_TEXT_HEIGHT, C8_TEXT_SPACING);
+	c8_draw_load_button(state);
 
 	if (state->program_loaded)
 	{
