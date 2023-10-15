@@ -1767,7 +1767,6 @@ float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_height, float container_height)
 {
 	C8_UNREFERENCED(container_height);
-	float result = 0.0f;
 	float scale = text_height / font->height;
 
 	float max_ascent = 0.0f;
@@ -1789,8 +1788,11 @@ float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text
 		text++;
 	}
 
-	// float text_height = max_descent + max_ascent;
+	float text_effective_height = max_descent + max_ascent;
 
+	float top_padding = (container_height - text_effective_height) / 2.0f;
+
+	float result = top_padding + max_ascent;
 	return result;
 }
 
@@ -1823,14 +1825,12 @@ void c8_draw_button(
 
 	// float text_max_height = c8_text_max_height(&state->atlas_header, text, text_height);
 
-	// float top_offset = (button_height - text_max_height) / 2.0f;
-
-	c8_offset_to_center_vertically(&state->atlas_header, text, text_height, button_height);
+		float y_offset = c8_offset_to_center_vertically(&state->atlas_header, text, text_height, button_height);
 
 	float text_width = c8_text_width(&state->atlas_header, text, text_height, text_spacing);
 	float left_offset = (button_width - text_width) / 2.0f;
 
-	c8_draw_text(state, text, button_x + left_offset, button_y, text_height, text_spacing, text_color);
+	c8_draw_text(state, text, button_x + left_offset, button_y + y_offset, text_height, text_spacing, text_color);
 }
 
 void c8_update_emulator(C8_State *state)
