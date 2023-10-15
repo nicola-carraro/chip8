@@ -1588,14 +1588,12 @@ void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float widt
 	c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 }
 
-void c8_draw_text(C8_State *state, char *text, float x, float y, float height, float spacing, C8_Rgba rgba)
+void c8_draw_text(C8_State *state, char *text, float x, float y, float scale, float spacing, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
 
 	char c = 0;
-
-	float scale = height / state->font.text_height;
 
 	while (*text)
 	{
@@ -1741,17 +1739,16 @@ float c8_max_v_height(char *text, size_t text_length, C8_Font *font)
 	return result;
 }
 
-float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
+float c8_text_width(C8_Font *font, char *text, float text_scale, float spacing)
 {
 	float result = 0.0f;
-	float scale = text_height / font->text_height;
 
-	float scaled_spacing = spacing * scale;
+	float scaled_spacing = spacing * text_scale;
 	while (*text)
 	{
 		char c = *text;
 		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
-		result += glyph.width * scale;
+		result += glyph.width * text_scale;
 		result += scaled_spacing;
 		text++;
 	}
@@ -1764,10 +1761,9 @@ float c8_text_width(C8_Font *font, char *text, float text_height, float spacing)
 	return result;
 }
 
-float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_height, float container_height)
+float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_scale, float container_height)
 {
 	C8_UNREFERENCED(container_height);
-	float scale = text_height / font->text_height;
 
 	float max_ascent = 0.0f;
 	float max_descent = 0.0f;
@@ -1775,8 +1771,8 @@ float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text
 	{
 		char c = *text;
 		C8_Glyph glyph = font->glyphs[c - C8_FIRST_CHAR];
-		float scaled_ascent = glyph.ascent * scale;
-		float scaled_descent = glyph.descent * scale;
+		float scaled_ascent = glyph.ascent * text_scale;
+		float scaled_descent = glyph.descent * text_scale;
 		if (scaled_ascent > max_ascent)
 		{
 			max_ascent = scaled_ascent;
@@ -1837,14 +1833,16 @@ void c8_draw_button(
 
 	char text[] = "Load";
 
+	float text_scale = text_height / state->font.text_height;
+
 	// float text_max_height = c8_text_max_height(&state->font, text, text_height);
 
-	float y_offset = c8_offset_to_center_vertically(&state->font, text, text_height, button_height);
+	float y_offset = c8_offset_to_center_vertically(&state->font, text, text_scale, button_height);
 
-	float text_width = c8_text_width(&state->font, text, text_height, text_spacing);
+	float text_width = c8_text_width(&state->font, text, text_scale, text_spacing);
 	float left_offset = (button_width - text_width) / 2.0f;
 
-	c8_draw_text(state, text, button_x + left_offset, button_y + y_offset, text_height, text_spacing, text_color);
+	c8_draw_text(state, text, button_x + left_offset, button_y + y_offset, text_scale, text_spacing, text_color);
 }
 
 void c8_update_emulator(C8_State *state)
