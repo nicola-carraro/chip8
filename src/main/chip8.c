@@ -1822,40 +1822,31 @@ void c8_load_button_init(
 	button->text_x_offset = (button->width - text_width) / 2.0f;
 }
 
-// void c8_draw_button(
-// 	C8_State *state,
-// 	float button_x,
-// 	float button_y,
-// 	float button_width,
-// 	float button_height,
-// 	float border,
-// 	float text_height,
-// 	float text_spacing)
 void c8_draw_load_button(C8_State *state)
 {
 
-	// C8_Rgba button_color = {255, 255, 255, 255};
-
-	// c8_draw_rect(state, button_x, button_y, button_width, button_height, button_color);
-
 	C8_Button button = state->load_button;
 
-	c8_draw_rect(state, button.x, button.y, button.width, button.border, button.text_color);
+	if ( button.is_mouse_over)
+	{
+		c8_draw_rect(state, button.x, button.y, button.width, button.height, button.text_color);
 
-	c8_draw_rect(state, button.x, button.y, button.border, button.height, button.text_color);
+		C8_Rgba white = {255, 255, 255, 255};
 
-	c8_draw_rect(state, button.x, button.y + button.height - button.border, button.width, button.border, button.text_color);
+		c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, white);
+	}
+	else
+	{
+		c8_draw_rect(state, button.x, button.y, button.width, button.border, button.text_color);
 
-	c8_draw_rect(state, button.x + button.width - button.border, button.y, button.border, button.height, button.text_color);
+		c8_draw_rect(state, button.x, button.y, button.border, button.height, button.text_color);
 
-	// float text_max_height = c8_text_max_height(&state->font, text, text_height);
+		c8_draw_rect(state, button.x, button.y + button.height - button.border, button.width, button.border, button.text_color);
 
-	// float y_offset = c8_offset_to_center_vertically(&state->font, button.text, button.text_scale, button.button_height);
+		c8_draw_rect(state, button.x + button.width - button.border, button.y, button.border, button.height, button.text_color);
 
-	// float text_width = c8_text_width(&state->font, button.text, button.text_scale, button.text_spacing);
-	// float left_offset = (button_width - text_width) / 2.0f;
-
-	c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, button.text_color);
+		c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, button.text_color);
+	}
 }
 
 void c8_update_emulator(C8_State *state)
@@ -1868,20 +1859,21 @@ void c8_update_emulator(C8_State *state)
 
 	C8_Button load_button = state->load_button;
 
-	bool is_mouse_over_button = state->mouse_position.xy.x >= load_button.x && state->mouse_position.xy.x <= load_button.x + load_button.width && state->mouse_position.xy.y >= load_button.y && state->mouse_position.xy.y <= load_button.y + load_button.width;
+	state->load_button.is_mouse_over = state->mouse_position.xy.x >= load_button.x && state->mouse_position.xy.x <= load_button.x + load_button.width && state->mouse_position.xy.y >= load_button.y && state->mouse_position.xy.y <= load_button.y + load_button.width;
 
-	if (state->load_button_down & state->mouse_buttons.left_button.was_lifted)
+	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)
+	{
+		state->load_button.is_down = true;
+	}
+
+
+	if (state->load_button.is_down && state->mouse_buttons.left_button.was_lifted)
 	{
 
-		if (is_mouse_over_button)
+		if (state->load_button.is_mouse_over)
 		{
 			c8_load_from_file_dialog(state);
 		}
-	}
-
-	if (state->mouse_buttons.left_button.was_pressed && is_mouse_over_button)
-	{
-		state->load_button_down = true;
 	}
 
 	c8_draw_load_button(state);

@@ -256,7 +256,9 @@ typedef struct
 	float text_scale;
 	float border;
 	C8_Rgba text_color;
-	char  * title;
+	char *title;
+	bool is_down;
+	bool is_mouse_over;
 } C8_Button;
 
 typedef struct
@@ -283,7 +285,6 @@ typedef struct
 	C8_Font font;
 	C8_V2 mouse_position;
 	C8_Mouse_Buttons mouse_buttons;
-	bool load_button_down;
 	C8_Color_Vertex color_vertices[C8_MAX_VERTICES];
 	uint32_t color_vertex_count;
 	C8_Texture_Vertex text_vertices[C8_MAX_VERTICES];
