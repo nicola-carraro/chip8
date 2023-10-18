@@ -1827,7 +1827,7 @@ void c8_draw_load_button(C8_State *state)
 
 	C8_Button button = state->load_button;
 
-	if ( button.is_mouse_over)
+	if (button.is_mouse_over)
 	{
 		c8_draw_rect(state, button.x, button.y, button.width, button.height, button.text_color);
 
@@ -1861,11 +1861,17 @@ void c8_update_emulator(C8_State *state)
 
 	state->load_button.is_mouse_over = state->mouse_position.xy.x >= load_button.x && state->mouse_position.xy.x <= load_button.x + load_button.width && state->mouse_position.xy.y >= load_button.y && state->mouse_position.xy.y <= load_button.y + load_button.width;
 
+	
+
 	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)
 	{
 		state->load_button.is_down = true;
 	}
 
+	if (state->load_button.is_down)
+	{
+		c8_logln("BUTTON DOWN");
+	}
 
 	if (state->load_button.is_down && state->mouse_buttons.left_button.was_lifted)
 	{
@@ -1874,6 +1880,10 @@ void c8_update_emulator(C8_State *state)
 		{
 			c8_load_from_file_dialog(state);
 		}
+	}
+
+	if (state->load_button.is_down && (state->mouse_buttons.left_button.was_lifted || !(state->load_button.is_mouse_over))) {
+		state->load_button.is_down = false;
 	}
 
 	c8_draw_load_button(state);
