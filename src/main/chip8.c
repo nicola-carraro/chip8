@@ -1868,11 +1868,6 @@ void c8_update_emulator(C8_State *state)
 		state->load_button.is_down = true;
 	}
 
-	if (state->load_button.is_down)
-	{
-		c8_logln("BUTTON DOWN");
-	}
-
 	if (state->load_button.is_down && state->mouse_buttons.left_button.was_lifted)
 	{
 
