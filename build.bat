@@ -2,6 +2,8 @@
 
 pushd build
 
+if not exist data mkdir data
+
 cl ../src/main/chip8.c /WX  /W4 /Z7  -nologo -Od  kernel32.lib user32.lib D3d9.lib Dsound.lib  ole32.lib Comdlg32.lib 
 
 cl ../src/test/test.c   /WX /W4 /Z7 -nologo -Od  kernel32.lib user32.lib D3d9.lib Dsound.lib /link ole32.lib Comdlg32.lib  /SUBSYSTEM:CONSOLE
