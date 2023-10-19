@@ -1020,9 +1020,9 @@ bool c8_process_msgs(C8_State* state, HWND window)
 
 bool c8_push_color_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
 {
-	bool push1 = c8_push_color_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push2 = c8_push_color_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push3 = c8_push_color_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push1 = c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push2 = c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	bool push3 = c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 
 	return push1 && push2 && push3;
 }
@@ -1209,8 +1209,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			POINT point;
 			if (GetCursorPos(&point) && ScreenToClient(window, &point))
 			{
-				global_state.mouse_position.xy.x = (float)point.x;
-				global_state.mouse_position.xy.y = (float)point.y;
+				global_state.mouse_position.x = (float)point.x;
+				global_state.mouse_position.y = (float)point.y;
 			}
 			else
 			{
@@ -1555,9 +1555,9 @@ cleanup:
 
 void c8_push_text_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
-	c8_push_text_vertex(state, p1.xy.x, p1.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	c8_push_text_vertex(state, p2.xy.x, p2.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-	c8_push_text_vertex(state, p3.xy.x, p3.xy.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
+	c8_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	c8_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	c8_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
 void c8_push_glyph(C8_State* state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
@@ -1616,21 +1616,10 @@ void c8_push_text_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8
 
 void c8_draw_rect(C8_State* state, float x, float y, float width, float height, C8_Rgba rgb)
 {
-	C8_V2 p1 = { 0 };
-	p1.xy.x = x;
-	p1.xy.y = y;
-
-	C8_V2 p2 = { 0 };
-	p2.xy.x = x + width;
-	p2.xy.y = y;
-
-	C8_V2 p3 = { 0 };
-	p3.xy.x = x + width;
-	p3.xy.y = y + height;
-
-	C8_V2 p4 = { 0 };
-	p4.xy.x = x;
-	p4.xy.y = y + height;
+	C8_V2 p1 = { x, y };
+	C8_V2 p2 = { x + width, y };
+	C8_V2 p3 = { x + width,  y + height };
+	C8_V2 p4 = { x, y + height };
 
 	c8_push_color_triangle(state, p1, p2, p3, rgb);
 	c8_push_color_triangle(state, p1, p3, p4, rgb);
@@ -1836,10 +1825,10 @@ void c8_update_emulator(C8_State* state)
 
 	C8_Button load_button = state->load_button;
 
-	state->load_button.is_mouse_over = state->mouse_position.xy.x >= load_button.x 
-		&& state->mouse_position.xy.x <= load_button.x + load_button.width 
-		&& state->mouse_position.xy.y >= load_button.y 
-		&& state->mouse_position.xy.y <= load_button.y + load_button.height;
+	state->load_button.is_mouse_over = state->mouse_position.x >= load_button.x 
+		&& state->mouse_position.x <= load_button.x + load_button.width 
+		&& state->mouse_position.y >= load_button.y 
+		&& state->mouse_position.y <= load_button.y + load_button.height;
 
 	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)
 	{

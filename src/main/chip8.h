@@ -142,7 +142,7 @@ typedef struct
 
 typedef struct
 {
-	void *data;
+	void* data;
 	psz max_bytes;
 	i32 alignement;
 	psz offset;
@@ -200,21 +200,16 @@ typedef struct
 	C8_Key right_button;
 } C8_Mouse_Buttons;
 
-typedef union
+typedef struct
 {
-	struct
-	{
-		float x;
-		float y;
-	} xy;
-
-	float coords[2];
+	float x;
+	float y;
 } C8_V2;
 
 typedef struct
 {
 	psz size;
-	void *data;
+	void* data;
 } C8_File;
 
 typedef struct
@@ -256,7 +251,7 @@ typedef struct
 	float text_scale;
 	float border;
 	C8_Rgba text_color;
-	char *title;
+	char* title;
 	bool is_down;
 	bool is_mouse_over;
 } C8_Button;
@@ -305,33 +300,33 @@ typedef struct
 
 static C8_State global_state;
 
-void *c8_allocate(psz size);
+void* c8_allocate(psz size);
 
-void *c8_arena_alloc(C8_Arena *arena, psz size);
+void* c8_arena_alloc(C8_Arena* arena, psz size);
 
-bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement);
+bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement);
 
-void c8_arena_free_all(C8_Arena *arena);
+void c8_arena_free_all(C8_Arena* arena);
 
-void c8_app_update(C8_State *state);
+void c8_app_update(C8_State* state);
 
-const C8_Rgba emulator_color = {0, 0, 0, 255};
+const C8_Rgba emulator_color = { 0, 0, 0, 255 };
 
-bool c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
+bool c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
-void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
+void c8_draw_rect(C8_State* state, float x, float y, float width, float height, C8_Rgba rgb);
 
-void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+void c8_push_glyph(C8_State* state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
-void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+void c8_push_text_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
-bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result);
+bool c8_read_entire_file(const char* path, C8_Arena* arena, C8_File* read_result);
 
-void c8_message_box(const char *message);
+void c8_message_box(const char* message);
 
-void c8_load_rom(char const *const filePath, C8_State *state);
+void c8_load_rom(char const* const filePath, C8_State* state);
 
-void c8_log_error(char const *const file, uint32_t line, char const *const msg);
+void c8_log_error(char const* const file, uint32_t line, char const* const msg);
 
-void c8_load_button_init(C8_State *state, C8_Button *button);
+void c8_load_button_init(C8_State* state, C8_Button* button);
 #endif // !CHIP8_H
