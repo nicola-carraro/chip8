@@ -376,12 +376,10 @@ void c8_render_color(C8_State* state)
 	}
 }
 
-bool c8_render(C8_State* state)
+void c8_render(C8_State* state)
 {
 
-	bool result = false;
-
-	HRESULT cleared = IDirect3DDevice9_Clear(state->d3d_dev,
+	HRESULT hr = IDirect3DDevice9_Clear(state->d3d_dev,
 		0,
 		0,
 		D3DCLEAR_TARGET,
@@ -389,42 +387,33 @@ bool c8_render(C8_State* state)
 		1.0f,
 		0);
 
-	if (SUCCEEDED(cleared))
-	{
-		if (SUCCEEDED(IDirect3DDevice9_BeginScene(state->d3d_dev)))
-		{
-
-			c8_render_color(state);
-
-			c8_render_text(state);
-		}
-		else
-		{
-			C8_LOG_ERROR("BeginScene failed\n");
-		}
-	}
-	else
-	{
+	if (FAILED(hr)) {
 		C8_LOG_ERROR("Could not clear screen\n");
+		assert(false);
 	}
 
-	if (SUCCEEDED(IDirect3DDevice9_EndScene(state->d3d_dev)))
-	{
-		if (SUCCEEDED(IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0)))
-		{
-			result = true;
-		}
-		else
-		{
-			C8_LOG_ERROR("Present failed\n");
-		}
+	hr = IDirect3DDevice9_BeginScene(state->d3d_dev);
+	if (FAILED(hr)) {
+		C8_LOG_ERROR("BeginScene failed\n");
+		assert(false);
 	}
-	else
-	{
+
+	c8_render_color(state);
+
+	c8_render_text(state);
+
+	hr = IDirect3DDevice9_EndScene(state->d3d_dev);
+	if (FAILED(hr)) {
 		C8_LOG_ERROR("EndScene failed\n");
+		assert(false);
 	}
 
-	return result;
+	hr = IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0);
+
+	if (FAILED(hr)) {
+		C8_LOG_ERROR("Present failed\n");
+		assert(false);
+	}
 }
 
 bool c8_init_texture(C8_State* state, char const* const file_name)
@@ -1237,11 +1226,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		c8_app_update(&global_state);
 
-		if (!c8_render(&global_state))
-		{
-			C8_LOG_ERROR("Could not render\n");
-			assert(false);
-		}
+		c8_render(&global_state);
 
 		if (!global_state.is_beeping && global_state.should_beep)
 		{
