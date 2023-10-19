@@ -63,7 +63,7 @@ void c8_render_text(C8_State* state)
 		C8_LOG_ERROR("Could not set D3DRS_ALPHABLENDENABLE\n");
 		assert(false);
 	}
-	
+
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 	if (FAILED(hr)) {
 		C8_LOG_ERROR("Could not set D3DBLEND_SRCALPHA\n");
@@ -297,93 +297,83 @@ float c8_millis_elapsed(C8_Timer* timer, bool reset_timer)
 	return millis_elapsed;
 }
 
-bool c8_render_color(C8_State* state)
+void c8_render_color(C8_State* state)
 {
-
-	BOOL result = FALSE;
 
 	VOID* vp;
 
-	if (FAILED(IDirect3DDevice9_SetTexture(state->d3d_dev, 0, 0)))
+	HRESULT hr = IDirect3DDevice9_SetTexture(state->d3d_dev, 0, 0);
+	if (FAILED(hr))
 	{
-		assert(false && "Unset texture failed");
+		C8_LOG_ERROR("Could not unset texture\n");
+		assert(false);
 	}
 
-	HRESULT locked = IDirect3DVertexBuffer9_Lock(
+	hr = IDirect3DVertexBuffer9_Lock(
 		state->color_vb,
 		0,
 		0,
 		&vp,
 		0);
-	if (SUCCEEDED(locked))
-	{
 
-		for (size_t vertex_index = 0; vertex_index < state->color_vertex_count; vertex_index++)
-		{
-			C8_D3D_Color_Vertex win_vertex = { 0 };
-			C8_Color_Vertex vertex = state->color_vertices[vertex_index];
-			win_vertex.x = vertex.x;
-			win_vertex.y = vertex.y;
-			win_vertex.rhw = 1.0f;
-			C8_Rgba color = vertex.color;
-			win_vertex.color = D3DCOLOR_ARGB(color.a, color.r, color.g, color.b);
-			((C8_D3D_Color_Vertex*)vp)[vertex_index] = win_vertex;
-		}
-		if (SUCCEEDED(IDirect3DVertexBuffer9_Unlock(state->color_vb)))
-		{
-			HRESULT fvf_set = IDirect3DDevice9_SetFVF(
-				state->d3d_dev,
-				C8_D3D_FVF);
-
-			if (SUCCEEDED(fvf_set))
-			{
-
-				HRESULT stream_src_set = IDirect3DDevice9_SetStreamSource(
-					state->d3d_dev,
-					0,
-					state->color_vb,
-					0,
-					sizeof(C8_D3D_Color_Vertex));
-
-				if (SUCCEEDED(stream_src_set))
-				{
-					HRESULT drawn = IDirect3DDevice9_DrawPrimitive(
-						state->d3d_dev,
-						D3DPT_TRIANGLELIST,
-						0,
-						state->color_vertex_count / 3);
-
-					if (SUCCEEDED(drawn))
-					{
-
-						result = TRUE;
-					}
-					else
-					{
-						C8_LOG_ERROR("DrawPrimitive failed\n");
-					}
-				}
-				else
-				{
-					C8_LOG_ERROR("SetStreamSource failed\n");
-				}
-			}
-			else
-			{
-				C8_LOG_ERROR("SetFVF failed\n");
-			}
-		}
-		else
-		{
-			C8_LOG_ERROR("Failed to unlock vertex buffer\n");
-		}
-	}
-	else
+	if (FAILED(hr))
 	{
 		C8_LOG_ERROR("Failed to lock vertex buffer\n");
+		assert(false);
 	}
 
-	return result;
+	for (size_t vertex_index = 0; vertex_index < state->color_vertex_count; vertex_index++)
+	{
+		C8_D3D_Color_Vertex win_vertex = { 0 };
+		C8_Color_Vertex vertex = state->color_vertices[vertex_index];
+		win_vertex.x = vertex.x;
+		win_vertex.y = vertex.y;
+		win_vertex.rhw = 1.0f;
+		C8_Rgba color = vertex.color;
+		win_vertex.color = D3DCOLOR_ARGB(color.a, color.r, color.g, color.b);
+		((C8_D3D_Color_Vertex*)vp)[vertex_index] = win_vertex;
+	}
+
+	hr = IDirect3DVertexBuffer9_Unlock(state->color_vb);
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("Failed to unlock vertex buffer\n");
+
+		assert(false);
+	}
+
+	hr = IDirect3DDevice9_SetFVF(
+		state->d3d_dev,
+		C8_D3D_FVF);
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("SetFVF failed\n");
+		assert(false);
+	}
+
+	hr = IDirect3DDevice9_SetStreamSource(
+		state->d3d_dev,
+		0,
+		state->color_vb,
+		0,
+		sizeof(C8_D3D_Color_Vertex));
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("SetStreamSource failed\n");
+		assert(false);
+	}
+
+	hr = IDirect3DDevice9_DrawPrimitive(
+		state->d3d_dev,
+		D3DPT_TRIANGLELIST,
+		0,
+		state->color_vertex_count / 3);
+
+	if (FAILED(hr))
+	{
+		C8_LOG_ERROR("DrawPrimitive failed\n");
+		assert(false);
+	}
 }
 
 bool c8_render(C8_State* state)
