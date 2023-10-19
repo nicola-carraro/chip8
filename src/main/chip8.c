@@ -1018,13 +1018,11 @@ bool c8_process_msgs(C8_State* state, HWND window)
 	return true;
 }
 
-bool c8_push_color_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
+void c8_push_color_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
 {
-	bool push1 = c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push2 = c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	bool push3 = c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
-
-	return push1 && push2 && push3;
+	c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 }
 
 bool c8_start_beep(C8_State* state)
@@ -1449,10 +1447,8 @@ void c8_push_frame(C8_State* state)
 	);
 }
 
-bool c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a)
+void c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a)
 {
-	bool result = false;
-
 	assert(state->color_vertex_count < C8_ARRCOUNT(state->color_vertices));
 
 	if (state->color_vertex_count < C8_ARRCOUNT(state->color_vertices))
@@ -1467,14 +1463,11 @@ bool c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u
 		color.a = a;
 		state->color_vertices[state->color_vertex_count].color = color;
 		state->color_vertex_count++;
-		result = true;
 	}
 	else
 	{
 		C8_LOG_ERROR("Vertex buffer size exceeded\n");
 	}
-
-	return result;
 }
 
 void c8_load_rom(const char* path, C8_State* state)
@@ -1825,9 +1818,9 @@ void c8_update_emulator(C8_State* state)
 
 	C8_Button load_button = state->load_button;
 
-	state->load_button.is_mouse_over = state->mouse_position.x >= load_button.x 
-		&& state->mouse_position.x <= load_button.x + load_button.width 
-		&& state->mouse_position.y >= load_button.y 
+	state->load_button.is_mouse_over = state->mouse_position.x >= load_button.x
+		&& state->mouse_position.x <= load_button.x + load_button.width
+		&& state->mouse_position.y >= load_button.y
 		&& state->mouse_position.y <= load_button.y + load_button.height;
 
 	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)

@@ -312,7 +312,7 @@ void c8_app_update(C8_State* state);
 
 const C8_Rgba emulator_color = { 0, 0, 0, 255 };
 
-bool c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a);
+void c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
 void c8_draw_rect(C8_State* state, float x, float y, float width, float height, C8_Rgba rgb);
 
