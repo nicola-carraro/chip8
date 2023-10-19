@@ -1207,10 +1207,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 			&window_placement))
 		{
 			POINT point;
-			if (GetCursorPos(&point))
+			if (GetCursorPos(&point) && ScreenToClient(window, &point))
 			{
-				global_state.mouse_position.xy.x = (float)point.x - (float)window_placement.rcNormalPosition.left;
-				global_state.mouse_position.xy.y = (float)point.y - (float)window_placement.rcNormalPosition.top;
+				global_state.mouse_position.xy.x = (float)point.x;
+				global_state.mouse_position.xy.y = (float)point.y;
 			}
 			else
 			{
@@ -1244,7 +1244,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		char str[255];
 		sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-		// c8_log(str);
+		//c8_log(str);
 	}
 
 	fflush(stdout);
@@ -1836,7 +1836,10 @@ void c8_update_emulator(C8_State* state)
 
 	C8_Button load_button = state->load_button;
 
-	state->load_button.is_mouse_over = state->mouse_position.xy.x >= load_button.x && state->mouse_position.xy.x <= load_button.x + load_button.width && state->mouse_position.xy.y >= load_button.y && state->mouse_position.xy.y <= load_button.y + load_button.width;
+	state->load_button.is_mouse_over = state->mouse_position.xy.x >= load_button.x 
+		&& state->mouse_position.xy.x <= load_button.x + load_button.width 
+		&& state->mouse_position.xy.y >= load_button.y 
+		&& state->mouse_position.xy.y <= load_button.y + load_button.height;
 
 	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)
 	{
