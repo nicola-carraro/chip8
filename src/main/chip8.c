@@ -1697,8 +1697,8 @@ bool c8_call(C8_State *state, u16 nnn)
 	state->stack_pointer++;
 	if (state->stack_pointer >= C8_ARRCOUNT(state->stack))
 	{
-		assert(false);
-		// TODO: handle stackoverflow
+
+		return false;
 	}
 	state->pc = nnn;
 
@@ -1835,6 +1835,13 @@ void c8_draw_load_button(C8_State *state)
 	}
 }
 
+void c8_bad_rom(C8_State *state)
+{
+	c8_message_box("Bad ROM");
+	c8_reset_emulator(state);
+	state->program_loaded = false;
+}
+
 void c8_update_emulator(C8_State *state)
 {
 
@@ -1897,7 +1904,11 @@ void c8_update_emulator(C8_State *state)
 			else if (op == 0x2)
 			{
 				// Call
-				c8_call(state, nnn);
+				if (!c8_call(state, nnn))
+				{
+					c8_bad_rom(state);
+					break;
+				}
 			}
 			else if (instruction == 0x00ee)
 			{
@@ -1906,8 +1917,8 @@ void c8_update_emulator(C8_State *state)
 				state->stack_pointer--;
 				if (state->stack_pointer < 0)
 				{
-					assert(false);
-					// TODO: handle stackundeflow (?)
+					c8_bad_rom(state);
+					break;
 				}
 				state->pc = state->stack[state->stack_pointer];
 			}
@@ -2187,9 +2198,7 @@ void c8_update_emulator(C8_State *state)
 			}
 			else
 			{
-				c8_message_box("Bad ROM");
-				c8_reset_emulator(state);
-				state->program_loaded = false;
+				c8_bad_rom(state);
 				break;
 			}
 		}
