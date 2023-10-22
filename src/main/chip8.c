@@ -6,113 +6,124 @@
 
 #include "chip8.h"
 
-void c8_render_text(C8_State* state)
+void c8_render_text(C8_State *state)
 {
 
 	HRESULT hr = IDirect3DDevice9_SetFVF(state->d3d_dev, C8_TEX_FVF);
 
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set FVF for texture\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_SetStreamSource(state->d3d_dev, 0, state->text_vb, 0, sizeof(C8_D3D_Texture_Vertex));
 
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set stream source texture\n");
 		assert(false);
-
 	}
 
-	C8_D3D_Texture_Vertex* vertices;
+	C8_D3D_Texture_Vertex *vertices;
 
-	hr = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void**)&vertices, 0);
-	if (FAILED(hr)) {
+	hr = IDirect3DVertexBuffer9_Lock(state->text_vb, 0, 0, (void **)&vertices, 0);
+	if (SUCCEEDED(hr))
+	{
+		for (size_t i = 0; i < state->text_vertex_count; i++)
+		{
+			C8_Texture_Vertex source_vertex = state->text_vertices[i];
+			C8_D3D_Texture_Vertex vertex = {0};
+			vertex.x = source_vertex.x;
+			vertex.y = source_vertex.y;
+			vertex.rhw = 1.0f;
+			vertex.u = source_vertex.u;
+			vertex.v = source_vertex.v;
+			C8_Rgba source_color = source_vertex.color;
+			vertex.color = D3DCOLOR_ARGB(source_color.a, source_color.r, source_color.g, source_color.b);
+			vertices[i] = vertex;
+		}
+
+		hr = IDirect3DVertexBuffer9_Unlock(state->text_vb);
+		if (FAILED(hr))
+		{
+			C8_LOG_ERROR("Could not unlock vertex buffer\n");
+			assert(false);
+		}
+	}
+	else
+	{
 		C8_LOG_ERROR("Could not lock vertex buffer\n");
 		assert(false);
 	}
 
-	for (size_t i = 0; i < state->text_vertex_count; i++)
-	{
-		C8_Texture_Vertex source_vertex = state->text_vertices[i];
-		C8_D3D_Texture_Vertex vertex = { 0 };
-		vertex.x = source_vertex.x;
-		vertex.y = source_vertex.y;
-		vertex.rhw = 1.0f;
-		vertex.u = source_vertex.u;
-		vertex.v = source_vertex.v;
-		C8_Rgba source_color = source_vertex.color;
-		vertex.color = D3DCOLOR_ARGB(source_color.a, source_color.r, source_color.g, source_color.b);
-		vertices[i] = vertex;
-	}
-
-	hr = IDirect3DVertexBuffer9_Unlock(state->text_vb);
-	if (FAILED(hr)) {
-		C8_LOG_ERROR("Could not unlock vertex buffer\n");
-		assert(false);
-	}
-
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_LIGHTING, FALSE);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set D3DRS_LIGHTING\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_ALPHABLENDENABLE, TRUE);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set D3DRS_ALPHABLENDENABLE\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set D3DBLEND_SRCALPHA\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set D3DBLEND_INVSRCALPHA\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_SetRenderState(state->d3d_dev, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set D3DTOP_MODULATE\n");
 		assert(false);
 	}
 
-	hr = IDirect3DDevice9_SetTexture(state->d3d_dev, 0, (IDirect3DBaseTexture9*)state->texture);
-	if (FAILED(hr)) {
+	hr = IDirect3DDevice9_SetTexture(state->d3d_dev, 0, (IDirect3DBaseTexture9 *)state->texture);
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not set texture\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_DrawPrimitive(state->d3d_dev, D3DPT_TRIANGLELIST, 0, state->text_vertex_count);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not draw primitive\n");
 
 		assert(false);
 	}
 
 	state->text_vertex_count = 0;
-
 }
 
-BOOL c8_load_font(C8_State* state, char const* const file_name)
+BOOL c8_load_font(C8_State *state, char const *const file_name)
 {
 
 	BOOL result = false;
 
-	C8_File file = { 0 };
+	C8_File file = {0};
 
 	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
-		C8_Font font = *((C8_Font*)file.data);
+		C8_Font font = *((C8_Font *)file.data);
 
 		state->font = font;
 
-		u8* input_bitmap = (u8*)file.data + sizeof(font);
+		u8 *input_bitmap = (u8 *)file.data + sizeof(font);
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
 				state->d3d_dev,
@@ -127,13 +138,13 @@ BOOL c8_load_font(C8_State* state, char const* const file_name)
 
 		if (SUCCEEDED(textureCreated))
 		{
-			D3DLOCKED_RECT out_rect = { 0 };
+			D3DLOCKED_RECT out_rect = {0};
 
 			HRESULT locked = IDirect3DTexture9_LockRect(state->texture, 0, &out_rect, 0, 0);
 			if (SUCCEEDED(locked))
 			{
 
-				uint8_t* row_start = (uint8_t*)(out_rect.pBits);
+				uint8_t *row_start = (uint8_t *)(out_rect.pBits);
 				for (uint32_t row = 0; row < font.height; row++)
 				{
 
@@ -143,10 +154,10 @@ BOOL c8_load_font(C8_State* state, char const* const file_name)
 
 						float alpha = ((float)src_pixel) / 255.0f;
 
-						((float*)row_start)[column * 4] = 1.0f;
-						((float*)row_start)[column * 4 + 1] = 1.0f;
-						((float*)row_start)[column * 4 + 2] = 1.0f;
-						((float*)row_start)[column * 4 + 3] = alpha;
+						((float *)row_start)[column * 4] = 1.0f;
+						((float *)row_start)[column * 4 + 1] = 1.0f;
+						((float *)row_start)[column * 4 + 2] = 1.0f;
+						((float *)row_start)[column * 4 + 3] = alpha;
 					}
 
 					row_start += out_rect.Pitch;
@@ -154,10 +165,10 @@ BOOL c8_load_font(C8_State* state, char const* const file_name)
 			}
 			else
 			{
-				C8_LOG_ERROR("Could not lock triangle\n");
+				C8_LOG_ERROR("Could not lock rectangle\n");
 			}
 
-			input_bitmap = ((uint8_t*)file.data + 2);
+			input_bitmap = ((uint8_t *)file.data + 2);
 
 			HRESULT unlocked = IDirect3DTexture9_UnlockRect(state->texture, 0);
 			if (SUCCEEDED(unlocked))
@@ -201,7 +212,7 @@ BOOL c8_load_font(C8_State* state, char const* const file_name)
 
 D3DPRESENT_PARAMETERS c8_init_d3d_params(HWND window)
 {
-	D3DPRESENT_PARAMETERS result = { 0 };
+	D3DPRESENT_PARAMETERS result = {0};
 
 	result.Windowed = TRUE;
 	result.SwapEffect = D3DSWAPEFFECT_DISCARD;
@@ -224,7 +235,7 @@ D3DPRESENT_PARAMETERS c8_init_d3d_params(HWND window)
 	return result;
 }
 
-bool c8_query_perf_count(C8_Timer* timer, LARGE_INTEGER* perf_count)
+bool c8_query_perf_count(C8_Timer *timer, LARGE_INTEGER *perf_count)
 {
 	bool result = false;
 	if (QueryPerformanceCounter(perf_count))
@@ -241,9 +252,9 @@ bool c8_query_perf_count(C8_Timer* timer, LARGE_INTEGER* perf_count)
 
 C8_Timer c8_init_timer()
 {
-	C8_Timer result = { 0 };
+	C8_Timer result = {0};
 
-	LARGE_INTEGER perf_freq = { 0 };
+	LARGE_INTEGER perf_freq = {0};
 
 	if (QueryPerformanceFrequency(&perf_freq))
 	{
@@ -267,14 +278,14 @@ C8_Timer c8_init_timer()
 float c8_compute_millis(C8_Timer timer, LARGE_INTEGER new_perf_count)
 {
 	float secs_elapsed = ((float)(new_perf_count.QuadPart - timer.perf_count.QuadPart)) /
-		((float)(timer.perf_freq.QuadPart));
+						 ((float)(timer.perf_freq.QuadPart));
 
 	float result = secs_elapsed * 1000.0f;
 
 	return result;
 }
 
-float c8_millis_elapsed(C8_Timer* timer, bool reset_timer)
+float c8_millis_elapsed(C8_Timer *timer, bool reset_timer)
 {
 	float millis_elapsed = -1.0f;
 
@@ -297,10 +308,10 @@ float c8_millis_elapsed(C8_Timer* timer, bool reset_timer)
 	return millis_elapsed;
 }
 
-void c8_render_color(C8_State* state)
+void c8_render_color(C8_State *state)
 {
 
-	VOID* vp;
+	VOID *vp;
 
 	HRESULT hr = IDirect3DDevice9_SetTexture(state->d3d_dev, 0, 0);
 	if (FAILED(hr))
@@ -316,29 +327,31 @@ void c8_render_color(C8_State* state)
 		&vp,
 		0);
 
-	if (FAILED(hr))
+	if (SUCCEEDED(hr))
+	{
+		for (size_t vertex_index = 0; vertex_index < state->color_vertex_count; vertex_index++)
+		{
+			C8_D3D_Color_Vertex win_vertex = {0};
+			C8_Color_Vertex vertex = state->color_vertices[vertex_index];
+			win_vertex.x = vertex.x;
+			win_vertex.y = vertex.y;
+			win_vertex.rhw = 1.0f;
+			C8_Rgba color = vertex.color;
+			win_vertex.color = D3DCOLOR_ARGB(color.a, color.r, color.g, color.b);
+			((C8_D3D_Color_Vertex *)vp)[vertex_index] = win_vertex;
+		}
+
+		hr = IDirect3DVertexBuffer9_Unlock(state->color_vb);
+		if (FAILED(hr))
+		{
+			C8_LOG_ERROR("Failed to unlock vertex buffer\n");
+
+			assert(false);
+		}
+	}
+	else
 	{
 		C8_LOG_ERROR("Failed to lock vertex buffer\n");
-		assert(false);
-	}
-
-	for (size_t vertex_index = 0; vertex_index < state->color_vertex_count; vertex_index++)
-	{
-		C8_D3D_Color_Vertex win_vertex = { 0 };
-		C8_Color_Vertex vertex = state->color_vertices[vertex_index];
-		win_vertex.x = vertex.x;
-		win_vertex.y = vertex.y;
-		win_vertex.rhw = 1.0f;
-		C8_Rgba color = vertex.color;
-		win_vertex.color = D3DCOLOR_ARGB(color.a, color.r, color.g, color.b);
-		((C8_D3D_Color_Vertex*)vp)[vertex_index] = win_vertex;
-	}
-
-	hr = IDirect3DVertexBuffer9_Unlock(state->color_vb);
-	if (FAILED(hr))
-	{
-		C8_LOG_ERROR("Failed to unlock vertex buffer\n");
-
 		assert(false);
 	}
 
@@ -376,24 +389,26 @@ void c8_render_color(C8_State* state)
 	}
 }
 
-void c8_render(C8_State* state)
+void c8_render(C8_State *state)
 {
 
 	HRESULT hr = IDirect3DDevice9_Clear(state->d3d_dev,
-		0,
-		0,
-		D3DCLEAR_TARGET,
-		D3DCOLOR_ARGB(255, 255, 255, 255),
-		1.0f,
-		0);
+										0,
+										0,
+										D3DCLEAR_TARGET,
+										D3DCOLOR_ARGB(255, 255, 255, 255),
+										1.0f,
+										0);
 
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Could not clear screen\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_BeginScene(state->d3d_dev);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("BeginScene failed\n");
 		assert(false);
 	}
@@ -403,31 +418,33 @@ void c8_render(C8_State* state)
 	c8_render_text(state);
 
 	hr = IDirect3DDevice9_EndScene(state->d3d_dev);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("EndScene failed\n");
 		assert(false);
 	}
 
 	hr = IDirect3DDevice9_Present(state->d3d_dev, 0, 0, 0, 0);
 
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		C8_LOG_ERROR("Present failed\n");
 		assert(false);
 	}
 }
 
-bool c8_init_texture(C8_State* state, char const* const file_name)
+bool c8_init_texture(C8_State *state, char const *const file_name)
 {
 
 	bool result = false;
 
-	C8_File file = { 0 };
+	C8_File file = {0};
 
 	if (c8_read_entire_file(file_name, &state->arena, &file))
 	{
 
-		UINT width = ((UINT*)file.data)[0];
-		UINT height = ((UINT*)file.data)[1];
+		UINT width = ((UINT *)file.data)[0];
+		UINT height = ((UINT *)file.data)[1];
 
 		HRESULT textureCreated =
 			IDirect3DDevice9_CreateTexture(
@@ -448,7 +465,7 @@ bool c8_init_texture(C8_State* state, char const* const file_name)
 			rect.Pitch = width;
 			rect.pBits = 0;
 
-			u8* input_bitmap = (u8*)(((UINT*)file.data) + 2);
+			u8 *input_bitmap = (u8 *)(((UINT *)file.data) + 2);
 			HRESULT locked = IDirect3DTexture9_LockRect(state->texture, 0, &rect, 0, 0);
 
 			if (SUCCEEDED(locked))
@@ -465,7 +482,7 @@ bool c8_init_texture(C8_State* state, char const* const file_name)
 						{
 
 							float color = (float)pixel / 255.0f;
-							((float*)rect.pBits)[float_count] = color;
+							((float *)rect.pBits)[float_count] = color;
 							float_count++;
 						}
 					}
@@ -501,7 +518,7 @@ bool c8_init_texture(C8_State* state, char const* const file_name)
 	return result;
 }
 
-bool c8_initd3d(C8_State* state, HWND window)
+bool c8_initd3d(C8_State *state, HWND window)
 {
 	state->d3d = Direct3DCreate9(DIRECT3D_VERSION);
 	if (!state->d3d)
@@ -586,7 +603,7 @@ bool c8_initd3d(C8_State* state, HWND window)
 	return true;
 }
 
-void c8_process_key(C8_Key* key, WORD key_flags)
+void c8_process_key(C8_Key *key, WORD key_flags)
 {
 
 	BOOL is_up = (key_flags & KF_UP) == KF_UP;
@@ -605,7 +622,7 @@ void c8_process_key(C8_Key* key, WORD key_flags)
 	key->half_transitions++;
 }
 
-bool c8_init_dsound(C8_State* state, HWND window, i32 samples_per_sec)
+bool c8_init_dsound(C8_State *state, HWND window, i32 samples_per_sec)
 {
 	bool result = false;
 
@@ -630,7 +647,7 @@ bool c8_init_dsound(C8_State* state, HWND window, i32 samples_per_sec)
 		HRESULT cl = IDirectSound_SetCooperativeLevel(dsound, window, DSSCL_PRIORITY);
 		if (SUCCEEDED(cl))
 		{
-			DSBUFFERDESC pbuf_desc = { 0 };
+			DSBUFFERDESC pbuf_desc = {0};
 			pbuf_desc.dwSize = sizeof(pbuf_desc);
 			pbuf_desc.dwFlags = DSBCAPS_PRIMARYBUFFER;
 			LPDIRECTSOUNDBUFFER pbuf;
@@ -642,7 +659,7 @@ bool c8_init_dsound(C8_State* state, HWND window, i32 samples_per_sec)
 				HRESULT fset = IDirectSoundBuffer_SetFormat(pbuf, &wformat);
 				if (SUCCEEDED(fset))
 				{
-					DSBUFFERDESC sbuf_desc = { 0 };
+					DSBUFFERDESC sbuf_desc = {0};
 					sbuf_desc.dwSize = sizeof(sbuf_desc);
 					sbuf_desc.dwBufferBytes = buf_bytes;
 					sbuf_desc.lpwfxFormat = &wformat;
@@ -673,7 +690,7 @@ bool c8_init_dsound(C8_State* state, HWND window, i32 samples_per_sec)
 
 							i32 half_wave_period = wave_period / 2;
 
-							i16* samples = (i16*)buf_data;
+							i16 *samples = (i16 *)buf_data;
 
 							for (i16 i = 0; i < buf_size / sizeof(i16); i++)
 							{
@@ -810,131 +827,131 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		WORD key_flags = HIWORD(lparam);
 		WORD scan_code = LOBYTE(key_flags);
 		WORD vkey_code = LOWORD(wparam);
-		C8_Control_Keys* controls = &(global_state.control_keys);
+		C8_Control_Keys *controls = &(global_state.control_keys);
 		switch (vkey_code)
 		{
 		case VK_RETURN:
 		{
-			C8_Key* key = &(controls->control_keys.enter);
+			C8_Key *key = &(controls->control_keys.enter);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case VK_ESCAPE:
 		{
-			C8_Key* key = &(controls->control_keys.esc);
+			C8_Key *key = &(controls->control_keys.esc);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 'P':
 		{
-			C8_Key* key = &(controls->control_keys.p);
+			C8_Key *key = &(controls->control_keys.p);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case VK_SPACE:
 		{
-			C8_Key* key = &(controls->control_keys.space);
+			C8_Key *key = &(controls->control_keys.space);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		}
 
-		C8_Keypad* keypad = &(global_state.keypad);
+		C8_Keypad *keypad = &(global_state.keypad);
 		switch (scan_code)
 		{
 		case 2:
 		{
-			C8_Key* key = &(keypad->keypad.kp_1);
+			C8_Key *key = &(keypad->keypad.kp_1);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 3:
 		{
-			C8_Key* key = &(keypad->keypad.kp_2);
+			C8_Key *key = &(keypad->keypad.kp_2);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 4:
 		{
-			C8_Key* key = &(keypad->keypad.kp_3);
+			C8_Key *key = &(keypad->keypad.kp_3);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 5:
 		{
-			C8_Key* key = &(keypad->keypad.kp_c);
+			C8_Key *key = &(keypad->keypad.kp_c);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 16:
 		{
-			C8_Key* key = &(keypad->keypad.kp_4);
+			C8_Key *key = &(keypad->keypad.kp_4);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 17:
 		{
-			C8_Key* key = &(keypad->keypad.kp_5);
+			C8_Key *key = &(keypad->keypad.kp_5);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 18:
 		{
-			C8_Key* key = &(keypad->keypad.kp_6);
+			C8_Key *key = &(keypad->keypad.kp_6);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 19:
 		{
-			C8_Key* key = &(keypad->keypad.kp_d);
+			C8_Key *key = &(keypad->keypad.kp_d);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 30:
 		{
-			C8_Key* key = &(keypad->keypad.kp_7);
+			C8_Key *key = &(keypad->keypad.kp_7);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 31:
 		{
-			C8_Key* key = &(keypad->keypad.kp_8);
+			C8_Key *key = &(keypad->keypad.kp_8);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 32:
 		{
-			C8_Key* key = &(keypad->keypad.kp_9);
+			C8_Key *key = &(keypad->keypad.kp_9);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 33:
 		{
-			C8_Key* key = &(keypad->keypad.kp_e);
+			C8_Key *key = &(keypad->keypad.kp_e);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 44:
 		{
-			C8_Key* key = &(keypad->keypad.kp_a);
+			C8_Key *key = &(keypad->keypad.kp_a);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 45:
 		{
-			C8_Key* key = &(keypad->keypad.kp_0);
+			C8_Key *key = &(keypad->keypad.kp_0);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 46:
 		{
-			C8_Key* key = &(keypad->keypad.kp_b);
+			C8_Key *key = &(keypad->keypad.kp_b);
 			c8_process_key(key, key_flags);
 		}
 		break;
 		case 47:
 		{
-			C8_Key* key = &(keypad->keypad.kp_f);
+			C8_Key *key = &(keypad->keypad.kp_f);
 			c8_process_key(key, key_flags);
 		}
 		break;
@@ -946,32 +963,32 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
-void c8_log(char const* const message)
+void c8_log(char const *const message)
 {
 	printf(message);
 	OutputDebugString(message);
 }
 
-void c8_logln(char const* const message)
+void c8_logln(char const *const message)
 {
 	c8_log(message);
 	c8_log("\n");
 }
 
-void c8_log_error(char const* const file, uint32_t line, char const* const msg)
+void c8_log_error(char const *const file, uint32_t line, char const *const msg)
 {
-	char buf[1024] = { 0 };
+	char buf[1024] = {0};
 	snprintf(buf, sizeof(buf), "ERROR (%s:%u): %s", file, line, msg);
 	c8_log(buf);
 }
 
 HWND c8_create_window(HINSTANCE instance, int width, int height)
 {
-	const char* class_name = "chip8";
+	const char *class_name = "chip8";
 
-	WNDCLASS wc = { .lpfnWndProc = WindowProc,
+	WNDCLASS wc = {.lpfnWndProc = WindowProc,
 				   .hInstance = instance,
-				   .lpszClassName = class_name };
+				   .lpszClassName = class_name};
 
 	HWND window = 0;
 	if (RegisterClass(&wc) != 0)
@@ -1001,7 +1018,7 @@ HWND c8_create_window(HINSTANCE instance, int width, int height)
 	return window;
 }
 
-bool c8_process_msgs(C8_State* state, HWND window)
+bool c8_process_msgs(C8_State *state, HWND window)
 {
 	MSG msg;
 	while (PeekMessage(&msg, window, 0, 0, PM_REMOVE))
@@ -1018,14 +1035,14 @@ bool c8_process_msgs(C8_State* state, HWND window)
 	return true;
 }
 
-void c8_push_color_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
+void c8_push_color_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
 {
 	c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
 	c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
 	c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 }
 
-bool c8_start_beep(C8_State* state)
+bool c8_start_beep(C8_State *state)
 {
 	bool result = false;
 
@@ -1043,7 +1060,7 @@ bool c8_start_beep(C8_State* state)
 	return result;
 }
 
-bool c8_stop_beep(C8_State* state)
+bool c8_stop_beep(C8_State *state)
 {
 	bool result = false;
 
@@ -1061,14 +1078,14 @@ bool c8_stop_beep(C8_State* state)
 	return result;
 }
 
-wchar_t* c8_get_first_argument(LPWSTR cmd_line, C8_Arena* arena)
+wchar_t *c8_get_first_argument(LPWSTR cmd_line, C8_Arena *arena)
 {
-	wchar_t* first_argument = 0;
+	wchar_t *first_argument = 0;
 
 	size_t length = 0;
 	size_t start = 0;
 
-	wchar_t* next_char = cmd_line;
+	wchar_t *next_char = cmd_line;
 	while (*next_char != '\0' && isspace(*next_char))
 	{
 		next_char++;
@@ -1092,10 +1109,10 @@ wchar_t* c8_get_first_argument(LPWSTR cmd_line, C8_Arena* arena)
 	return first_argument;
 }
 
-void c8_load_from_file_dialog(C8_State* state)
+void c8_load_from_file_dialog(C8_State *state)
 {
 
-	char path[1024] = { 0 };
+	char path[1024] = {0};
 
 	OPENFILENAME file_name = {
 		.lStructSize = sizeof(file_name),
@@ -1122,7 +1139,7 @@ void c8_load_from_file_dialog(C8_State* state)
 	}
 }
 
-void c8_message_box(const char* message)
+void c8_message_box(const char *message)
 {
 	BOOL succeded = MessageBox(
 		global_state.window,
@@ -1201,8 +1218,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 		WINDOWPLACEMENT window_placement;
 		window_placement.length = sizeof(WINDOWPLACEMENT);
 		if (GetWindowPlacement(
-			window,
-			&window_placement))
+				window,
+				&window_placement))
 		{
 			POINT point;
 			if (GetCursorPos(&point) && ScreenToClient(window, &point))
@@ -1242,7 +1259,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 
 		char str[255];
 		sprintf(str, "Milliseconds: %f\n", milli_elapsed);
-		//c8_log(str);
+		// c8_log(str);
 	}
 
 	fflush(stdout);
@@ -1250,9 +1267,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
 	return 0;
 }
 
-void* c8_allocate(psz size)
+void *c8_allocate(psz size)
 {
-	void* result = VirtualAlloc(
+	void *result = VirtualAlloc(
 		0,
 		size,
 		MEM_COMMIT,
@@ -1261,7 +1278,7 @@ void* c8_allocate(psz size)
 	return result;
 }
 
-HANDLE c8_open_file_for_read(const char* path)
+HANDLE c8_open_file_for_read(const char *path)
 {
 	HANDLE f = CreateFile(
 		path,
@@ -1285,10 +1302,10 @@ uint64_t c8_file_size(HANDLE file)
 {
 
 	uint64_t result = 0;
-	LARGE_INTEGER f_size = { 0 };
+	LARGE_INTEGER f_size = {0};
 	if (GetFileSizeEx(
-		file,
-		&f_size))
+			file,
+			&f_size))
 	{
 		result = f_size.QuadPart;
 	}
@@ -1300,7 +1317,7 @@ uint64_t c8_file_size(HANDLE file)
 	return result;
 }
 
-bool c8_read_file(HANDLE f, char* buffer, uint64_t total_bytes_to_read)
+bool c8_read_file(HANDLE f, char *buffer, uint64_t total_bytes_to_read)
 {
 	while (total_bytes_to_read > 0)
 	{
@@ -1317,11 +1334,11 @@ bool c8_read_file(HANDLE f, char* buffer, uint64_t total_bytes_to_read)
 		DWORD bytes_read;
 
 		if (!ReadFile(
-			f,
-			buffer,
-			bytes_to_read,
-			&bytes_read,
-			0))
+				f,
+				buffer,
+				bytes_to_read,
+				&bytes_read,
+				0))
 		{
 			return false;
 		}
@@ -1337,7 +1354,7 @@ bool c8_close_file(HANDLE file)
 	return CloseHandle(file);
 }
 
-bool c8_read_entire_file(const char* path, C8_Arena* arena, C8_File* read_result)
+bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result)
 {
 
 	bool result = false;
@@ -1348,7 +1365,7 @@ bool c8_read_entire_file(const char* path, C8_Arena* arena, C8_File* read_result
 	{
 		uint64_t size = c8_file_size(f);
 
-		void* data = c8_arena_alloc(arena, size);
+		void *data = c8_arena_alloc(arena, size);
 
 		if (data != 0)
 		{
@@ -1390,21 +1407,21 @@ u16 c8_read_instruction(u16 bytes)
 	return result;
 }
 
-float c8_frame_x(C8_State* state)
+float c8_frame_x(C8_State *state)
 {
 	float result = (state->cli_width / 2) - (C8_MONITOR_WIDTH / 2);
 
 	return result;
 }
 
-float c8_frame_y(C8_State* state)
+float c8_frame_y(C8_State *state)
 {
 	float result = (state->cli_height / 2) - (C8_MONITOR_HEIGHT / 2);
 
 	return result;
 }
 
-void c8_push_frame(C8_State* state)
+void c8_push_frame(C8_State *state)
 {
 	float frame_x = c8_frame_x(state);
 
@@ -1447,7 +1464,7 @@ void c8_push_frame(C8_State* state)
 	);
 }
 
-void c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a)
+void c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a)
 {
 	assert(state->color_vertex_count < C8_ARRCOUNT(state->color_vertices));
 
@@ -1456,7 +1473,7 @@ void c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u
 		state->color_vertices[state->color_vertex_count].x = x;
 		state->color_vertices[state->color_vertex_count].y = y;
 
-		C8_Rgba color = { 0 };
+		C8_Rgba color = {0};
 		color.r = r;
 		color.g = g;
 		color.b = b;
@@ -1470,7 +1487,7 @@ void c8_push_color_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u
 	}
 }
 
-void c8_load_rom(const char* path, C8_State* state)
+void c8_load_rom(const char *path, C8_State *state)
 {
 
 	HANDLE handle = c8_open_file_for_read(path);
@@ -1490,7 +1507,7 @@ void c8_load_rom(const char* path, C8_State* state)
 		goto cleanup;
 	}
 
-	char* buffer = c8_arena_alloc(&state->arena, size);
+	char *buffer = c8_arena_alloc(&state->arena, size);
 
 	if (!buffer)
 	{
@@ -1546,14 +1563,14 @@ cleanup:
 	}
 }
 
-void c8_push_text_triangle(C8_State* state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
+void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
 	c8_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
 	c8_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
 	c8_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
-void c8_push_glyph(C8_State* state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
 {
 
 	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
@@ -1565,7 +1582,7 @@ void c8_push_glyph(C8_State* state, C8_Glyph glyph, float x, float y, float widt
 	c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 }
 
-void c8_draw_text(C8_State* state, char* text, float x, float y, float scale, float spacing, C8_Rgba rgba)
+void c8_draw_text(C8_State *state, char *text, float x, float y, float scale, float spacing, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
@@ -1583,7 +1600,7 @@ void c8_draw_text(C8_State* state, char* text, float x, float y, float scale, fl
 	}
 }
 
-void c8_push_text_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
+void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
 {
 	assert(state->text_vertex_count < C8_ARRCOUNT(state->text_vertices));
 
@@ -1593,7 +1610,7 @@ void c8_push_text_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8
 		state->text_vertices[state->text_vertex_count].y = y;
 		state->text_vertices[state->text_vertex_count].u = u;
 		state->text_vertices[state->text_vertex_count].v = v;
-		C8_Rgba color = { 0 };
+		C8_Rgba color = {0};
 		color.r = r;
 		color.g = g;
 		color.b = b;
@@ -1607,18 +1624,18 @@ void c8_push_text_vertex(C8_State* state, float x, float y, u8 r, u8 g, u8 b, u8
 	}
 }
 
-void c8_draw_rect(C8_State* state, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)
 {
-	C8_V2 p1 = { x, y };
-	C8_V2 p2 = { x + width, y };
-	C8_V2 p3 = { x + width,  y + height };
-	C8_V2 p4 = { x, y + height };
+	C8_V2 p1 = {x, y};
+	C8_V2 p2 = {x + width, y};
+	C8_V2 p3 = {x + width, y + height};
+	C8_V2 p4 = {x, y + height};
 
 	c8_push_color_triangle(state, p1, p2, p3, rgb);
 	c8_push_color_triangle(state, p1, p3, p4, rgb);
 }
 
-void c8_push_pixels(C8_State* state)
+void c8_push_pixels(C8_State *state)
 {
 
 	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
@@ -1642,7 +1659,7 @@ void c8_push_pixels(C8_State* state)
 	}
 }
 
-void c8_reset_key(C8_Key* k)
+void c8_reset_key(C8_Key *k)
 {
 	k->started_down = k->ended_down;
 	k->was_down = k->ended_down;
@@ -1651,7 +1668,7 @@ void c8_reset_key(C8_Key* k)
 	k->half_transitions = 0;
 }
 
-void c8_add_number_to_register(C8_State* state, u8 x, u8 nn)
+void c8_add_number_to_register(C8_State *state, u8 x, u8 nn)
 {
 
 	u8 vx = state->var_registers[x];
@@ -1669,7 +1686,7 @@ void c8_add_number_to_register(C8_State* state, u8 x, u8 nn)
 	state->var_registers[x] = (result & 0xff);
 }
 
-bool c8_call(C8_State* state, u16 nnn)
+bool c8_call(C8_State *state, u16 nnn)
 {
 	state->stack[state->stack_pointer] = state->pc;
 	state->stack_pointer++;
@@ -1683,7 +1700,7 @@ bool c8_call(C8_State* state, u16 nnn)
 	return true;
 }
 
-float c8_max_v_height(char* text, size_t text_length, C8_Font* font)
+float c8_max_v_height(char *text, size_t text_length, C8_Font *font)
 {
 
 	float result = 0.0f;
@@ -1705,7 +1722,7 @@ float c8_max_v_height(char* text, size_t text_length, C8_Font* font)
 	return result;
 }
 
-float c8_text_width(C8_Font* font, char* text, float text_scale, float spacing)
+float c8_text_width(C8_Font *font, char *text, float text_scale, float spacing)
 {
 	float result = 0.0f;
 
@@ -1727,7 +1744,7 @@ float c8_text_width(C8_Font* font, char* text, float text_scale, float spacing)
 	return result;
 }
 
-float c8_offset_to_center_vertically(C8_Font* font, const char* text, float text_scale, float container_height)
+float c8_offset_to_center_vertically(C8_Font *font, const char *text, float text_scale, float container_height)
 {
 	C8_UNREFERENCED(container_height);
 
@@ -1759,8 +1776,8 @@ float c8_offset_to_center_vertically(C8_Font* font, const char* text, float text
 }
 
 void c8_load_button_init(
-	C8_State* state,
-	C8_Button* button)
+	C8_State *state,
+	C8_Button *button)
 {
 	button->x = (state->cli_width / 2.0f) - (C8_LOAD_BUTTON_WIDTH / 2.0f);
 
@@ -1786,7 +1803,7 @@ void c8_load_button_init(
 	button->text_x_offset = (button->width - text_width) / 2.0f;
 }
 
-void c8_draw_load_button(C8_State* state)
+void c8_draw_load_button(C8_State *state)
 {
 
 	C8_Button button = state->load_button;
@@ -1795,7 +1812,7 @@ void c8_draw_load_button(C8_State* state)
 	{
 		c8_draw_rect(state, button.x, button.y, button.width, button.height, button.text_color);
 
-		C8_Rgba white = { 255, 255, 255, 255 };
+		C8_Rgba white = {255, 255, 255, 255};
 
 		c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, white);
 	}
@@ -1813,15 +1830,12 @@ void c8_draw_load_button(C8_State* state)
 	}
 }
 
-void c8_update_emulator(C8_State* state)
+void c8_update_emulator(C8_State *state)
 {
 
 	C8_Button load_button = state->load_button;
 
-	state->load_button.is_mouse_over = state->mouse_position.x >= load_button.x
-		&& state->mouse_position.x <= load_button.x + load_button.width
-		&& state->mouse_position.y >= load_button.y
-		&& state->mouse_position.y <= load_button.y + load_button.height;
+	state->load_button.is_mouse_over = state->mouse_position.x >= load_button.x && state->mouse_position.x <= load_button.x + load_button.width && state->mouse_position.y >= load_button.y && state->mouse_position.y <= load_button.y + load_button.height;
 
 	if (state->mouse_buttons.left_button.was_pressed && state->load_button.is_mouse_over)
 	{
@@ -1837,7 +1851,8 @@ void c8_update_emulator(C8_State* state)
 		}
 	}
 
-	if (state->load_button.is_down && (state->mouse_buttons.left_button.was_lifted || !(state->load_button.is_mouse_over))) {
+	if (state->load_button.is_down && (state->mouse_buttons.left_button.was_lifted || !(state->load_button.is_mouse_over)))
+	{
 		state->load_button.is_down = false;
 	}
 
@@ -1848,7 +1863,7 @@ void c8_update_emulator(C8_State* state)
 		for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 		{
 			assert(state->pc < sizeof(state->ram));
-			u16 instruction = c8_read_instruction(*((u16*)(state->ram + state->pc)));
+			u16 instruction = c8_read_instruction(*((u16 *)(state->ram + state->pc)));
 
 			u8 op = instruction >> 12;
 
@@ -1922,7 +1937,7 @@ void c8_update_emulator(C8_State* state)
 				u8 flag_register = 0;
 				u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
 				u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
-				u8* sprite_start = state->ram + state->index_register;
+				u8 *sprite_start = state->ram + state->index_register;
 
 				for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
 				{
@@ -2179,13 +2194,13 @@ void c8_update_emulator(C8_State* state)
 
 	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{
-		C8_Key* k = &(state->keypad.keys[kp]);
+		C8_Key *k = &(state->keypad.keys[kp]);
 		c8_reset_key(k);
 	}
 
 	for (int ck = 0; ck < C8_ARRCOUNT(state->control_keys.keys); ck++)
 	{
-		C8_Key* k = &(state->control_keys.keys[ck]);
+		C8_Key *k = &(state->control_keys.keys[ck]);
 		c8_reset_key(k);
 	}
 
@@ -2210,7 +2225,7 @@ void c8_update_emulator(C8_State* state)
 	}
 }
 
-void c8_app_update(C8_State* state)
+void c8_app_update(C8_State *state)
 {
 	state->color_vertex_count = 0;
 	state->text_vertex_count = 0;
@@ -2218,13 +2233,13 @@ void c8_app_update(C8_State* state)
 	c8_update_emulator(state);
 }
 
-bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement)
+bool c8_arena_init(C8_Arena *arena, psz size, i32 alignement)
 {
 	bool result = false;
 
 	assert(size % alignement == 0);
 
-	void* mem = c8_allocate(size);
+	void *mem = c8_allocate(size);
 
 	if (mem != 0)
 	{
@@ -2242,11 +2257,11 @@ bool c8_arena_init(C8_Arena* arena, psz size, i32 alignement)
 	return result;
 }
 
-void* c8_arena_alloc(C8_Arena* arena, psz size)
+void *c8_arena_alloc(C8_Arena *arena, psz size)
 {
 	assert(arena != 0);
 
-	void* result = 0;
+	void *result = 0;
 
 	psz eff_size = size;
 	if (eff_size % arena->alignement != 0)
@@ -2260,14 +2275,14 @@ void* c8_arena_alloc(C8_Arena* arena, psz size)
 
 	if (big_enough)
 	{
-		result = ((u8*)arena->data) + arena->offset;
+		result = ((u8 *)arena->data) + arena->offset;
 		arena->offset += eff_size;
 	}
 
 	return result;
 }
 
-void c8_arena_free_all(C8_Arena* arena)
+void c8_arena_free_all(C8_Arena *arena)
 {
 	assert(arena != 0);
 
