@@ -6,6 +6,14 @@
 
 #include "chip8.h"
 
+#pragma comment(lib, "kernel32.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "D3d9.lib")
+#pragma comment(lib, "Dsound.lib")
+#pragma comment(lib, "Dsound.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "Comdlg32.lib")
+
 void c8_render_text(C8_State *state)
 {
 
