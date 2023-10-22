@@ -110,7 +110,7 @@ void c8_render_text(C8_State *state)
 	state->text_vertex_count = 0;
 }
 
-BOOL c8_load_font(C8_State *state, char const *const file_name)
+BOOL c8_load_font(C8_State *state, const char *file_name)
 {
 
 	BOOL result = false;
@@ -433,7 +433,7 @@ void c8_render(C8_State *state)
 	}
 }
 
-bool c8_init_texture(C8_State *state, char const *const file_name)
+bool c8_init_texture(C8_State *state, const char *file_name)
 {
 
 	bool result = false;
@@ -963,19 +963,19 @@ LRESULT CALLBACK WindowProc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProcA(window, msg, wparam, lparam);
 }
 
-void c8_log(char const *const message)
+void c8_log(const char *message)
 {
 	printf(message);
 	OutputDebugString(message);
 }
 
-void c8_logln(char const *const message)
+void c8_logln(const char *message)
 {
 	c8_log(message);
 	c8_log("\n");
 }
 
-void c8_log_error(char const *const file, uint32_t line, char const *const msg)
+void c8_log_error(const char *file, uint32_t line, const char *msg)
 {
 	char buf[1024] = {0};
 	snprintf(buf, sizeof(buf), "ERROR (%s:%u): %s", file, line, msg);
