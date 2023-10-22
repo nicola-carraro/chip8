@@ -1394,7 +1394,7 @@ bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result
 	}
 	else
 	{
-		C8_LOG_ERROR("Could not open file:");
+		C8_LOG_ERROR("Could not open file: ");
 		c8_logln(path);
 	}
 
