@@ -1035,11 +1035,11 @@ bool c8_process_msgs(C8_State *state, HWND window)
 	return true;
 }
 
-void c8_push_color_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
+void c8_color_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb)
 {
-	c8_push_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	c8_push_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
-	c8_push_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	c8_color_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	c8_color_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a);
+	c8_color_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a);
 }
 
 bool c8_start_beep(C8_State *state)
@@ -1421,13 +1421,13 @@ float c8_frame_y(C8_State *state)
 	return result;
 }
 
-void c8_push_frame(C8_State *state)
+void c8_emulator_frame(C8_State *state)
 {
 	float frame_x = c8_frame_x(state);
 
 	float frame_y = c8_frame_y(state);
 
-	c8_draw_rect(
+	c8_rect(
 		state,
 		frame_x,
 		frame_y,
@@ -1435,7 +1435,7 @@ void c8_push_frame(C8_State *state)
 		C8_FRAME_WIDTH,
 		emulator_color);
 
-	c8_draw_rect(
+	c8_rect(
 		state,
 		frame_x + C8_MONITOR_WIDTH,
 		frame_y,
@@ -1443,7 +1443,7 @@ void c8_push_frame(C8_State *state)
 		C8_MONITOR_HEIGHT,
 		emulator_color);
 
-	c8_draw_rect(
+	c8_rect(
 		state,
 		frame_x + C8_FRAME_WIDTH,
 		frame_y + C8_MONITOR_HEIGHT,
@@ -1453,7 +1453,7 @@ void c8_push_frame(C8_State *state)
 
 	);
 
-	c8_draw_rect(
+	c8_rect(
 		state,
 		frame_x,
 		frame_y + C8_FRAME_WIDTH,
@@ -1464,7 +1464,7 @@ void c8_push_frame(C8_State *state)
 	);
 }
 
-void c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a)
+void c8_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a)
 {
 	assert(state->color_vertex_count < C8_ARRCOUNT(state->color_vertices));
 
@@ -1568,26 +1568,26 @@ cleanup:
 	}
 }
 
-void c8_push_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
+void c8_text_triangle(C8_State *state, C8_V2 p1, C8_V2 p2, C8_V2 p3, C8_Rgba rgb, float u1, float v1, float u2, float v2, float u3, float v3)
 {
-	c8_push_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
-	c8_push_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
-	c8_push_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
+	c8_text_vertex(state, p1.x, p1.y, rgb.r, rgb.g, rgb.b, rgb.a, u1, v1);
+	c8_text_vertex(state, p2.x, p2.y, rgb.r, rgb.g, rgb.b, rgb.a, u2, v2);
+	c8_text_vertex(state, p3.x, p3.y, rgb.r, rgb.g, rgb.b, rgb.a, u3, v3);
 }
 
-void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb)
 {
 
-	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	c8_push_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
-	c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	c8_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	c8_text_vertex(state, x + width, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_top);
+	c8_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
 
-	c8_push_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
-	c8_push_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
-	c8_push_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
+	c8_text_vertex(state, x, y, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_top);
+	c8_text_vertex(state, x + width, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_right, glyph.v_bottom);
+	c8_text_vertex(state, x, y + height, rgb.r, rgb.g, rgb.b, rgb.a, glyph.u_left, glyph.v_bottom);
 }
 
-void c8_draw_text(C8_State *state, char *text, float x, float y, float scale, float spacing, C8_Rgba rgba)
+void c8_text(C8_State *state, char *text, float x, float y, float scale, float spacing, C8_Rgba rgba)
 {
 
 	float x_offset = 0;
@@ -1598,14 +1598,14 @@ void c8_draw_text(C8_State *state, char *text, float x, float y, float scale, fl
 	{
 		c = *text;
 		C8_Glyph glyph = state->font.glyphs[c - C8_FIRST_CHAR];
-		c8_push_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
+		c8_glyph(state, glyph, x + x_offset, y + glyph.y_offset * scale, glyph.width * scale, glyph.height * scale, rgba);
 		x_offset += glyph.width * scale;
 		x_offset += spacing * scale;
 		text++;
 	}
 }
 
-void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
+void c8_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v)
 {
 	assert(state->text_vertex_count < C8_ARRCOUNT(state->text_vertices));
 
@@ -1629,18 +1629,18 @@ void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8
 	}
 }
 
-void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)
+void c8_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb)
 {
 	C8_V2 p1 = {x, y};
 	C8_V2 p2 = {x + width, y};
 	C8_V2 p3 = {x + width, y + height};
 	C8_V2 p4 = {x, y + height};
 
-	c8_push_color_triangle(state, p1, p2, p3, rgb);
-	c8_push_color_triangle(state, p1, p3, p4, rgb);
+	c8_color_triangle(state, p1, p2, p3, rgb);
+	c8_color_triangle(state, p1, p3, p4, rgb);
 }
 
-void c8_push_pixels(C8_State *state)
+void c8_emulator_pixels(C8_State *state)
 {
 
 	for (i32 r = 0; r < C8_ARRCOUNT(state->pixels); r++)
@@ -1652,7 +1652,7 @@ void c8_push_pixels(C8_State *state)
 				float frame_x = c8_frame_x(state);
 				float frame_y = c8_frame_y(state);
 
-				c8_draw_rect(
+				c8_rect(
 					state,
 					frame_x + (c * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
 					frame_y + (r * C8_PIXEL_SIDE) + C8_FRAME_WIDTH,
@@ -1806,30 +1806,30 @@ void c8_load_button_init(
 	button->text_x_offset = (button->width - text_width) / 2.0f;
 }
 
-void c8_draw_load_button(C8_State *state)
+void c8_load_button(C8_State *state)
 {
 
 	C8_Button button = state->load_button;
 
 	if (button.is_mouse_over)
 	{
-		c8_draw_rect(state, button.x, button.y, button.width, button.height, button.text_color);
+		c8_rect(state, button.x, button.y, button.width, button.height, button.text_color);
 
 		C8_Rgba white = {255, 255, 255, 255};
 
-		c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, white);
+		c8_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, white);
 	}
 	else
 	{
-		c8_draw_rect(state, button.x, button.y, button.width, button.border, button.text_color);
+		c8_rect(state, button.x, button.y, button.width, button.border, button.text_color);
 
-		c8_draw_rect(state, button.x, button.y, button.border, button.height, button.text_color);
+		c8_rect(state, button.x, button.y, button.border, button.height, button.text_color);
 
-		c8_draw_rect(state, button.x, button.y + button.height - button.border, button.width, button.border, button.text_color);
+		c8_rect(state, button.x, button.y + button.height - button.border, button.width, button.border, button.text_color);
 
-		c8_draw_rect(state, button.x + button.width - button.border, button.y, button.border, button.height, button.text_color);
+		c8_rect(state, button.x + button.width - button.border, button.y, button.border, button.height, button.text_color);
 
-		c8_draw_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, button.text_color);
+		c8_text(state, button.title, button.x + button.text_x_offset, button.y + button.text_y_offset, button.text_scale, button.text_spacing, button.text_color);
 	}
 }
 
@@ -1866,7 +1866,7 @@ void c8_update_emulator(C8_State *state)
 		state->load_button.is_down = false;
 	}
 
-	c8_draw_load_button(state);
+	c8_load_button(state);
 
 	if (state->program_loaded)
 	{
@@ -2202,9 +2202,9 @@ void c8_update_emulator(C8_State *state)
 		}
 	}
 
-	c8_push_frame(state);
+	c8_emulator_frame(state);
 
-	c8_push_pixels(state);
+	c8_emulator_pixels(state);
 
 	for (int kp = 0; kp < C8_ARRCOUNT(state->keypad.keys); kp++)
 	{

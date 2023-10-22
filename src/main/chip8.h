@@ -312,13 +312,13 @@ void c8_app_update(C8_State *state);
 
 const C8_Rgba emulator_color = {0, 0, 0, 255};
 
-void c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
+void c8_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a);
 
-void c8_draw_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
+void c8_rect(C8_State *state, float x, float y, float width, float height, C8_Rgba rgb);
 
-void c8_push_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
+void c8_glyph(C8_State *state, C8_Glyph glyph, float x, float y, float width, float height, C8_Rgba rgb);
 
-void c8_push_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
+void c8_text_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u8 a, float u, float v);
 
 bool c8_read_entire_file(const char *path, C8_Arena *arena, C8_File *read_result);
 
