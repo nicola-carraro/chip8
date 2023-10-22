@@ -1487,6 +1487,13 @@ void c8_push_color_vertex(C8_State *state, float x, float y, u8 r, u8 g, u8 b, u
 	}
 }
 
+void c8_reset_emulator(C8_State *state)
+{
+	memset(state->ram, 0, sizeof(state->ram));
+	memset(state->pixels, 0, sizeof(state->pixels));
+	state->pc = C8_PROG_ADDR;
+}
+
 void c8_load_rom(const char *path, C8_State *state)
 {
 
@@ -1518,9 +1525,7 @@ void c8_load_rom(const char *path, C8_State *state)
 	if (c8_read_file(handle, buffer, size))
 	{
 
-		memset(state->ram, 0, sizeof(state->ram));
-		memset(state->pixels, 0, sizeof(state->pixels));
-		state->pc = C8_PROG_ADDR;
+		c8_reset_emulator(state);
 		memcpy(state->ram + state->pc, buffer, size);
 
 		state->program_loaded = true;
@@ -2182,8 +2187,10 @@ void c8_update_emulator(C8_State *state)
 			}
 			else
 			{
-				C8_LOG_ERROR("Unimplemented instruction\n");
-				assert(false);
+				c8_message_box("Bad ROM");
+				c8_reset_emulator(state);
+				state->program_loaded = false;
+				break;
 			}
 		}
 	}
