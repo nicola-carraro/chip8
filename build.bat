@@ -1,10 +1,12 @@
 @echo off
 
-cl chip8.c /WX  /W4 /Z7  -nologo -Od       
+set common_flags=/WX /W4 /Z7  -nologo -Od
 
-cl test.c   /WX /W4 /Z7 -nologo -Od  /link  /SUBSYSTEM:CONSOLE
+cl chip8.c %common_flags%     
 
-cl assets.c  /WX /W4 /Z7 -Od -nologo -Od 
+cl test.c %common_flags%   /link  /SUBSYSTEM:CONSOLE
+
+cl assets.c %common_flags%  
 
 assets.exe
 
