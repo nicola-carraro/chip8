@@ -1691,18 +1691,16 @@ void c8_add_number_to_register(C8_State *state, u8 x, u8 nn)
 	state->var_registers[x] = (result & 0xff);
 }
 
-bool c8_call(C8_State *state, u16 nnn)
+void c8_call(C8_State *state, u16 nnn)
 {
 	state->stack[state->stack_pointer] = state->pc;
 	state->stack_pointer++;
 	if (state->stack_pointer >= C8_ARRCOUNT(state->stack))
 	{
 
-		return false;
+		c8_bad_rom(state);
 	}
 	state->pc = nnn;
-
-	return true;
 }
 
 float c8_max_v_height(char *text, size_t text_length, C8_Font *font)
@@ -1874,6 +1872,12 @@ void c8_update_emulator(C8_State *state)
 	{
 		for (i32 i = 0; i < C8_INSTRUCTIONS_PER_FRAME; i++)
 		{
+			// Break in case of bad ROM
+			if (!state->program_loaded)
+			{
+				break;
+			}
+
 			assert(state->pc < sizeof(state->ram));
 			u16 instruction = c8_read_instruction(*((u16 *)(state->ram + state->pc)));
 
@@ -1904,11 +1908,7 @@ void c8_update_emulator(C8_State *state)
 			else if (op == 0x2)
 			{
 				// Call
-				if (!c8_call(state, nnn))
-				{
-					c8_bad_rom(state);
-					break;
-				}
+				c8_call(state, nnn);
 			}
 			else if (instruction == 0x00ee)
 			{
@@ -1918,7 +1918,6 @@ void c8_update_emulator(C8_State *state)
 				if (state->stack_pointer < 0)
 				{
 					c8_bad_rom(state);
-					break;
 				}
 				state->pc = state->stack[state->stack_pointer];
 			}
@@ -2199,7 +2198,6 @@ void c8_update_emulator(C8_State *state)
 			else
 			{
 				c8_bad_rom(state);
-				break;
 			}
 		}
 	}
