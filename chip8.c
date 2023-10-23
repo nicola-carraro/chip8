@@ -1149,6 +1149,7 @@ void c8_load_from_file_dialog(C8_State *state)
 
 void c8_message_box(const char *message)
 {
+#ifndef C8_TEST
 	BOOL succeded = MessageBox(
 		global_state.window,
 		message,
@@ -1159,6 +1160,10 @@ void c8_message_box(const char *message)
 	{
 		C8_LOG_ERROR("Error while showing message box\n");
 	}
+
+#else
+	C8_UNREFERENCED(message);
+#endif
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int cmd_show)
@@ -1857,7 +1862,7 @@ void c8_return(C8_State *state)
 {
 	state->stack_pointer--;
 
-	if (state->stack_pointer < 0)
+	if (state->stack_pointer > C8_ARRCOUNT(state->stack))
 	{
 		C8_LOG_ERROR("Stack underflow\n");
 

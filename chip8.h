@@ -91,7 +91,16 @@ typedef uint8_t u8;
 
 #define C8_TEX_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
+#ifdef C8_TEST
+#define C8_LOG_ERROR(msg) \
+	{                     \
+	}
+
+#else
+
 #define C8_LOG_ERROR(msg) c8_log_error(__FILE__, __LINE__, msg)
+
+#endif
 
 typedef struct
 {

@@ -1,5 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#define C8_TEST
+
 #include <stdio.h>
 
 #include "chip8.c"
@@ -131,6 +133,16 @@ void c8_test_return()
 	assert(state.pc == 3 && "Program counter not updated");
 }
 
+void c8_test_return_underflow()
+{
+	c8_test_def("Return that causes stack underflow");
+	C8_State state = {0};
+	state.program_loaded = true;
+	state.stack_pointer = 0;
+	c8_return(&state);
+	assert(!state.program_loaded && "Execution not stopped");
+}
+
 int main(void)
 {
 	c8_test_arena_init();
@@ -140,4 +152,5 @@ int main(void)
 	c8_test_add_number_to_register_overflow();
 	c8_test_clear();
 	c8_test_return();
+	c8_test_return_underflow();
 }
