@@ -120,6 +120,17 @@ void c8_test_clear()
 	}
 }
 
+void c8_test_return()
+{
+	c8_test_def("Return from call");
+	C8_State state = {0};
+	state.stack_pointer = 10;
+	state.stack[9] = 3;
+	c8_return(&state);
+	assert(state.stack_pointer == 9 && "Stack pointer not decremented");
+	assert(state.pc == 3 && "Program counter not updated");
+}
+
 int main(void)
 {
 	c8_test_arena_init();
@@ -128,4 +139,5 @@ int main(void)
 	c8_test_add_number_to_register_no_overflow();
 	c8_test_add_number_to_register_overflow();
 	c8_test_clear();
+	c8_test_return();
 }

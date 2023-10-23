@@ -1853,6 +1853,20 @@ void c8_clear(C8_State *state)
 	memset(state->pixels, 0, sizeof(state->pixels));
 }
 
+void c8_return(C8_State *state)
+{
+	state->stack_pointer--;
+
+	if (state->stack_pointer < 0)
+	{
+		C8_LOG_ERROR("Stack underflow\n");
+
+		c8_bad_rom(state);
+	}
+
+	state->pc = state->stack[state->stack_pointer];
+}
+
 void c8_update_emulator(C8_State *state)
 {
 
@@ -1919,19 +1933,11 @@ void c8_update_emulator(C8_State *state)
 			}
 			else if (op == 0x2)
 			{
-				// Call
 				c8_call(state, nnn);
 			}
 			else if (instruction == 0x00ee)
 			{
-				// Return
-
-				state->stack_pointer--;
-				if (state->stack_pointer < 0)
-				{
-					c8_bad_rom(state);
-				}
-				state->pc = state->stack[state->stack_pointer];
+				c8_return(state);
 			}
 			else if (op == 0x6)
 			{
@@ -2210,6 +2216,7 @@ void c8_update_emulator(C8_State *state)
 			else
 			{
 				c8_bad_rom(state);
+				C8_LOG_ERROR("Unimplemented instruction\n");
 			}
 		}
 	}
