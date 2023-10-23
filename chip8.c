@@ -1848,6 +1848,11 @@ void c8_bad_rom(C8_State *state)
 	state->program_loaded = false;
 }
 
+void c8_clear(C8_State *state)
+{
+	memset(state->pixels, 0, sizeof(state->pixels));
+}
+
 void c8_update_emulator(C8_State *state)
 {
 
@@ -1904,8 +1909,7 @@ void c8_update_emulator(C8_State *state)
 
 			if (instruction == 0x00e0)
 			{
-				// Clear
-				memset(state->pixels, 0, sizeof(state->pixels));
+				c8_clear(state);
 			}
 			else if (op == 0x1)
 			{

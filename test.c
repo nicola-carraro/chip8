@@ -103,6 +103,23 @@ void c8_test_add_number_to_register_overflow()
 	assert(state.var_registers[C8_FLAG_REG] == 1 && "Overflow flag incorrect");
 }
 
+void c8_test_clear()
+{
+	c8_test_def("Clear emulator's screen");
+	C8_State state = {0};
+	state.pixels[10][10] = true;
+	state.pixels[0][0] = true;
+	c8_clear(&state);
+
+	for (int i = 0; i < C8_ARRCOUNT(state.pixels); i++)
+	{
+		for (int j = 0; j < C8_ARRCOUNT(state.pixels[0]); j++)
+		{
+			assert(state.pixels[i][j] == false && "Pixel not cleared");
+		}
+	}
+}
+
 int main(void)
 {
 	c8_test_arena_init();
@@ -110,4 +127,5 @@ int main(void)
 	c8_test_call();
 	c8_test_add_number_to_register_no_overflow();
 	c8_test_add_number_to_register_overflow();
+	c8_test_clear();
 }
