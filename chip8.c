@@ -1872,6 +1872,13 @@ void c8_return(C8_State *state)
 	state->pc = state->stack[state->stack_pointer];
 }
 
+void c8_random(C8_State *state, u8 x, u8 nn)
+{
+	int random = rand();
+	u8 result = (u8)((u16)random & nn);
+	state->var_registers[x] = result;
+}
+
 void c8_update_emulator(C8_State *state)
 {
 
@@ -1962,11 +1969,7 @@ void c8_update_emulator(C8_State *state)
 			}
 			else if (op == 0xc)
 			{
-				// Random
-
-				int random = rand();
-				u8 result = (u8)((u16)random & nn);
-				state->var_registers[x] = result;
+				c8_random(state, x, nn);
 			}
 			else if (op == 0xd)
 			{
