@@ -171,6 +171,8 @@ void c8_test_display_sprite()
 
 	assert(!state.pixels[15][15] && "Pixels not flipped from 1 to 0");
 
+	assert(!state.pixels[16][16] && "Pixels should not have been flipped");
+
 	assert(state.var_registers[C8_FLAG_REG] && "Flag register not set");
 }
 
