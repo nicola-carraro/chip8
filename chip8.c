@@ -1879,6 +1879,42 @@ void c8_random(C8_State *state, u8 x, u8 nn)
 	state->var_registers[x] = result;
 }
 
+void c8_display_sprite(C8_State *state, u8 x, u8 y, u8 n)
+{
+	u8 flag_register = 0;
+	u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
+	u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
+	u8 *sprite_start = state->ram + state->index_register;
+
+	for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
+	{
+		u8 sprite_row = *(sprite_start + r);
+
+		for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
+		{
+			u8 on = (sprite_row >> (7 - c)) & 0x01;
+			if (on == 0x01)
+			{
+				if (state->pixels[sprite_y + r][sprite_x + c])
+				{
+					state->pixels[sprite_y + r][sprite_x + c] = false;
+				}
+				else
+				{
+					state->pixels[sprite_y + r][sprite_x + c] = true;
+				}
+				flag_register = 1;
+			}
+			else
+			{
+				assert(on == 0x00);
+			}
+		}
+	}
+
+	state->var_registers[C8_FLAG_REG] = flag_register;
+}
+
 void c8_update_emulator(C8_State *state)
 {
 
@@ -1973,40 +2009,7 @@ void c8_update_emulator(C8_State *state)
 			}
 			else if (op == 0xd)
 			{
-				// Display sprite
-
-				u8 flag_register = 0;
-				u16 sprite_x = state->var_registers[x] % C8_PIXEL_COLS;
-				u16 sprite_y = state->var_registers[y] % C8_PIXEL_ROWS;
-				u8 *sprite_start = state->ram + state->index_register;
-
-				for (i32 r = 0; r < n && sprite_y + r < C8_PIXEL_ROWS; r++)
-				{
-					u8 sprite_row = *(sprite_start + r);
-
-					for (i32 c = 0; c < 8 && sprite_x + c < C8_PIXEL_COLS; c++)
-					{
-						u8 on = (sprite_row >> (7 - c)) & 0x01;
-						if (on == 0x01)
-						{
-							if (state->pixels[sprite_y + r][sprite_x + c])
-							{
-								state->pixels[sprite_y + r][sprite_x + c] = false;
-							}
-							else
-							{
-								state->pixels[sprite_y + r][sprite_x + c] = true;
-							}
-							flag_register = 1;
-						}
-						else
-						{
-							assert(on == 0x00);
-						}
-					}
-				}
-
-				state->var_registers[C8_FLAG_REG] = flag_register;
+				c8_display_sprite(state, x, y, n);
 			}
 			// Skip
 			else if (op == 0x3)
