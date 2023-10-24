@@ -143,6 +143,35 @@ void c8_test_return_underflow()
 	assert(!state.program_loaded && "Execution not stopped");
 }
 
+void c8_test_display_sprite()
+{
+	c8_test_def("Display sprite");
+
+	C8_State state = {0};
+	u16 source_index = 8;
+	u8 *source = state.ram + source_index;
+	memset(source, 0xff, 8);
+
+	u8 x = 0;
+	u8 y = 1;
+	u8 n = 8;
+
+	state.var_registers[x] = 8;
+	state.var_registers[y] = 8;
+
+	state.pixels[8][8] = true;
+	state.pixels[15][15] = true;
+	state.index_register = source_index;
+
+	c8_display_sprite(&state, x, y, n);
+
+	assert(!state.pixels[8][8] && "Pixels not flipped from 1 to 0");
+
+	assert(state.pixels[9][9] && "Pixels not flipped from 0 to 1");
+
+	assert(!state.pixels[15][15] && "Pixels not flipped from 1 to 0");
+}
+
 int main(void)
 {
 	c8_test_arena_init();
@@ -153,4 +182,5 @@ int main(void)
 	c8_test_clear();
 	c8_test_return();
 	c8_test_return_underflow();
+	c8_test_display_sprite();
 }
